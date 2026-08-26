@@ -1,0 +1,24 @@
+# Variables de entorno locales; todo VITE_* es público en el navegador
+.env
+.env.*
+!.env.example
+
+# Dependencias y compilados
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.cache/
+*.tsbuildinfo
+
+# Pruebas y reportes
+playwright-report/
+test-results/
+.lighthouseci/
+
+# Logs y despliegue local
+*.log
+.vercel/
+tmp/
+temp/
