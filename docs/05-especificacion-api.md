@@ -1,7 +1,7 @@
 # 05 — Especificación de API
 
-**Estado:** Base de contrato  
-**Versión:** 1.0
+**Estado:** Contrato implementado
+**Versión:** 1.1
 
 ## 1. Convenciones
 - Base: `/api/v1`.
@@ -9,7 +9,9 @@
 - HTTPS obligatorio en producción.
 - Cada request incluye/genera `request_id`.
 - Escrituras críticas aceptan `operationUuid`.
-- Errores: `{ code, message, requestId, details? }`.
+- Éxito: `{ "data": ..., "meta": { ... } }`.
+- Error: `{ "error": { "code", "message", "requestId", "retryable", "details"? } }`.
+- La autenticación usa una sesión opaca persistida por el servidor y una cookie `HttpOnly`.
 
 ## 2. Auth
 - `POST /auth/login`
@@ -54,12 +56,12 @@ Respuesta exitosa: `201` la primera vez; un reintento idéntico puede responder 
 - `GET /actas/:id/verificar`
 
 ## 6. Admin
-CRUD versionado para:
-- `/admin/users`
-- `/admin/noches`
-- `/admin/comparsas`
-- `/admin/items`
-- `/admin/asignaciones`
+Operaciones implementadas:
+- `GET|POST /admin/users` y `PATCH /admin/users/:id`
+- `GET|POST /admin/noches` y `PATCH /admin/noches/:id`
+- `GET|POST /admin/comparsas` y `PATCH /admin/comparsas/:id`
+- `GET|POST /admin/items` y `PATCH /admin/items/:id`
+- `GET|POST /admin/asignaciones`
 
 Operaciones críticas:
 - `POST /admin/noches/:id/abrir`
@@ -68,17 +70,24 @@ Operaciones críticas:
 
 ## 7. Códigos de error de negocio
 - `AUTH_REQUIRED`
-- `ROLE_FORBIDDEN`
-- `ASSIGNMENT_NOT_FOUND`
+- `FORBIDDEN`
+- `RESOURCE_NOT_FOUND`
+- `JUROR_NOT_ASSIGNED`
+- `ASSIGNMENT_INACTIVE`
+- `JUDGE_CAPACITY_EXCEEDED`
 - `NIGHT_CLOSED`
-- `VOTE_ALREADY_EXISTS`
-- `INVALID_ITEM`
+- `COMPARSA_CLOSED`
+- `ITEM_NOT_SCORABLE`
+- `INVALID_SCORE`
+- `VOTE_ALREADY_CONFIRMED`
 - `COMPARSA_INCOMPLETE`
-- `OPERATION_CONFLICT`
+- `IDEMPOTENCY_CONFLICT`
 - `SYNC_REVIEW_REQUIRED`
 - `RATE_LIMITED`
 
 ## 8. Idempotencia
 Si el mismo `operationUuid` llega nuevamente:
 - mismo payload → devolver resultado original;
-- payload diferente → `409 OPERATION_CONFLICT`.
+- payload diferente → `409 IDEMPOTENCY_CONFLICT`, preservando evidencia auditable.
+
+`POST /jurado/sync/reconcile` responde por operación con `APPLIED`, `ALREADY_APPLIED`, `REJECTED` o `CONFLICT`. La decisión reglamentaria final sobre operaciones recibidas después del cierre continúa pendiente; el backend actual las conserva como conflicto y no las aplica silenciosamente.
