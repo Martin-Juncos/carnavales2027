@@ -1,0 +1,17 @@
+DROP TABLE IF EXISTS eventos_fiscal;
+DROP TABLE IF EXISTS audit_log;
+DROP TABLE IF EXISTS actas;
+DROP TABLE IF EXISTS penalizaciones;
+DROP TABLE IF EXISTS cierres_comparsa;
+DROP TABLE IF EXISTS puntuaciones;
+DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS otp_challenges;
+DROP TABLE IF EXISTS items;
+DROP TABLE IF EXISTS comparsas;
+DROP TABLE IF EXISTS jurado_asignaciones;
+DROP TABLE IF EXISTS noches;
+DROP TABLE IF EXISTS users;
+DROP FUNCTION IF EXISTS reject_append_only_mutation();
+DROP FUNCTION IF EXISTS enforce_three_active_jurors();
+DROP FUNCTION IF EXISTS enforce_nine_active_jurors();
+DROP FUNCTION IF EXISTS set_updated_at();
