@@ -1,0 +1,19 @@
+{
+  "name": "Carnavales 2027",
+  "short_name": "Carnavales",
+  "description": "Sistema de votaci?n auditable para comparsas de carnaval",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#080b16",
+  "background_color": "#050713",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
