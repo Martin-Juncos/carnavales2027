@@ -31,7 +31,7 @@ export class ApiClientError extends Error implements NormalizedApiError {
 export function normalizeError(error: unknown): NormalizedApiError {
   if (error instanceof ApiClientError) return error
   if (error instanceof DOMException && error.name === 'AbortError') {
-    return { code: 'TIMEOUT', message: 'La solicitud tard? demasiado. Se reintentar? cuando sea seguro.', status: 0, retryable: true }
+    return { code: 'TIMEOUT', message: 'La solicitud tardó demasiado. Se reintentará cuando sea seguro.', status: 0, retryable: true }
   }
   if (error instanceof TypeError) {
     return { code: 'NETWORK_ERROR', message: 'No se pudo comunicar con el servidor.', status: 0, retryable: true }
@@ -39,7 +39,7 @@ export function normalizeError(error: unknown): NormalizedApiError {
   if (error instanceof Error) {
     return { code: 'UNKNOWN_ERROR', message: error.message, status: 0, retryable: true }
   }
-  return { code: 'UNKNOWN_ERROR', message: 'Ocurri? un error inesperado.', status: 0, retryable: true }
+  return { code: 'UNKNOWN_ERROR', message: 'Ocurrió un error inesperado.', status: 0, retryable: true }
 }
 
 async function readJson(response: Response): Promise<unknown> {
@@ -83,7 +83,7 @@ async function requestEnvelope<T>(url: string, options: RequestOptions = {}): Pr
       }
       throw new ApiClientError({
         code: response.status >= 500 ? 'INTERNAL_ERROR' : 'UNKNOWN_ERROR',
-        message: 'El servidor devolvi? una respuesta no esperada.',
+        message: 'El servidor devolvió una respuesta no esperada.',
         status: response.status,
         retryable: response.status >= 500 || response.status === 429,
       })

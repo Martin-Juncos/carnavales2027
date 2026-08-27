@@ -14,6 +14,6 @@ export function SyncStatusBadge({ status }: SyncStatusBadgeProps) {
       : status === 'SYNCING'
         ? 'info'
         : 'warning'
-  const icon = status === 'SYNCED' ? '?' : status === 'SYNCING' ? '?' : status === 'CONFLICT' || status === 'REJECTED' ? '!' : '?'
+  const icon = status === 'SYNCED' ? '✓' : status === 'SYNCING' ? '↻' : status === 'CONFLICT' || status === 'REJECTED' ? '!' : '•'
   return <Badge tone={tone}><span aria-hidden="true">{icon}</span>{operationStatusLabel(status)}</Badge>
 }

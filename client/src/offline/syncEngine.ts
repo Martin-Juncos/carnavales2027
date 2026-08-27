@@ -78,7 +78,7 @@ export async function processSyncQueue(options: { force?: boolean } = {}): Promi
   } catch (error) {
     const normalized = normalizeError(error)
     if (error instanceof ApiClientError && (error.code === 'AUTH_REQUIRED' || error.code === 'SESSION_EXPIRED')) {
-      await markOperationsPendingAfterTransportFailure(operations, 'La sesi?n debe renovarse antes de sincronizar.', error.code)
+      await markOperationsPendingAfterTransportFailure(operations, 'La sesión debe renovarse antes de sincronizar.', error.code)
     } else {
       await markOperationsPendingAfterTransportFailure(operations, normalized.message, normalized.code)
     }

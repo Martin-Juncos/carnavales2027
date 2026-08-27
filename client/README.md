@@ -1,6 +1,6 @@
-# Client ? Carnavales 2027
+# Client — Carnavales 2027
 
-PWA React/TypeScript para el sistema de votaci?n digital.
+PWA React/TypeScript para el sistema de votación digital.
 
 ## Stack
 
@@ -20,11 +20,14 @@ npm run dev
 npm run lint
 npm run typecheck
 npm test
-npm run test:e2e
+npm run test:e2e:mock
+npm run test:system
 npm run build
 ```
 
-## Variables p?blicas
+`test:e2e:mock` ejecuta el escenario offline rápido con API simulada. `test:system` delega al runner de la API, exige `carnavales2027_test` y Mailpit, y levanta temporalmente API `3100` y preview `5174`.
+
+## Variables públicas
 
 Copiar `.env.example` a `.env` si hace falta cambiar endpoints locales:
 
@@ -37,7 +40,7 @@ No colocar secretos en variables `VITE_*`.
 
 ## Arquitectura offline
 
-El flujo del jurado persiste primero en IndexedDB y despu?s intenta sincronizar:
+El flujo del jurado persiste primero en IndexedDB y después intenta sincronizar:
 
 ```text
 confirmar voto -> operationId UUID -> IndexedDB -> UI bloqueada -> /jurado/sync/reconcile -> SYNCED/CONFLICT/REJECTED
@@ -55,4 +58,4 @@ Tablas locales principales:
 
 Estados visibles: `LOCAL`, `PENDING`, `SYNCING`, `SYNCED`, `CONFLICT`, `REJECTED`.
 
-La UI nunca presenta ?guardado localmente? como ?confirmado por servidor?.
+La UI nunca presenta «guardado localmente» como «confirmado por servidor».

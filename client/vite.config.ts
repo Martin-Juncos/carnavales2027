@@ -13,6 +13,6 @@ export default defineConfig({
     globals: true,
     restoreMocks: true,
     css: true,
-    exclude: ['tests/e2e/**', 'node_modules/**', 'dist/**'],
+    exclude: ['tests/e2e/**', 'tests/system/**', 'node_modules/**', 'dist/**'],
   },
 })

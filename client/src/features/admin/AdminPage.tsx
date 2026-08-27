@@ -78,8 +78,8 @@ export function AdminPage() {
       orden: Number(itemForm.orden),
       activo: itemForm.activo,
     }),
-    onSuccess: () => { setItemForm(initialItem); setMessage('?tem creado.'); refreshAdmin() },
-    onError: (caught) => setMessage(errorText(caught, 'No se pudo crear el ?tem.')),
+    onSuccess: () => { setItemForm(initialItem); setMessage('Ítem creado.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo crear el ítem.')),
   })
   const createAssignment = useMutation({
     mutationFn: () => adminApi.createAssignment({
@@ -87,8 +87,8 @@ export function AdminPage() {
       nocheId: Number(assignmentForm.nocheId),
       ...(assignmentForm.motivo.trim() ? { motivo: assignmentForm.motivo.trim() } : {}),
     }),
-    onSuccess: () => { setAssignmentForm(initialAssignment); setMessage('Asignaci?n creada.'); refreshAdmin() },
-    onError: (caught) => setMessage(errorText(caught, 'No se pudo crear la asignaci?n.')),
+    onSuccess: () => { setAssignmentForm(initialAssignment); setMessage('Asignación creada.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo crear la asignación.')),
   })
   const openNight = useMutation({
     mutationFn: (id: number) => adminApi.openNight(id),
@@ -122,76 +122,76 @@ export function AdminPage() {
         <Card>
           <h2 className="text-xl font-bold">Usuarios</h2>
           <form className="mt-3 grid gap-3 sm:grid-cols-2" onSubmit={onUser}>
-            <input aria-label="Nombre" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.nombre} onChange={(event) => setUserForm({ ...userForm, nombre: event.target.value })} />
-            <input aria-label="DNI" placeholder="DNI" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.dni} onChange={(event) => setUserForm({ ...userForm, dni: event.target.value })} />
-            <input aria-label="Email" placeholder="Email" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} />
-            <input aria-label="Contrase?a" placeholder="Contrase?a inicial" type="password" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} />
-            <select aria-label="Rol" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value as Role })}><option value="jurado">Jurado</option><option value="fiscal">Fiscal</option><option value="escribano">Escribano</option><option value="admin">Admin</option></select>
+            <input id="admin-user-name" name="nombre" aria-label="Nombre" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.nombre} onChange={(event) => setUserForm({ ...userForm, nombre: event.target.value })} />
+            <input id="admin-user-dni" name="dni" aria-label="DNI" placeholder="DNI" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.dni} onChange={(event) => setUserForm({ ...userForm, dni: event.target.value })} />
+            <input id="admin-user-email" name="email" aria-label="Email" placeholder="Email" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} />
+            <input id="admin-user-password" name="password" aria-label="Contraseña" placeholder="Contraseña inicial" type="password" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} />
+            <select id="admin-user-role" name="role" aria-label="Rol" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value as Role })}><option value="jurado">Jurado</option><option value="fiscal">Fiscal</option><option value="escribano">Escribano</option><option value="admin">Admin</option></select>
             <Button type="submit" disabled={busy}>Crear usuario</Button>
           </form>
           <div className="mt-4 max-h-80 space-y-2 overflow-auto">
-            {(users.data ?? []).map((user) => <div key={user.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><p className="font-semibold">{user.nombre}</p><p className="text-slate-400">{user.email} ? {user.role}</p></div>)}
+            {(users.data ?? []).map((user) => <div key={user.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><p className="font-semibold">{user.nombre}</p><p className="text-slate-400">{user.email} · {user.role}</p></div>)}
           </div>
         </Card>
 
         <Card>
           <h2 className="text-xl font-bold">Noches</h2>
           <form className="mt-3 grid gap-3 sm:grid-cols-3" onSubmit={onNight}>
-            <input aria-label="Nombre de noche" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={nightForm.nombre} onChange={(event) => setNightForm({ ...nightForm, nombre: event.target.value })} />
-            <input aria-label="Fecha" type="date" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={nightForm.fecha} onChange={(event) => setNightForm({ ...nightForm, fecha: event.target.value })} />
+            <input id="admin-night-name" name="nightName" aria-label="Nombre de noche" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={nightForm.nombre} onChange={(event) => setNightForm({ ...nightForm, nombre: event.target.value })} />
+            <input id="admin-night-date" name="nightDate" aria-label="Fecha" type="date" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={nightForm.fecha} onChange={(event) => setNightForm({ ...nightForm, fecha: event.target.value })} />
             <Button type="submit" disabled={busy}>Crear noche</Button>
           </form>
           <div className="mt-4 space-y-2">
-            {(nights.data ?? []).map((night) => <div key={night.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><div><p className="font-semibold">#{night.id} ? {night.nombre}</p><p className="text-slate-400">{night.fecha}</p></div><Badge tone={night.estado === 'open' ? 'success' : 'warning'}>{night.estado}</Badge><div className="flex gap-2"><Button variant="secondary" onClick={() => setConfirm({ type: 'openNight', id: night.id, label: night.nombre })}>Abrir</Button><Button variant="danger" onClick={() => setConfirm({ type: 'closeNight', id: night.id, label: night.nombre })}>Cerrar</Button></div></div>)}
+            {(nights.data ?? []).map((night) => <div key={night.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><div><p className="font-semibold">#{night.id} · {night.nombre}</p><p className="text-slate-400">{night.fecha}</p></div><Badge tone={night.estado === 'open' ? 'success' : 'warning'}>{night.estado}</Badge><div className="flex gap-2"><Button variant="secondary" onClick={() => setConfirm({ type: 'openNight', id: night.id, label: night.nombre })}>Abrir</Button><Button variant="danger" onClick={() => setConfirm({ type: 'closeNight', id: night.id, label: night.nombre })}>Cerrar</Button></div></div>)}
           </div>
         </Card>
 
         <Card>
           <h2 className="text-xl font-bold">Comparsas</h2>
           <form className="mt-3 grid gap-3 sm:grid-cols-4" onSubmit={onComparsa}>
-            <input aria-label="Nombre comparsa" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nombre} onChange={(event) => setComparsaForm({ ...comparsaForm, nombre: event.target.value })} />
-            <input aria-label="Noche ID comparsa" placeholder="Noche ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nocheId} onChange={(event) => setComparsaForm({ ...comparsaForm, nocheId: event.target.value })} />
-            <input aria-label="Orden comparsa" placeholder="Orden" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.orden} onChange={(event) => setComparsaForm({ ...comparsaForm, orden: event.target.value })} />
+            <input id="admin-comparsa-name" name="comparsaName" aria-label="Nombre comparsa" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nombre} onChange={(event) => setComparsaForm({ ...comparsaForm, nombre: event.target.value })} />
+            <input id="admin-comparsa-night" name="comparsaNightId" aria-label="Noche ID comparsa" placeholder="Noche ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nocheId} onChange={(event) => setComparsaForm({ ...comparsaForm, nocheId: event.target.value })} />
+            <input id="admin-comparsa-order" name="comparsaOrder" aria-label="Orden comparsa" placeholder="Orden" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.orden} onChange={(event) => setComparsaForm({ ...comparsaForm, orden: event.target.value })} />
             <Button type="submit" disabled={busy}>Crear comparsa</Button>
           </form>
-          <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(comparsas.data ?? []).map((comparsa) => <p key={comparsa.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">#{comparsa.id} ? {comparsa.nombre} ? noche {comparsa.nocheId} ? orden {comparsa.orden}</p>)}</div>
+          <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(comparsas.data ?? []).map((comparsa) => <p key={comparsa.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">#{comparsa.id} · {comparsa.nombre} · noche {comparsa.nocheId} · orden {comparsa.orden}</p>)}</div>
         </Card>
 
         <Card>
-          <h2 className="text-xl font-bold">Rubros / ?tems</h2>
+          <h2 className="text-xl font-bold">Rubros / Ítems</h2>
           <form className="mt-3 grid gap-3 sm:grid-cols-4" onSubmit={onItem}>
-            <input aria-label="Nombre ?tem" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.nombre} onChange={(event) => setItemForm({ ...itemForm, nombre: event.target.value })} />
-            <input aria-label="?tem padre" placeholder="Padre opcional" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.parentItemId} onChange={(event) => setItemForm({ ...itemForm, parentItemId: event.target.value })} />
-            <input aria-label="Orden ?tem" placeholder="Orden" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.orden} onChange={(event) => setItemForm({ ...itemForm, orden: event.target.value })} />
-            <Button type="submit" disabled={busy}>Crear ?tem</Button>
+            <input id="admin-item-name" name="itemName" aria-label="Nombre ítem" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.nombre} onChange={(event) => setItemForm({ ...itemForm, nombre: event.target.value })} />
+            <input id="admin-item-parent" name="parentItemId" aria-label="Ítem padre" placeholder="Padre opcional" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.parentItemId} onChange={(event) => setItemForm({ ...itemForm, parentItemId: event.target.value })} />
+            <input id="admin-item-order" name="itemOrder" aria-label="Orden ítem" placeholder="Orden" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.orden} onChange={(event) => setItemForm({ ...itemForm, orden: event.target.value })} />
+            <Button type="submit" disabled={busy}>Crear ítem</Button>
           </form>
-          <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(items.data ?? []).map((item) => <p key={item.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">#{item.id} ? {item.nombre} ? padre {item.parentItemId ?? '-'} ? orden {item.orden}</p>)}</div>
+          <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(items.data ?? []).map((item) => <p key={item.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">#{item.id} · {item.nombre} · padre {item.parentItemId ?? '-'} · orden {item.orden}</p>)}</div>
         </Card>
 
         <Card className="xl:col-span-2">
           <h2 className="text-xl font-bold">Asignaciones y reemplazos</h2>
           <div className="mt-3 grid gap-4 lg:grid-cols-2">
             <form className="grid gap-3" onSubmit={onAssignment}>
-              <input aria-label="Jurado ID" placeholder="Jurado ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={assignmentForm.juradoId} onChange={(event) => setAssignmentForm({ ...assignmentForm, juradoId: event.target.value })} />
-              <input aria-label="Noche ID asignaci?n" placeholder="Noche ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={assignmentForm.nocheId} onChange={(event) => setAssignmentForm({ ...assignmentForm, nocheId: event.target.value })} />
-              <input aria-label="Motivo asignaci?n" placeholder="Motivo opcional" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={assignmentForm.motivo} onChange={(event) => setAssignmentForm({ ...assignmentForm, motivo: event.target.value })} />
+              <input id="admin-assignment-juror" name="juradoId" aria-label="Jurado ID" placeholder="Jurado ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={assignmentForm.juradoId} onChange={(event) => setAssignmentForm({ ...assignmentForm, juradoId: event.target.value })} />
+              <input id="admin-assignment-night" name="assignmentNightId" aria-label="Noche ID asignación" placeholder="Noche ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={assignmentForm.nocheId} onChange={(event) => setAssignmentForm({ ...assignmentForm, nocheId: event.target.value })} />
+              <input id="admin-assignment-reason" name="assignmentReason" aria-label="Motivo asignación" placeholder="Motivo opcional" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={assignmentForm.motivo} onChange={(event) => setAssignmentForm({ ...assignmentForm, motivo: event.target.value })} />
               <Button type="submit" disabled={busy}>Asignar jurado</Button>
             </form>
             <form className="grid gap-3" onSubmit={onReplace}>
-              <input aria-label="Asignaci?n ID" placeholder="Asignaci?n ID activa" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={replaceForm.assignmentId} onChange={(event) => setReplaceForm({ ...replaceForm, assignmentId: event.target.value })} />
-              <input aria-label="Jurado reemplazante ID" placeholder="Jurado reemplazante ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={replaceForm.replacementJurorId} onChange={(event) => setReplaceForm({ ...replaceForm, replacementJurorId: event.target.value })} />
-              <input aria-label="Motivo reemplazo" placeholder="Motivo obligatorio" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={replaceForm.motivo} onChange={(event) => setReplaceForm({ ...replaceForm, motivo: event.target.value })} />
+              <input id="admin-replacement-assignment" name="assignmentId" aria-label="Asignación ID" placeholder="Asignación ID activa" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={replaceForm.assignmentId} onChange={(event) => setReplaceForm({ ...replaceForm, assignmentId: event.target.value })} />
+              <input id="admin-replacement-juror" name="replacementJurorId" aria-label="Jurado reemplazante ID" placeholder="Jurado reemplazante ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={replaceForm.replacementJurorId} onChange={(event) => setReplaceForm({ ...replaceForm, replacementJurorId: event.target.value })} />
+              <input id="admin-replacement-reason" name="replacementReason" aria-label="Motivo reemplazo" placeholder="Motivo obligatorio" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={replaceForm.motivo} onChange={(event) => setReplaceForm({ ...replaceForm, motivo: event.target.value })} />
               <Button type="submit" variant="danger" disabled={busy || replaceForm.motivo.trim().length < 3}>Reemplazar jurado</Button>
             </form>
           </div>
-          <div className="mt-4 max-h-96 space-y-2 overflow-auto">{(assignments.data ?? []).map((assignment) => <div key={assignment.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><p className="font-semibold">{assignment.juradoNombre} ? {assignment.nocheNombre}</p><p className="text-slate-400">{assignment.estado} ? {assignment.id}</p></div>)}</div>
+          <div className="mt-4 max-h-96 space-y-2 overflow-auto">{(assignments.data ?? []).map((assignment) => <div key={assignment.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><p className="font-semibold">{assignment.juradoNombre} · {assignment.nocheNombre}</p><p className="text-slate-400">{assignment.estado} · {assignment.id}</p></div>)}</div>
         </Card>
       </div>
 
       <Modal
         open={Boolean(confirm)}
         title={confirm?.type === 'replaceAssignment' ? 'Reemplazar jurado' : confirm?.type === 'closeNight' ? 'Cerrar noche' : 'Abrir noche'}
-        description="Acci?n operativa sensible: quedar? auditada en backend. Verific? que corresponde antes de confirmar."
+        description="Acción operativa sensible: quedará auditada en backend. Verificá que corresponde antes de confirmar."
         confirmLabel="Confirmar"
         danger={confirm?.type !== 'openNight'}
         busy={busy}
@@ -203,7 +203,7 @@ export function AdminPage() {
           if (confirm.type === 'replaceAssignment') replaceAssignment.mutate(confirm.form)
         }}
       >
-        {confirm?.type === 'replaceAssignment' ? <p className="break-all text-slate-100">Asignaci?n: {confirm.form.assignmentId}</p> : <p className="text-slate-100">{confirm?.label}</p>}
+        {confirm?.type === 'replaceAssignment' ? <p className="break-all text-slate-100">Asignación: {confirm.form.assignmentId}</p> : <p className="text-slate-100">{confirm?.label}</p>}
       </Modal>
     </main>
   )

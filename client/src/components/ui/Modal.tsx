@@ -45,7 +45,7 @@ export function Modal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center" role="presentation">
+    <div className="fixed inset-0 z-50 isolate flex items-end justify-center bg-black/70 p-4 sm:items-center" role="presentation">
       <div
         ref={panelRef}
         role="dialog"
@@ -53,7 +53,7 @@ export function Modal({
         aria-labelledby="modal-title"
         aria-describedby={description ? 'modal-description' : undefined}
         tabIndex={-1}
-        className="w-full max-w-lg rounded-3xl border border-slate-700 bg-night-900 p-5 shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-gold"
+        className="relative z-10 w-full max-w-lg rounded-3xl border border-slate-700 bg-night-900 p-5 shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-gold"
       >
         <h2 id="modal-title" className="text-xl font-bold text-slate-50">{title}</h2>
         {description ? <p id="modal-description" className="mt-2 text-sm text-slate-300">{description}</p> : null}

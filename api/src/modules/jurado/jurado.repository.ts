@@ -65,8 +65,8 @@ export interface VoteRecord {
   server_received_at: Date
 }
 
-export async function findVoteByOperation(operationUuid: string): Promise<VoteRecord | undefined> {
-  const result = await query<VoteRecord>('SELECT * FROM puntuaciones WHERE operation_uuid = $1', [operationUuid])
+export async function findVoteByOperation(operationUuid: string, client?: PoolClient): Promise<VoteRecord | undefined> {
+  const result = await query<VoteRecord>('SELECT * FROM puntuaciones WHERE operation_uuid = $1', [operationUuid], client)
   return result.rows[0]
 }
 
@@ -111,8 +111,8 @@ export interface CloseRecord {
   server_received_at: Date
 }
 
-export async function findCloseByOperation(operationUuid: string): Promise<CloseRecord | undefined> {
-  const result = await query<CloseRecord>('SELECT * FROM cierres_comparsa WHERE operation_uuid = $1', [operationUuid])
+export async function findCloseByOperation(operationUuid: string, client?: PoolClient): Promise<CloseRecord | undefined> {
+  const result = await query<CloseRecord>('SELECT * FROM cierres_comparsa WHERE operation_uuid = $1', [operationUuid], client)
   return result.rows[0]
 }
 

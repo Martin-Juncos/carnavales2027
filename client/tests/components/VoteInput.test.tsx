@@ -6,7 +6,7 @@ describe('VoteInput', () => {
   it('offers large numeric buttons from 0 to 5', async () => {
     const user = userEvent.setup()
     const onSelect = vi.fn()
-    render(<VoteInput itemName="M?sica" onSelect={onSelect} />)
+    render(<VoteInput itemName="Música" onSelect={onSelect} />)
 
     await user.click(screen.getByRole('button', { name: /nota 4/i }))
 
@@ -16,7 +16,7 @@ describe('VoteInput', () => {
   })
 
   it('locks the control after local or server confirmation', () => {
-    render(<VoteInput itemName="M?sica" score={{ value: 5, status: 'PENDING', operationId: 'op-1' }} onSelect={vi.fn()} />)
+    render(<VoteInput itemName="Música" score={{ value: 5, status: 'PENDING', operationId: 'op-1' }} onSelect={vi.fn()} />)
 
     expect(screen.getByText('Nota bloqueada')).toBeInTheDocument()
     expect(screen.getByText('Pendiente de sincronizar')).toBeInTheDocument()

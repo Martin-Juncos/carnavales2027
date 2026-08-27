@@ -5,7 +5,7 @@ import { AppProviders } from './app/providers/AppProviders'
 import './styles.css'
 
 const rootElement = document.getElementById('root')
-if (!rootElement) throw new Error('No se encontr? el contenedor principal de React')
+if (!rootElement) throw new Error('No se encontró el contenedor principal de React')
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>

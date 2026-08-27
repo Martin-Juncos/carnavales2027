@@ -53,7 +53,7 @@ function renderItemNode(
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-bold text-slate-50">{node.nombre}</h3>
-          <p className="text-sm text-slate-400">{isParent ? '?tem calculado por sub?tems' : '?tem puntuable ? escala 0 a 5'}</p>
+          <p className="text-sm text-slate-400">{isParent ? 'Ítem calculado por subítems' : 'Ítem puntuable · escala 0 a 5'}</p>
         </div>
         {isParent && subtotal !== undefined ? <Badge tone="info">Subtotal visual: {subtotal}</Badge> : null}
       </div>
@@ -126,7 +126,7 @@ export function JudgePage() {
       <main className="mx-auto max-w-4xl px-4 py-6">
         <Card>
           <h2 className="text-xl font-bold">No hay contexto de jurado disponible</h2>
-          <p className="mt-2 text-slate-300">Necesitamos una sesi?n v?lida o datos previamente cacheados para operar sin conexi?n.</p>
+          <p className="mt-2 text-slate-300">Necesitamos una sesión válida o datos previamente cacheados para operar sin conexión.</p>
           {contextQuery.error ? <p className="mt-3 text-sm text-rose-200">{contextQuery.error.message}</p> : null}
         </Card>
       </main>
@@ -193,7 +193,7 @@ export function JudgePage() {
                     <span className="font-bold">{comparsa.orden}. {comparsa.nombre}</span>
                     <Badge tone={progress.closed ? 'success' : progress.pending > 0 ? 'warning' : progress.confirmed > 0 ? 'info' : 'neutral'}>{progressLabel(progress)}</Badge>
                   </div>
-                  <p className="mt-2 text-sm text-slate-400">{progress.confirmed}/{progress.totalScorable} ?tems ? {progress.synced} en servidor</p>
+                  <p className="mt-2 text-sm text-slate-400">{progress.confirmed}/{progress.totalScorable} ítems · {progress.synced} en servidor</p>
                 </button>
               )
             })}
@@ -207,13 +207,13 @@ export function JudgePage() {
             <Card className="border-carnival-gold/20">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-carnival-gold">Planilla de votaci?n</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-carnival-gold">Planilla de votación</p>
                   <h2 className="mt-1 text-3xl font-black">{selectedComparsa.nombre}</h2>
-                  <p className="mt-2 text-sm text-slate-300">Seleccion? una nota, revis? el resumen y confirm?. Una nota confirmada queda bloqueada aunque a?n est? pendiente de servidor.</p>
+                  <p className="mt-2 text-sm text-slate-300">Seleccioná una nota, revisá el resumen y confirmá. Una nota confirmada queda bloqueada aunque aún esté pendiente de servidor.</p>
                 </div>
                 {close ? <SyncStatusBadge status={close} /> : null}
               </div>
-              {night.status !== 'open' ? <p className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-100">La noche no est? abierta. El frontend no habilita nuevas confirmaciones.</p> : null}
+              {night.status !== 'open' ? <p className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-100">La noche no está abierta. El frontend no habilita nuevas confirmaciones.</p> : null}
             </Card>
 
             <div className="space-y-3">
@@ -227,11 +227,11 @@ export function JudgePage() {
                   {missing.length > 0 ? (
                     <p className="mt-1 text-sm text-yellow-100">Faltan puntuar: {missing.map((item) => item.nombre).join(', ')}</p>
                   ) : pendingVoteDraftsForSelected.length > 0 ? (
-                    <p className="mt-1 text-sm text-yellow-100">La planilla est? completa localmente, pero hay votos pendientes de servidor. Sin eso NO cierres: primero sincronizamos.</p>
+                    <p className="mt-1 text-sm text-yellow-100">La planilla está completa localmente, pero hay votos pendientes de servidor. Sin eso NO cierres: primero sincronizamos.</p>
                   ) : close ? (
                     <p className="mt-1 text-sm text-emerald-100">La comparsa tiene cierre registrado.</p>
                   ) : (
-                    <p className="mt-1 text-sm text-slate-300">Todos los ?tems est?n completos y sincronizados.</p>
+                    <p className="mt-1 text-sm text-slate-300">Todos los ítems están completos y sincronizados.</p>
                   )}
                 </div>
                 <Button size="lg" disabled={!canCloseSelected} onClick={() => setCloseConfirm(selectedComparsa)}>Cerrar comparsa</Button>
@@ -245,8 +245,8 @@ export function JudgePage() {
 
       <Modal
         open={Boolean(pendingVote)}
-        title="Confirmar puntuaci?n"
-        description="Esta acci?n bloquear? la nota en este dispositivo y se enviar? al servidor con un identificador idempotente. No es lo mismo que confirmaci?n final del servidor."
+        title="Confirmar puntuación"
+        description="Esta acción bloqueará la nota en este dispositivo y se enviará al servidor con un identificador idempotente. No es lo mismo que confirmación final del servidor."
         confirmLabel="Confirmar nota"
         busy={busy}
         onConfirm={() => { void confirmVote() }}
@@ -255,7 +255,7 @@ export function JudgePage() {
         {pendingVote ? (
           <dl className="grid gap-2 text-sm">
             <div className="flex justify-between gap-4"><dt className="text-slate-400">Comparsa</dt><dd className="font-bold text-slate-50">{pendingVote.comparsa.nombre}</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-slate-400">?tem</dt><dd className="font-bold text-slate-50">{pendingVote.item.nombre}</dd></div>
+            <div className="flex justify-between gap-4"><dt className="text-slate-400">Ítem</dt><dd className="font-bold text-slate-50">{pendingVote.item.nombre}</dd></div>
             <div className="flex justify-between gap-4"><dt className="text-slate-400">Nota</dt><dd className="text-2xl font-black text-carnival-gold">{pendingVote.value}</dd></div>
           </dl>
         ) : null}
@@ -264,7 +264,7 @@ export function JudgePage() {
       <Modal
         open={Boolean(closeConfirm)}
         title="Cerrar comparsa"
-        description="El cierre tambi?n es idempotente e irreversible desde la interfaz normal. Solo se habilita cuando los votos requeridos est?n confirmados por servidor."
+        description="El cierre también es idempotente e irreversible desde la interfaz normal. Solo se habilita cuando los votos requeridos están confirmados por servidor."
         confirmLabel="Cerrar comparsa"
         danger
         busy={busy}

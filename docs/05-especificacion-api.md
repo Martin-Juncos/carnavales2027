@@ -84,6 +84,7 @@ Operaciones críticas:
 - `IDEMPOTENCY_CONFLICT`
 - `SYNC_REVIEW_REQUIRED`
 - `RATE_LIMITED`
+- `OTP_DELIVERY_UNAVAILABLE` (503 reintentable cuando el canal OTP no responde)
 
 ## 8. Idempotencia
 Si el mismo `operationUuid` llega nuevamente:

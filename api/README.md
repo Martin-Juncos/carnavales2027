@@ -31,6 +31,22 @@ docker compose up -d postgres
 npm run db:migrate
 ```
 
+Para el correo OTP local, Mailpit expone SMTP en `127.0.0.1:1025` y su bandeja en `http://127.0.0.1:8025`:
+
+```bash
+docker compose up -d mailpit
+```
+
+Si Windows tiene una variable global `DATABASE_URL` de otro proyecto, quitála en la terminal antes de iniciar o migrar. La API valida el esquema efectivo antes de abrir el puerto:
+
+```powershell
+Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
+```
+
+```bash
+unset DATABASE_URL
+```
+
 Rollback de la última migración:
 
 ```bash
@@ -72,15 +88,17 @@ npm start
 ```bash
 npm run lint
 npm run typecheck
-npm run test:unit
+npm run test:all
 npm run build
 ```
 
-Las integraciones crean un esquema PostgreSQL temporal y solo se habilitan si existe una URL explícita de test:
+Las integraciones crean un esquema PostgreSQL temporal y requieren una URL explícita de test:
 
 ```bash
 TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/carnavales2027_test npm run test:integration
 ```
+
+`test:integration` falla de forma explícita si falta `TEST_DATABASE_URL` o si el nombre de la base no termina en `_test`.
 
 PowerShell:
 
@@ -90,6 +108,15 @@ npm run test:integration
 ```
 
 Usar exclusivamente una base descartable de pruebas. El esquema temporal se elimina al finalizar.
+
+Prueba integral con OTP real, API `3100`, cliente de producción `5174` y Chromium móvil:
+
+```bash
+docker compose up -d postgres mailpit
+npm run test:system
+```
+
+El runner crea datos deterministas en un esquema temporal de `carnavales2027_test`, recupera los OTP desde Mailpit y elimina esquema, actas y procesos temporales aunque la prueba falle. Nunca acepta una base cuyo nombre no termine en `_test`.
 
 ## Decisiones operativas
 

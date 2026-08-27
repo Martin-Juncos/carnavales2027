@@ -24,24 +24,24 @@ export function AppShell() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-carnival-gold">Carnavales 2027</p>
             <h1 className="text-lg font-black">{auth.user?.nombre}</h1>
-            {auth.offlineSession ? <p className="text-xs text-yellow-200">Sesi?n restaurada desde este dispositivo; falta validar con servidor.</p> : null}
+            {auth.offlineSession ? <p className="text-xs text-yellow-200">Sesión restaurada desde este dispositivo; falta validar con servidor.</p> : null}
           </div>
           <div className="flex flex-col gap-2 sm:items-end">
             <ConnectionStatus connection={connection} sync={sync} />
             <LastSyncIndicator lastSyncAt={sync.lastSyncAt} />
           </div>
         </div>
-        <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-3" aria-label="Navegaci?n principal">
+        <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-3" aria-label="Navegación principal">
           {auth.user?.role === 'jurado' ? <NavLink className={navClass} to="/jurado">Jurado</NavLink> : null}
-          {auth.user && ['fiscal', 'escribano', 'admin'].includes(auth.user.role) ? <NavLink className={navClass} to="/supervision">Supervisi?n</NavLink> : null}
-          {auth.user && ['escribano', 'admin'].includes(auth.user.role) ? <NavLink className={navClass} to="/escribania">Escriban?a</NavLink> : null}
+          {auth.user && ['fiscal', 'escribano', 'admin'].includes(auth.user.role) ? <NavLink className={navClass} to="/supervision">Supervisión</NavLink> : null}
+          {auth.user && ['escribano', 'admin'].includes(auth.user.role) ? <NavLink className={navClass} to="/escribania">Escribanía</NavLink> : null}
           {auth.user?.role === 'admin' ? <NavLink className={navClass} to="/admin">Admin</NavLink> : null}
           <Button variant="ghost" className="ml-auto" onClick={() => { void auth.logout() }}>Salir</Button>
         </nav>
       </header>
       {update.updateAvailable ? (
         <div className="border-b border-cyan-500/40 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100" role="status">
-          Nueva versi?n disponible. Antes de actualizar verific? que tus votos est?n guardados localmente. <button className="font-bold underline" onClick={update.applyUpdate}>Aplicar actualizaci?n</button>
+          Nueva versión disponible. Antes de actualizar verificá que tus votos estén guardados localmente. <button className="font-bold underline" onClick={update.applyUpdate}>Aplicar actualización</button>
         </div>
       ) : null}
       <Outlet />

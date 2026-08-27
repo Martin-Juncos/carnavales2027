@@ -3,6 +3,6 @@ interface LastSyncIndicatorProps {
 }
 
 export function LastSyncIndicator({ lastSyncAt }: LastSyncIndicatorProps) {
-  if (!lastSyncAt) return <p className="text-xs text-slate-400">A?n no hubo sincronizaci?n exitosa.</p>
-  return <p className="text-xs text-slate-400">?ltima sincronizaci?n: {new Date(lastSyncAt).toLocaleString()}</p>
+  if (!lastSyncAt) return <p className="text-xs text-slate-400">Aún no hubo sincronización exitosa.</p>
+  return <p className="text-xs text-slate-400">Última sincronización: {new Date(lastSyncAt).toLocaleString()}</p>
 }

@@ -1,9 +1,21 @@
-const CACHE_NAME = 'carnavales2027-shell-v1'
+const CACHE_NAME = 'carnavales2027-shell-v2'
 const APP_SHELL = ['/', '/offline.html', '/manifest.webmanifest', '/icons/icon.svg']
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)))
-  self.skipWaiting()
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME)
+    await cache.addAll(APP_SHELL)
+    const shellResponse = await fetch('/')
+    if (!shellResponse.ok) throw new Error('No se pudo precachear la aplicación')
+    const html = await shellResponse.clone().text()
+    await cache.put('/', shellResponse)
+    const assets = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)]
+      .map((match) => new URL(match[1], self.location.origin))
+      .filter((url) => url.origin === self.location.origin)
+      .map((url) => url.pathname)
+    await cache.addAll([...new Set(assets)])
+    await self.skipWaiting()
+  })())
 })
 
 self.addEventListener('activate', (event) => {

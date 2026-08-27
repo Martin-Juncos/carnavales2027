@@ -9,7 +9,17 @@ import type { AuthService as AuthServiceType } from '../../src/modules/auth/auth
 import type { JuradoService as JuradoServiceType } from '../../src/modules/jurado/jurado.service'
 import type { SyncService as SyncServiceType } from '../../src/modules/jurado/sync.service'
 
-const testDatabaseUrl = process.env.TEST_DATABASE_URL
+function requireTestDatabaseUrl(): string {
+  const value = process.env.TEST_DATABASE_URL
+  if (!value) throw new Error('TEST_DATABASE_URL es obligatoria para las pruebas de integración.')
+  const databaseName = decodeURIComponent(new URL(value).pathname.slice(1))
+  if (!databaseName.endsWith('_test')) {
+    throw new Error(`TEST_DATABASE_URL debe apuntar a una base terminada en _test; recibido: ${databaseName || '(vacía)'}.`)
+  }
+  return value
+}
+
+const testDatabaseUrl = requireTestDatabaseUrl()
 const schemaName = `carnavales_test_${process.pid}_${randomUUID().replaceAll('-', '').slice(0, 8)}`
 
 let bootstrapPool: Pool
@@ -37,9 +47,8 @@ function pgCode(error: unknown): string | undefined {
     : undefined
 }
 
-describe.skipIf(!testDatabaseUrl)('PostgreSQL integrity', () => {
+describe('PostgreSQL integrity', () => {
   beforeAll(async () => {
-    if (!testDatabaseUrl) return
     bootstrapPool = new Pool({ connectionString: testDatabaseUrl })
     await bootstrapPool.query(`CREATE SCHEMA "${schemaName}"`)
 
@@ -172,6 +181,53 @@ describe.skipIf(!testDatabaseUrl)('PostgreSQL integrity', () => {
     expect(session.rows[0]?.revoked_at).toBeInstanceOf(Date)
   })
 
+  it('rejects invalid credentials, expired OTPs and exhausted attempts', async () => {
+    let deliveredCode = ''
+    const auth = new AuthServiceClass({
+      send: (_recipient, code) => {
+        deliveredCode = code
+        return Promise.resolve()
+      },
+    })
+
+    await expect(auth.requestOtp(
+      { identity: 'admin@test.local', password: 'incorrect-password' },
+      { requestId: randomUUID(), ip: '127.0.0.1' },
+    )).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' })
+
+    const expired = await auth.requestOtp(
+      { identity: 'admin@test.local', password: 'AdminPassword123!' },
+      { requestId: randomUUID() },
+    )
+    await isolatedPool.query(
+      "UPDATE otp_challenges SET expires_at = now() - interval '1 second' WHERE id = $1",
+      [expired.challengeId],
+    )
+    await expect(auth.verifyOtp(
+      { challengeId: expired.challengeId, code: deliveredCode },
+      { requestId: randomUUID() },
+    )).rejects.toMatchObject({ code: 'OTP_EXPIRED' })
+
+    const exhausted = await auth.requestOtp(
+      { identity: 'admin@test.local', password: 'AdminPassword123!' },
+      { requestId: randomUUID() },
+    )
+    for (let attempt = 1; attempt < 5; attempt += 1) {
+      await expect(auth.verifyOtp(
+        { challengeId: exhausted.challengeId, code: '000000' },
+        { requestId: randomUUID() },
+      )).rejects.toMatchObject({ code: 'INVALID_OTP' })
+    }
+    await expect(auth.verifyOtp(
+      { challengeId: exhausted.challengeId, code: '000000' },
+      { requestId: randomUUID() },
+    )).rejects.toMatchObject({ code: 'OTP_ATTEMPTS_EXCEEDED' })
+    await expect(auth.verifyOtp(
+      { challengeId: exhausted.challengeId, code: deliveredCode },
+      { requestId: randomUUID() },
+    )).rejects.toMatchObject({ code: 'OTP_ALREADY_USED' })
+  })
+
   it('creates one auditable vote and treats an identical retry as idempotent', async () => {
     const jurorId = assignedJurors[0] as string
     const actor: AuthenticatedUser = {
@@ -296,5 +352,45 @@ describe.skipIf(!testDatabaseUrl)('PostgreSQL integrity', () => {
       .rejects.toSatisfy((error: unknown) => pgCode(error) === 'P0001')
     await expect(isolatedPool.query('DELETE FROM puntuaciones WHERE id = $1', [id]))
       .rejects.toSatisfy((error: unknown) => pgCode(error) === 'P0001')
+  })
+
+  it('closes a comparsa once under concurrent retries and rejects a new logical operation', async () => {
+    const jurorId = assignedJurors[0] as string
+    const actor: AuthenticatedUser = {
+      id: jurorId,
+      nombre: 'Jurado 1',
+      email: 'jurado-1@test.local',
+      role: 'jurado',
+      sessionId: randomUUID(),
+    }
+    const operationUuid = randomUUID()
+    const input = {
+      operationUuid,
+      comparsaId,
+      clientCreatedAt: '2027-02-06T22:10:00-03:00',
+    }
+    const service = new JuradoServiceClass()
+
+    const attempts = await Promise.all(
+      Array.from({ length: 10 }, () => service.closeComparsa(actor, input, { requestId: randomUUID() })),
+    )
+
+    expect(attempts.filter((attempt) => !attempt.replayed)).toHaveLength(1)
+    expect(attempts.filter((attempt) => attempt.replayed)).toHaveLength(9)
+    const persisted = await isolatedPool.query<{ count: number }>(
+      'SELECT count(*)::int AS count FROM cierres_comparsa WHERE operation_uuid = $1',
+      [operationUuid],
+    )
+    const audit = await isolatedPool.query<{ count: number }>(
+      "SELECT count(*)::int AS count FROM audit_log WHERE operation_uuid = $1 AND accion = 'comparsa.closed_by_juror'",
+      [operationUuid],
+    )
+    expect(persisted.rows[0]?.count).toBe(1)
+    expect(audit.rows[0]?.count).toBe(1)
+
+    await expect(service.closeComparsa(actor, { ...input, clientCreatedAt: '2027-02-06T22:11:00-03:00' }, { requestId: randomUUID() }))
+      .rejects.toMatchObject({ code: 'IDEMPOTENCY_CONFLICT' })
+    await expect(service.closeComparsa(actor, { ...input, operationUuid: randomUUID() }, { requestId: randomUUID() }))
+      .rejects.toMatchObject({ code: 'COMPARSA_CLOSED' })
   })
 })

@@ -58,7 +58,7 @@ export function SupervisionPage() {
       setError(null)
       void queryClient.invalidateQueries({ queryKey: ['night-report', parsedNightId] })
     },
-    onError: (caught) => setError(caught instanceof ApiClientError ? caught.message : 'No se pudo registrar la penalizaci?n.'),
+    onError: (caught) => setError(caught instanceof ApiClientError ? caught.message : 'No se pudo registrar la penalización.'),
   })
 
   const submitPenalty = (event: FormEvent<HTMLFormElement>): void => {
@@ -77,24 +77,24 @@ export function SupervisionPage() {
     <main className="mx-auto grid max-w-7xl gap-4 px-4 py-5 xl:grid-cols-[360px_1fr]">
       <aside className="space-y-4">
         <Card>
-          <h2 className="text-xl font-bold">Supervisi?n</h2>
+          <h2 className="text-xl font-bold">Supervisión</h2>
           <label className="mt-4 block">
             <span className="text-sm font-semibold text-slate-200">Noche</span>
-            <input className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-slate-50" type="number" min="1" value={nightId} onChange={(event) => setNightId(event.target.value)} />
+            <input id="supervision-night" name="nightId" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-slate-50" type="number" min="1" value={nightId} onChange={(event) => setNightId(event.target.value)} />
           </label>
-          <p className="mt-3 text-sm text-slate-400">Actualizaci?n por polling controlado. No se asumen WebSockets.</p>
+          <p className="mt-3 text-sm text-slate-400">Actualización por polling controlado. No se asumen WebSockets.</p>
         </Card>
 
         {canCreatePenalty ? (
           <Card>
-            <h2 className="text-lg font-bold">Registrar penalizaci?n</h2>
+            <h2 className="text-lg font-bold">Registrar penalización</h2>
             <form className="mt-3 space-y-3" onSubmit={submitPenalty}>
-              <label className="block text-sm font-semibold">Comparsa ID<input className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={penalty.comparsaId} onChange={(event) => setPenalty({ ...penalty, comparsaId: event.target.value })} inputMode="numeric" /></label>
-              <label className="block text-sm font-semibold">Puntos<input className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={penalty.puntos} onChange={(event) => setPenalty({ ...penalty, puntos: event.target.value })} inputMode="numeric" /></label>
-              <label className="block text-sm font-semibold">C?digo de motivo opcional<input className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={penalty.motivoCodigo} onChange={(event) => setPenalty({ ...penalty, motivoCodigo: event.target.value })} /></label>
-              <label className="block text-sm font-semibold">Motivo<textarea className="mt-1 min-h-24 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2" value={penalty.motivoDescripcion} onChange={(event) => setPenalty({ ...penalty, motivoDescripcion: event.target.value })} /></label>
+              <label className="block text-sm font-semibold">Comparsa ID<input id="penalty-comparsa" name="comparsaId" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={penalty.comparsaId} onChange={(event) => setPenalty({ ...penalty, comparsaId: event.target.value })} inputMode="numeric" /></label>
+              <label className="block text-sm font-semibold">Puntos<input id="penalty-points" name="puntos" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={penalty.puntos} onChange={(event) => setPenalty({ ...penalty, puntos: event.target.value })} inputMode="numeric" /></label>
+              <label className="block text-sm font-semibold">Código de motivo opcional<input id="penalty-code" name="motivoCodigo" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={penalty.motivoCodigo} onChange={(event) => setPenalty({ ...penalty, motivoCodigo: event.target.value })} /></label>
+              <label className="block text-sm font-semibold">Motivo<textarea id="penalty-reason" name="motivoDescripcion" className="mt-1 min-h-24 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2" value={penalty.motivoDescripcion} onChange={(event) => setPenalty({ ...penalty, motivoDescripcion: event.target.value })} /></label>
               {error ? <p className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-100" role="alert">{error}</p> : null}
-              <Button type="submit" className="w-full">Revisar penalizaci?n</Button>
+              <Button type="submit" className="w-full">Revisar penalización</Button>
             </form>
           </Card>
         ) : null}
@@ -116,7 +116,7 @@ export function SupervisionPage() {
                   {nightState.data.assignments.map((assignment) => (
                     <div key={assignment.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
                       <p className="font-semibold">{assignment.nombre}</p>
-                      <p className="text-sm text-slate-400">{assignment.estado} ? {new Date(assignment.asignadoAt).toLocaleString()}</p>
+                      <p className="text-sm text-slate-400">{assignment.estado} · {new Date(assignment.asignadoAt).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
@@ -127,7 +127,7 @@ export function SupervisionPage() {
                   {nightState.data.progress.map((row) => (
                     <div key={row.comparsaId} className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
                       <p className="font-semibold">{row.comparsaNombre}</p>
-                      <p className="text-sm text-slate-400">{row.votesReceived} votos recibidos ? {row.jurorCloses} cierres de jurado</p>
+                      <p className="text-sm text-slate-400">{row.votesReceived} votos recibidos · {row.jurorCloses} cierres de jurado</p>
                     </div>
                   ))}
                 </div>
@@ -155,7 +155,7 @@ export function SupervisionPage() {
           <div className="mt-3 space-y-2">
             {(events.data ?? []).slice(-10).map((event) => (
               <div key={event.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">
-                <p className="font-semibold">#{event.id} ? {event.tipo}</p>
+                <p className="font-semibold">#{event.id} · {event.tipo}</p>
                 <p className="text-slate-400">{new Date(event.createdAt).toLocaleString()}</p>
               </div>
             ))}
@@ -165,15 +165,15 @@ export function SupervisionPage() {
 
       <Modal
         open={Boolean(confirmPenalty)}
-        title="Confirmar penalizaci?n"
-        description="La penalizaci?n queda auditada. No se borra f?sicamente; una anulaci?n requiere otro evento autorizado."
-        confirmLabel="Registrar penalizaci?n"
+        title="Confirmar penalización"
+        description="La penalización queda auditada. No se borra físicamente; una anulación requiere otro evento autorizado."
+        confirmLabel="Registrar penalización"
         danger
         busy={penaltyMutation.isPending}
         onCancel={() => setConfirmPenalty(null)}
         onConfirm={() => { if (confirmPenalty) penaltyMutation.mutate(confirmPenalty) }}
       >
-        {confirmPenalty ? <p className="text-slate-100">Comparsa #{confirmPenalty.comparsaId} ? {confirmPenalty.puntos} punto(s)</p> : null}
+        {confirmPenalty ? <p className="text-slate-100">Comparsa #{confirmPenalty.comparsaId} · {confirmPenalty.puntos} punto(s)</p> : null}
       </Modal>
     </main>
   )

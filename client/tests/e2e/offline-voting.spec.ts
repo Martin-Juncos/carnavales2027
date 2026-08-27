@@ -3,8 +3,8 @@ import { test, expect, type Route } from '@playwright/test'
 const user = { id: '11111111-1111-4111-8111-111111111111', nombre: 'Jurado Uno', email: 'jurado@example.com', role: 'jurado', sessionId: 'session-1' }
 const context = {
   assignment: { id: 'assignment-1', night: { id: 1, name: 'Noche 1', status: 'open' } },
-  comparsas: [{ id: 10, nombre: 'Ar? Ber?', orden: 1 }],
-  items: [{ id: 2, nombre: 'M?sica', parentItemId: null, orden: 1 }],
+  comparsas: [{ id: 10, nombre: 'Ará Berá', orden: 1 }],
+  items: [{ id: 2, nombre: 'Música', parentItemId: null, orden: 1 }],
   votes: [],
   closes: [],
 }
@@ -21,7 +21,7 @@ test('juror vote survives lost connectivity, reloads, and syncs idempotently', a
   })
   await page.route('**/api/v1/auth/me', (route) => {
     if (!loggedIn) {
-      return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: { code: 'AUTH_REQUIRED', message: 'Autenticaci?n requerida.', requestId: 'request-1', retryable: false } }) })
+      return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: { code: 'AUTH_REQUIRED', message: 'Autenticación requerida.', requestId: 'request-1', retryable: false } }) })
     }
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { user }, meta: {} }) })
   })
@@ -51,7 +51,7 @@ test('juror vote survives lost connectivity, reloads, and syncs idempotently', a
   await page.getByLabel(/otp/i).fill('123456')
   await page.getByRole('button', { name: /entrar/i }).click()
 
-  await expect(page.getByRole('heading', { name: 'Ar? Ber?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Ará Berá' })).toBeVisible()
   await page.getByRole('button', { name: /nota 4/i }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Confirmar nota' }).click()
   await expect(page.getByText('Nota bloqueada')).toBeVisible()

@@ -15,7 +15,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "node scripts/run-e2e.mjs"
+    "test:e2e": "npm run test:e2e:mock",
+    "test:e2e:mock": "node scripts/run-e2e.mjs",
+    "test:system": "npm --prefix ../api run test:system"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",

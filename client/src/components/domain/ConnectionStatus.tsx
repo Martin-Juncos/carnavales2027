@@ -12,7 +12,7 @@ export function ConnectionStatus({ connection, sync }: ConnectionStatusProps) {
   const pending = sync.pending + sync.syncing
   const tone = !connection.apiReachable ? 'warning' : hasProblems ? 'danger' : pending > 0 ? 'info' : 'success'
   const syncText = hasProblems
-    ? `${sync.conflicts + sync.rejected} operaciones requieren revisi?n`
+    ? `${sync.conflicts + sync.rejected} operaciones requieren revisión`
     : sync.syncing > 0
       ? 'Sincronizando'
       : pending > 0

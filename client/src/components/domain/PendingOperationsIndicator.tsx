@@ -11,12 +11,12 @@ export function PendingOperationsIndicator({ summary }: PendingOperationsIndicat
 
   return (
     <Card className="border-yellow-500/30 bg-yellow-500/10">
-      <p className="font-semibold text-yellow-100">Estado de sincronizaci?n</p>
+      <p className="font-semibold text-yellow-100">Estado de sincronización</p>
       <p className="mt-1 text-sm text-yellow-50">
-        {pending > 0 ? `${pending} cambio(s) guardados en este dispositivo todav?a no fueron confirmados por el servidor.` : 'No hay pendientes de red.'}
+        {pending > 0 ? `${pending} cambio(s) guardados en este dispositivo todavía no fueron confirmados por el servidor.` : 'No hay pendientes de red.'}
       </p>
       {summary.conflicts + summary.rejected > 0 ? (
-        <p className="mt-2 text-sm text-rose-100">{summary.conflicts + summary.rejected} operaci?n(es) quedaron en conflicto o rechazadas. No se eliminaron: requieren revisi?n.</p>
+        <p className="mt-2 text-sm text-rose-100">{summary.conflicts + summary.rejected} operación(es) quedaron en conflicto o rechazadas. No se eliminaron: requieren revisión.</p>
       ) : null}
     </Card>
   )

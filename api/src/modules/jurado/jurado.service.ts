@@ -82,13 +82,21 @@ export class JuradoService {
     }
 
     try {
-      const vote = await withTransaction(async (client) => {
+      const outcome = await withTransaction(async (client) => {
         const assignment = await repository.lockAssignment(user.id, client)
         if (!assignment) throw new AppError('JUROR_NOT_ASSIGNED', 'El jurado no tiene una asignación activa.', 403)
         if (assignment.assignment_status !== 'active') throw new AppError('ASSIGNMENT_INACTIVE', 'La asignación del jurado no está activa.', 409)
         if (assignment.noche_estado !== 'open') throw new AppError('NIGHT_CLOSED', 'La noche no está abierta.', 409)
 
         await repository.lockJurorComparsaScope(user.id, input.comparsaId, client)
+
+        const concurrentOperation = await repository.findVoteByOperation(input.operationUuid, client)
+        if (concurrentOperation) {
+          if (concurrentOperation.request_hash !== requestHash) {
+            return { kind: 'idempotency_conflict' as const }
+          }
+          return { kind: 'vote' as const, record: concurrentOperation, replayed: true }
+        }
 
         const comparsa = await repository.lockComparsa(input.comparsaId, client)
         if (!comparsa || !comparsa.activo || comparsa.noche_id !== assignment.noche_id) {
@@ -127,9 +135,13 @@ export class JuradoService {
           deviceId: context.deviceId,
           metadata: { comparsaId: input.comparsaId, itemId: input.itemId, value: input.valor },
         }, client)
-        return created
+        return { kind: 'vote' as const, record: created, replayed: false }
       })
-      return { vote: serializeVote(vote), replayed: false }
+      if (outcome.kind === 'idempotency_conflict') {
+        await auditIdempotencyConflict(user, input.operationUuid, context, 'vote')
+        throw errors.conflict('IDEMPOTENCY_CONFLICT', 'El operationUuid ya representa otra operación.')
+      }
+      return { vote: serializeVote(outcome.record), replayed: outcome.replayed }
     } catch (error) {
       if (!isUniqueViolation(error)) throw error
       const concurrent = await repository.findVoteByOperation(input.operationUuid)
@@ -156,17 +168,26 @@ export class JuradoService {
     }
 
     try {
-      const close = await withTransaction(async (client) => {
+      const outcome = await withTransaction(async (client) => {
         const assignment = await repository.lockAssignment(user.id, client)
         if (!assignment) throw new AppError('JUROR_NOT_ASSIGNED', 'El jurado no tiene una asignación activa.', 403)
         if (assignment.assignment_status !== 'active') throw new AppError('ASSIGNMENT_INACTIVE', 'La asignación del jurado no está activa.', 409)
         if (assignment.noche_estado !== 'open') throw new AppError('NIGHT_CLOSED', 'La noche no está abierta.', 409)
         await repository.lockJurorComparsaScope(user.id, input.comparsaId, client)
+
+        const concurrentOperation = await repository.findCloseByOperation(input.operationUuid, client)
+        if (concurrentOperation) {
+          if (concurrentOperation.request_hash !== requestHash) {
+            return { kind: 'idempotency_conflict' as const }
+          }
+          return { kind: 'close' as const, record: concurrentOperation, replayed: true }
+        }
+
         const comparsa = await repository.lockComparsa(input.comparsaId, client)
         if (!comparsa || !comparsa.activo || comparsa.noche_id !== assignment.noche_id) throw errors.forbidden()
 
         const logicalClose = await repository.findLogicalClose(user.id, input.comparsaId, client)
-        if (logicalClose) return logicalClose
+        if (logicalClose) throw new AppError('COMPARSA_CLOSED', 'La comparsa ya fue cerrada por el jurado.', 409)
         const missing = await repository.missingScorableItems(user.id, input.comparsaId, client)
         if (missing.length > 0) {
           throw new AppError('COMPARSA_INCOMPLETE', 'Faltan items por puntuar.', 409, { missing })
@@ -198,9 +219,13 @@ export class JuradoService {
           nightId: assignment.noche_id,
           payload: { closeId: created.id },
         }, client)
-        return created
+        return { kind: 'close' as const, record: created, replayed: false }
       })
-      return { close: serializeClose(close), replayed: false }
+      if (outcome.kind === 'idempotency_conflict') {
+        await auditIdempotencyConflict(user, input.operationUuid, context, 'close_comparsa')
+        throw errors.conflict('IDEMPOTENCY_CONFLICT', 'El operationUuid ya representa otra operación.')
+      }
+      return { close: serializeClose(outcome.record), replayed: outcome.replayed }
     } catch (error) {
       if (!isUniqueViolation(error)) throw error
       const concurrent = await repository.findCloseByOperation(input.operationUuid)

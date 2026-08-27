@@ -45,7 +45,7 @@ export function useConnectionStatus(pollMs = 20_000): ConnectionStatusState {
   }, [pollMs])
 
   const label = !browserOnline
-    ? 'Sin conexi?n'
+    ? 'Sin conexión'
     : checking
       ? 'Verificando API'
       : apiReachable
