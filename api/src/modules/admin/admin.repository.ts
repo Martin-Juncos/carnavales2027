@@ -6,12 +6,14 @@ import type {
   CreateComparsaInput,
   CreateItemInput,
   CreateNightInput,
+  ReorderComparsasInput,
   CreateUserInput,
   UpdateComparsaInput,
   UpdateItemInput,
   UpdateNightInput,
   UpdateUserInput,
 } from './admin.schemas'
+import { fixedComparsaNames } from './fixed-comparsas'
 
 export interface PublicUserRow {
   id: string
@@ -41,16 +43,15 @@ export async function createUser(input: CreateUserInput, passwordHash: string, c
   return result.rows[0]
 }
 
-export async function updateUser(id: string, input: UpdateUserInput, passwordHash?: string, client?: DatabaseClient) {
+export async function updateUser(id: string, input: UpdateUserInput, client?: DatabaseClient) {
   const result = await query<PublicUserRow>(
     `UPDATE users SET
       nombre = COALESCE($2, nombre),
       email = COALESCE($3, email),
-      password_hash = COALESCE($4, password_hash),
-      role = COALESCE($5, role),
-      activo = COALESCE($6, activo)
+      role = COALESCE($4, role),
+      activo = COALESCE($5, activo)
      WHERE id = $1 RETURNING ${publicUserColumns}`,
-    [id, input.nombre ?? null, input.email?.toLowerCase() ?? null, passwordHash ?? null, input.role ?? null, input.activo ?? null],
+    [id, input.nombre ?? null, input.email?.toLowerCase() ?? null, input.role ?? null, input.activo ?? null],
     client,
   )
   return result.rows[0]
@@ -91,6 +92,26 @@ export async function createNight(input: CreateNightInput, client?: DatabaseClie
   )).rows[0]
 }
 
+export async function seedFixedComparsasForNight(nightId: number, client: DatabaseClient) {
+  const result = await query(
+    `WITH fixed(nombre, orden) AS (
+       SELECT * FROM unnest($2::text[], $3::int[])
+     )
+     INSERT INTO comparsas (nombre, noche_id, orden, activo)
+     SELECT fixed.nombre, $1, fixed.orden, true
+     FROM fixed
+     WHERE NOT EXISTS (
+       SELECT 1 FROM comparsas c
+       WHERE c.noche_id = $1 AND lower(c.nombre) = lower(fixed.nombre)
+     )
+     RETURNING id, nombre, noche_id AS "nocheId", orden, activo,
+               created_at AS "createdAt", updated_at AS "updatedAt"`,
+    [nightId, fixedComparsaNames, fixedComparsaNames.map((_, index) => index + 1)],
+    client,
+  )
+  return result.rows
+}
+
 export async function updateNight(id: number, input: UpdateNightInput, client?: DatabaseClient) {
   return (await query(
     `UPDATE noches SET nombre = COALESCE($2,nombre), fecha = COALESCE($3,fecha)
@@ -119,11 +140,41 @@ export async function createComparsa(input: CreateComparsaInput, client?: Databa
 
 export async function updateComparsa(id: number, input: UpdateComparsaInput, client?: DatabaseClient) {
   return (await query(
-    `UPDATE comparsas SET nombre = COALESCE($2,nombre), orden = COALESCE($3,orden), activo = COALESCE($4,activo)
+    `UPDATE comparsas SET orden = $2
      WHERE id = $1 RETURNING id, nombre, noche_id AS "nocheId", orden, activo, created_at AS "createdAt", updated_at AS "updatedAt"`,
-    [id, input.nombre ?? null, input.orden ?? null, input.activo ?? null],
+    [id, input.orden],
     client,
   )).rows[0]
+}
+
+export async function getComparsasForNight(nightId: number, client: PoolClient) {
+  return (await query<{ id: string; nombre: string }>(
+    'SELECT id, nombre FROM comparsas WHERE noche_id = $1 FOR UPDATE',
+    [nightId],
+    client,
+  )).rows
+}
+
+export async function reorderComparsas(
+  nightId: number,
+  input: ReorderComparsasInput,
+  client: PoolClient,
+) {
+  for (const item of input.comparsas) {
+    await query('UPDATE comparsas SET orden = $3 + 10000 WHERE noche_id = $1 AND id = $2', [nightId, item.comparsaId, item.orden], client)
+  }
+  for (const item of input.comparsas) {
+    await query('UPDATE comparsas SET orden = $3 WHERE noche_id = $1 AND id = $2', [nightId, item.comparsaId, item.orden], client)
+  }
+  return (await query(
+    `SELECT c.id, c.nombre, c.noche_id AS "nocheId", n.nombre AS "nocheNombre", c.orden, c.activo,
+            c.created_at AS "createdAt", c.updated_at AS "updatedAt"
+     FROM comparsas c JOIN noches n ON n.id = c.noche_id
+     WHERE c.noche_id = $1
+     ORDER BY c.orden`,
+    [nightId],
+    client,
+  )).rows
 }
 
 export async function listItems() {

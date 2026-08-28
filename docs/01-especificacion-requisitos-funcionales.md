@@ -16,7 +16,7 @@ Define qué debe hacer el Sistema de Votación Digital de Carnavales 2027. Es la
 ## 3. Configuración del concurso
 El Administrador puede:
 - Crear/editar/desactivar noches.
-- Crear/editar/desactivar comparsas y definir su orden de presentación.
+- Definir el orden de presentación por noche de las comparsas oficiales precreadas.
 - Crear/editar/desactivar ítems y subítems, incluyendo orden y jerarquía.
 - Crear/desactivar usuarios.
 - Asignar jurados a noches.
@@ -26,6 +26,11 @@ El Administrador puede:
 - Existen **9 jurados**, con **3 jurados asignados por noche**.
 - Un jurado **no elige libremente la noche**: el backend determina su asignación activa.
 - El sistema debe impedir una cuarta asignación activa a la misma noche.
+
+### Regla de comparsas oficiales
+- Las comparsas oficiales son: **Tropicala**, **Ita Vera**, **Arami**, **Aymara**, **Oh Bahia** y **Poramba**.
+- Todas pasan en todas las noches.
+- El Administrador no crea, renombra ni desactiva comparsas oficiales durante la operación normal; solo modifica el orden de pasada de cada noche.
 
 ## 4. Autenticación y sesión
 - El acceso utiliza identidad previamente creada por Administración.

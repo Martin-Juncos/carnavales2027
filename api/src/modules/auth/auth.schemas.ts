@@ -2,8 +2,9 @@ import { z } from 'zod'
 
 export const requestOtpSchema = z.object({
   body: z.object({
-    identity: z.string().trim().min(3).max(254),
-    password: z.string().min(8).max(200),
+    nombre: z.string().trim().min(2).max(150),
+    email: z.email(),
+    dni: z.string().trim().min(5).max(20),
   }).strict(),
 })
 

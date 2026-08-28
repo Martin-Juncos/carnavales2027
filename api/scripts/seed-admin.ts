@@ -7,11 +7,10 @@ const input = z.object({
   ADMIN_NAME: z.string().min(2),
   ADMIN_DNI: z.string().min(5),
   ADMIN_EMAIL: z.email(),
-  ADMIN_PASSWORD: z.string().min(12),
 }).parse(process.env)
 
 async function main(): Promise<void> {
-  const passwordHash = await argon2.hash(input.ADMIN_PASSWORD)
+  const passwordHash = await argon2.hash(input.ADMIN_DNI)
   await pool.query(
     `INSERT INTO users (nombre, dni, email, password_hash, role)
      VALUES ($1,$2,$3,$4,'admin')

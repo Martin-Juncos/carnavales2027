@@ -9,6 +9,7 @@ interface ModalProps {
   cancelLabel?: string
   danger?: boolean
   busy?: boolean
+  confirmDisabled?: boolean
   children?: ReactNode
   onConfirm: () => void
   onCancel: () => void
@@ -22,6 +23,7 @@ export function Modal({
   cancelLabel = 'Cancelar',
   danger = false,
   busy = false,
+  confirmDisabled = false,
   children,
   onConfirm,
   onCancel,
@@ -60,7 +62,7 @@ export function Modal({
         {children ? <div className="mt-4">{children}</div> : null}
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Button type="button" variant="secondary" size="lg" onClick={onCancel} disabled={busy}>{cancelLabel}</Button>
-          <Button type="button" variant={danger ? 'danger' : 'primary'} size="lg" onClick={onConfirm} disabled={busy}>{busy ? 'Procesando...' : confirmLabel}</Button>
+          <Button type="button" variant={danger ? 'danger' : 'primary'} size="lg" onClick={onConfirm} disabled={busy || confirmDisabled}>{busy ? 'Procesando...' : confirmLabel}</Button>
         </div>
       </div>
     </div>

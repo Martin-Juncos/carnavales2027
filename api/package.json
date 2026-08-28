@@ -20,7 +20,8 @@
     "system:serve": "tsx src/server.ts",
     "db:migrate": "tsx src/database/migrate.ts up",
     "db:rollback": "tsx src/database/migrate.ts down",
-    "seed:admin": "tsx scripts/seed-admin.ts"
+    "seed:admin": "tsx scripts/seed-admin.ts",
+    "seed:core-users": "tsx scripts/seed-core-users.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
@@ -36,6 +37,7 @@
     "pg": "^8.23.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
+    "resend": "^6.24.0",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.4.3"
   },

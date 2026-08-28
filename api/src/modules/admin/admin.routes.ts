@@ -9,6 +9,7 @@ import {
   createUserSchema,
   numericIdSchema,
   replaceAssignmentSchema,
+  reorderComparsasSchema,
   updateComparsaSchema,
   updateItemSchema,
   updateNightSchema,
@@ -32,6 +33,7 @@ export function createAdminRouter(): Router {
   router.get('/comparsas', controller.listComparsas)
   router.post('/comparsas', validate(createComparsaSchema), controller.createComparsa)
   router.patch('/comparsas/:id', validate(updateComparsaSchema), controller.updateComparsa)
+  router.patch('/noches/:id/comparsas/orden', validate(reorderComparsasSchema), controller.reorderComparsas)
   router.get('/items', controller.listItems)
   router.post('/items', validate(createItemSchema), controller.createItem)
   router.patch('/items/:id', validate(updateItemSchema), controller.updateItem)

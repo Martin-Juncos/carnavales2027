@@ -23,10 +23,12 @@ const schema = z.object({
   COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('lax'),
   OTP_TTL_MINUTES: z.coerce.number().int().positive().default(5),
   OTP_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(20).default(5),
+  OTP_DEV_LOG: booleanString.default(false),
   AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900_000),
   AUTH_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(10),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900_000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(100),
+  RESEND_API_KEY: z.string().optional(),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().int().positive().default(587),
   SMTP_SECURE: booleanString.default(false),
@@ -48,8 +50,8 @@ export function loadEnvironment(source: NodeJS.ProcessEnv = process.env): Enviro
     if (!parsed.COOKIE_SECURE) {
       throw new Error('COOKIE_SECURE must be true in production')
     }
-    if (!parsed.SMTP_HOST) {
-      throw new Error('SMTP_HOST is required in production')
+    if (!parsed.RESEND_API_KEY && !parsed.SMTP_HOST) {
+      throw new Error('RESEND_API_KEY or SMTP_HOST is required in production')
     }
   }
 

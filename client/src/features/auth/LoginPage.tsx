@@ -7,15 +7,22 @@ import { useAuth } from './AuthProvider'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
+import { Modal } from '../../components/ui/Modal'
+import { PasswordInput } from '../../components/ui/PasswordInput'
 
-const loginSchema = z.object({ identity: z.string().trim().min(3), password: z.string().min(8) })
+const loginSchema = z.object({
+  nombre: z.string().trim().min(2, 'Ingresá tu nombre.'),
+  email: z.string().email('Ingresá un email válido.'),
+  dni: z.string().trim().min(5, 'Ingresá tu DNI.'),
+})
 const otpSchema = z.object({ code: z.string().regex(/^\d{6}$/, 'Ingresá el código de 6 dígitos.') })
 
 export function LoginPage() {
   const auth = useAuth()
   const connection = useConnectionStatus()
-  const [identity, setIdentity] = useState('')
-  const [password, setPassword] = useState('')
+  const [nombre, setNombre] = useState('')
+  const [email, setEmail] = useState('')
+  const [dni, setDni] = useState('')
   const [code, setCode] = useState('')
   const [challengeId, setChallengeId] = useState<string | null>(null)
   const [expiresIn, setExpiresIn] = useState<number | null>(null)
@@ -29,19 +36,18 @@ export function LoginPage() {
     setBusy(true)
     setError(null)
     try {
-      const parsed = loginSchema.parse({ identity, password })
+      const parsed = loginSchema.parse({ nombre, email, dni })
       const challenge = await auth.requestOtp(parsed)
       setChallengeId(challenge.challengeId)
       setExpiresIn(challenge.expiresIn)
     } catch (caught) {
-      setError(caught instanceof ApiClientError ? caught.message : 'Revisá usuario y contraseña.')
+      setError(caught instanceof ApiClientError ? caught.message : 'Revisá nombre, email y DNI.')
     } finally {
       setBusy(false)
     }
   }
 
-  const submitOtp = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault()
+  const verifyCode = async (): Promise<void> => {
     if (!challengeId) return
     setBusy(true)
     setError(null)
@@ -53,6 +59,11 @@ export function LoginPage() {
     } finally {
       setBusy(false)
     }
+  }
+
+  const submitOtp = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault()
+    await verifyCode()
   }
 
   return (
@@ -69,33 +80,43 @@ export function LoginPage() {
             <Badge tone={connection.apiReachable ? 'success' : 'warning'}>{connection.label}</Badge>
           </div>
 
-          {!challengeId ? (
-            <form className="space-y-4" onSubmit={(event) => { void submitCredentials(event) }}>
+          <form className="space-y-4" onSubmit={(event) => { void submitCredentials(event) }}>
               <label className="block">
-                <span className="text-sm font-semibold text-slate-200">Email o DNI</span>
-                <input id="login-identity" name="identity" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-base text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={identity} onChange={(event) => setIdentity(event.target.value)} autoComplete="username" />
+                <span className="text-sm font-semibold text-slate-200">Nombre</span>
+                <input id="login-name" name="nombre" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-base text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={nombre} onChange={(event) => setNombre(event.target.value)} autoComplete="name" />
               </label>
               <label className="block">
-                <span className="text-sm font-semibold text-slate-200">Contraseña</span>
-                <input id="login-password" name="password" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-base text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" />
+                <span className="text-sm font-semibold text-slate-200">Email</span>
+                <input id="login-email" name="email" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-base text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" />
+              </label>
+              <label className="block">
+                <span className="text-sm font-semibold text-slate-200">DNI</span>
+                <PasswordInput id="login-dni" name="dni" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-base text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={dni} onChange={(event) => setDni(event.target.value)} autoComplete="current-password" inputMode="numeric" toggleLabel="Mostrar u ocultar DNI" />
               </label>
               {error ? <p className="rounded-2xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-100" role="alert">{error}</p> : null}
               <Button type="submit" size="lg" className="w-full" disabled={busy}>{busy ? 'Solicitando código...' : 'Solicitar código'}</Button>
             </form>
-          ) : (
-            <form className="space-y-4" onSubmit={(event) => { void submitOtp(event) }}>
-              <p className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 p-3 text-sm text-cyan-100">Te enviamos un código de 6 dígitos. {expiresIn ? `Expira en ${Math.round(expiresIn / 60)} min.` : null}</p>
-              <label className="block">
-                <span className="text-sm font-semibold text-slate-200">Código OTP</span>
-                <input id="login-otp" name="otp" className="mt-2 min-h-14 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-center text-2xl tracking-[0.35em] text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" />
-              </label>
-              {error ? <p className="rounded-2xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-100" role="alert">{error}</p> : null}
-              <Button type="submit" size="lg" className="w-full" disabled={busy || code.length !== 6}>{busy ? 'Verificando...' : 'Entrar'}</Button>
-              <Button type="button" variant="ghost" className="w-full" onClick={() => { setChallengeId(null); setCode('') }} disabled={busy}>Cambiar credenciales</Button>
-            </form>
-          )}
         </Card>
       </div>
+      <Modal
+        open={Boolean(challengeId)}
+        title="Confirmar autenticación"
+        description={expiresIn ? `Te enviamos un código de 6 dígitos. Expira en ${Math.round(expiresIn / 60)} min.` : 'Te enviamos un código de 6 dígitos.'}
+        confirmLabel="Entrar"
+        cancelLabel="Cambiar datos"
+        busy={busy}
+        confirmDisabled={code.length !== 6}
+        onCancel={() => { setChallengeId(null); setCode(''); setError(null) }}
+        onConfirm={() => { void verifyCode() }}
+      >
+        <form className="space-y-4" onSubmit={(event) => { void submitOtp(event) }}>
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-200">Código OTP</span>
+            <input id="login-otp" name="otp" className="mt-2 min-h-14 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-center text-2xl tracking-[0.35em] text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" autoFocus />
+          </label>
+          {error ? <p className="rounded-2xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-100" role="alert">{error}</p> : null}
+        </form>
+      </Modal>
     </main>
   )
 }

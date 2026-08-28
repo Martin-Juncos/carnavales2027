@@ -2,8 +2,9 @@ import { apiClient } from './apiClient'
 import type { AuthenticatedUser } from '../types/domain'
 
 export interface LoginRequest {
-  identity: string
-  password: string
+  nombre: string
+  email: string
+  dni: string
 }
 
 export interface OtpChallenge {

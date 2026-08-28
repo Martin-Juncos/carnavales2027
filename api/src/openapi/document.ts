@@ -101,7 +101,7 @@ route({
   path: '/auth/login',
   summary: 'Validar credenciales y solicitar OTP',
   request: { body: requestOtpSchema.shape.body },
-  requestExample: { identity: 'jurado@example.com', password: 'contraseña-segura' },
+  requestExample: { nombre: 'Martín Juncos', email: 'jurado@example.com', dni: '25609038' },
   secured: false,
 })
 route({ method: 'post', path: '/auth/otp/request', summary: 'Solicitar desafío OTP', request: { body: requestOtpSchema.shape.body }, secured: false })

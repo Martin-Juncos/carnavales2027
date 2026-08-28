@@ -20,6 +20,20 @@
 - `POST /auth/logout`
 - `GET /auth/me`
 
+### Solicitar OTP
+`POST /auth/login` y `POST /auth/otp/request` validan identidad operativa y envían un código al correo del usuario.
+
+Request:
+```json
+{
+  "nombre": "Nombre Apellido",
+  "email": "jurado@example.com",
+  "dni": "25609038"
+}
+```
+
+El DNI actúa como clave operativa del usuario. No existe una contraseña separada para el login. El código OTP no se devuelve en la respuesta ni debe registrarse en logs.
+
 ## 3. Jurado
 - `GET /jurado/contexto` — noche asignada, comparsas, ítems, progreso y estado.
 - `POST /jurado/votos` — crea voto idempotente.
@@ -59,9 +73,11 @@ Respuesta exitosa: `201` la primera vez; un reintento idéntico puede responder 
 Operaciones implementadas:
 - `GET|POST /admin/users` y `PATCH /admin/users/:id`
 - `GET|POST /admin/noches` y `PATCH /admin/noches/:id`
-- `GET|POST /admin/comparsas` y `PATCH /admin/comparsas/:id`
+- `GET /admin/comparsas`, `PATCH /admin/comparsas/:id` y `PATCH /admin/noches/:id/comparsas/orden`
 - `GET|POST /admin/items` y `PATCH /admin/items/:id`
 - `GET|POST /admin/asignaciones`
+
+Las comparsas oficiales están predefinidas y se crean automáticamente por noche. `PATCH /admin/comparsas/:id` solo acepta `{ "orden": number }`; el endpoint bulk por noche recibe `{ "comparsas": [{ "comparsaId": number, "orden": number }] }`.
 
 Operaciones críticas:
 - `POST /admin/noches/:id/abrir`
@@ -81,6 +97,8 @@ Operaciones críticas:
 - `INVALID_SCORE`
 - `VOTE_ALREADY_CONFIRMED`
 - `COMPARSA_INCOMPLETE`
+- `COMPARSA_CATALOG_FIXED`
+- `COMPARSA_ONLY_ORDER_MUTABLE`
 - `IDEMPOTENCY_CONFLICT`
 - `SYNC_REVIEW_REQUIRED`
 - `RATE_LIMITED`

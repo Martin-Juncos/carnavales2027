@@ -11,6 +11,7 @@
 - Un voto confirmado no se modifica ni elimina.
 - Un ítem padre con hijos es calculado; un ítem hoja es puntuable.
 - No se descartan nota máxima ni mínima con la información disponible actualmente.
+- Las comparsas oficiales son Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba; participan todas las noches y solo cambia su orden de pasada por noche.
 
 ## 2. Asignación de jurados
 - Una noche admite como máximo 3 asignaciones activas de jurado.

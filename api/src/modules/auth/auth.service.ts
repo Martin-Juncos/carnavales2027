@@ -1,5 +1,4 @@
 import { randomInt, randomUUID } from 'node:crypto'
-import argon2 from 'argon2'
 import { env } from '../../config/env'
 import { withTransaction } from '../../database/pool'
 import { AppError } from '../../shared/errors/app-error'
@@ -16,17 +15,19 @@ interface RequestContext {
   userAgent?: string
 }
 
-const dummyPasswordHash = argon2.hash('invalid-credential-placeholder')
+function normalizeName(value: string): string {
+  return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('es-AR')
+}
 
 export class AuthService {
   constructor(private readonly delivery: OtpDelivery) {}
 
   async requestOtp(input: RequestOtpInput, context: RequestContext): Promise<{ challengeId: string; expiresIn: number }> {
-    const user = await repository.findUserByIdentity(input.identity)
-    const passwordHash = user?.password_hash ?? (await dummyPasswordHash)
-    const validPassword = await argon2.verify(passwordHash, input.password)
+    const user = await repository.findUserByEmail(input.email)
+    const validName = user ? normalizeName(user.nombre) === normalizeName(input.nombre) : false
+    const validDni = user ? user.dni === input.dni.trim() : false
 
-    if (!user || !user.activo || !validPassword) {
+    if (!user || !user.activo || !validName || !validDni) {
       await writeAudit({
         action: 'auth.login_failed',
         entity: 'auth',

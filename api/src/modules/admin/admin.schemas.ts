@@ -8,7 +8,6 @@ const createUserBody = z.object({
   nombre: z.string().trim().min(2).max(150),
   dni: z.string().trim().min(5).max(20),
   email: z.email(),
-  password: z.string().min(12).max(200),
   role: z.enum(roles),
   activo: z.boolean().default(true),
 }).strict()
@@ -22,7 +21,15 @@ const createComparsaBody = z.object({
   orden: z.coerce.number().int().positive(),
   activo: z.boolean().default(true),
 }).strict()
-const updateComparsaBody = createComparsaBody.omit({ nocheId: true }).partial().refine((value) => Object.keys(value).length > 0)
+const updateComparsaBody = z.object({
+  orden: z.coerce.number().int().positive(),
+}).strict()
+const reorderComparsasBody = z.object({
+  comparsas: z.array(z.object({
+    comparsaId: z.coerce.number().int().positive(),
+    orden: z.coerce.number().int().positive(),
+  }).strict()).min(1),
+}).strict()
 const createItemBody = z.object({
   nombre: z.string().trim().min(2).max(200),
   parentItemId: z.coerce.number().int().positive().nullable().optional(),
@@ -37,6 +44,7 @@ export const createNightSchema = z.object({ body: createNightBody })
 export const updateNightSchema = z.object({ params: numericParams, body: updateNightBody })
 export const createComparsaSchema = z.object({ body: createComparsaBody })
 export const updateComparsaSchema = z.object({ params: numericParams, body: updateComparsaBody })
+export const reorderComparsasSchema = z.object({ params: numericParams, body: reorderComparsasBody })
 export const createItemSchema = z.object({ body: createItemBody })
 export const updateItemSchema = z.object({ params: numericParams, body: updateItemBody })
 export const numericIdSchema = z.object({ params: numericParams })
@@ -64,6 +72,7 @@ export type CreateNightInput = z.infer<typeof createNightBody>
 export type UpdateNightInput = z.infer<typeof updateNightBody>
 export type CreateComparsaInput = z.infer<typeof createComparsaBody>
 export type UpdateComparsaInput = z.infer<typeof updateComparsaBody>
+export type ReorderComparsasInput = z.infer<typeof reorderComparsasBody>
 export type CreateItemInput = z.infer<typeof createItemBody>
 export type UpdateItemInput = z.infer<typeof updateItemBody>
 export type CreateAssignmentInput = z.infer<typeof createAssignmentSchema>['body']

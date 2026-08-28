@@ -22,11 +22,11 @@ export interface ChallengeRecord {
   consumed_at: Date | null
 }
 
-export async function findUserByIdentity(identity: string): Promise<UserRecord | undefined> {
+export async function findUserByEmail(email: string): Promise<UserRecord | undefined> {
   const result = await query<UserRecord>(
     `SELECT id, nombre, dni, email, password_hash, role, activo
-     FROM users WHERE lower(email) = lower($1) OR dni = $1 LIMIT 1`,
-    [identity],
+     FROM users WHERE lower(email) = lower($1) LIMIT 1`,
+    [email],
   )
   return result.rows[0]
 }

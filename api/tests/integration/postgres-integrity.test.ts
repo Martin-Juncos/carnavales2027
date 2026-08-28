@@ -157,7 +157,7 @@ describe('PostgreSQL integrity', () => {
       },
     })
     const requested = await auth.requestOtp(
-      { identity: 'admin@test.local', password: 'AdminPassword123!' },
+      { nombre: 'Admin', email: 'admin@test.local', dni: 'admin-1' },
       { requestId: randomUUID(), ip: '127.0.0.1' },
     )
     expect(deliveredCode).toMatch(/^\d{6}$/)
@@ -191,12 +191,12 @@ describe('PostgreSQL integrity', () => {
     })
 
     await expect(auth.requestOtp(
-      { identity: 'admin@test.local', password: 'incorrect-password' },
+      { nombre: 'Admin', email: 'admin@test.local', dni: 'dni-incorrecto' },
       { requestId: randomUUID(), ip: '127.0.0.1' },
     )).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' })
 
     const expired = await auth.requestOtp(
-      { identity: 'admin@test.local', password: 'AdminPassword123!' },
+      { nombre: 'Admin', email: 'admin@test.local', dni: 'admin-1' },
       { requestId: randomUUID() },
     )
     await isolatedPool.query(
@@ -209,7 +209,7 @@ describe('PostgreSQL integrity', () => {
     )).rejects.toMatchObject({ code: 'OTP_EXPIRED' })
 
     const exhausted = await auth.requestOtp(
-      { identity: 'admin@test.local', password: 'AdminPassword123!' },
+      { nombre: 'Admin', email: 'admin@test.local', dni: 'admin-1' },
       { requestId: randomUUID() },
     )
     for (let attempt = 1; attempt < 5; attempt += 1) {

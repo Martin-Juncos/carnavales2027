@@ -42,6 +42,8 @@ Debe garantizarse un máximo de **3 asignaciones activas por noche** mediante tr
 ### `comparsas`
 `id`, `nombre`, `noche_id`, `orden`, `activo`, timestamps. `UNIQUE(noche_id, orden)`.
 
+El catálogo operativo de comparsas queda fijo por noche con las seis comparsas oficiales: Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba. La mutación normal permitida sobre esas filas es únicamente `orden`; el nombre, la noche y el estado activo quedan protegidos.
+
 ### `items`
 `id`, `nombre`, `parent_item_id`, `orden`, `activo`, timestamps.
 

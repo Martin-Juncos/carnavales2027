@@ -10,6 +10,7 @@ import type {
   CreateComparsaInput,
   CreateItemInput,
   CreateNightInput,
+  ReorderComparsasInput,
   CreateUserInput,
   ReplaceAssignmentInput,
   UpdateComparsaInput,
@@ -17,6 +18,7 @@ import type {
   UpdateNightInput,
   UpdateUserInput,
 } from './admin.schemas'
+import { fixedComparsaNames, isFixedComparsaName } from './fixed-comparsas'
 
 interface Context { requestId: string; ip?: string }
 
@@ -34,6 +36,12 @@ function mapDatabaseError(error: unknown): never {
   }
   if (databaseCode(error) === 'P0001' && error instanceof Error && error.message.includes('JUROR_TOTAL_CAPACITY_EXCEEDED')) {
     throw new AppError('JUDGE_CAPACITY_EXCEEDED', 'El sistema ya tiene nueve jurados activos.', 409)
+  }
+  if (databaseCode(error) === 'P0001' && error instanceof Error && error.message.includes('COMPARSA_CATALOG_FIXED')) {
+    throw new AppError('COMPARSA_CATALOG_FIXED', 'Las comparsas oficiales ya están predefinidas.', 409)
+  }
+  if (databaseCode(error) === 'P0001' && error instanceof Error && error.message.includes('COMPARSA_ONLY_ORDER_MUTABLE')) {
+    throw new AppError('COMPARSA_ONLY_ORDER_MUTABLE', 'Solo se puede modificar el orden de una comparsa.', 409)
   }
   throw error
 }
@@ -67,7 +75,7 @@ export class AdminService {
   listAssignments = repository.listAssignments
 
   async createUser(actor: AuthenticatedUser, input: CreateUserInput, context: Context) {
-    const passwordHash = await argon2.hash(input.password)
+    const passwordHash = await argon2.hash(input.dni)
     try {
       return await withTransaction(async (client) => {
         const created = await repository.createUser(input, passwordHash, client)
@@ -81,7 +89,6 @@ export class AdminService {
   }
 
   async updateUser(actor: AuthenticatedUser, id: string, input: UpdateUserInput, context: Context) {
-    const passwordHash = input.password ? await argon2.hash(input.password) : undefined
     try {
       return await withTransaction(async (client) => {
         if (!await repository.lockUser(id, client)) throw errors.notFound('Usuario')
@@ -91,7 +98,7 @@ export class AdminService {
         ) {
           throw errors.conflict('ASSIGNMENT_INACTIVE', 'Debe reemplazar o finalizar la asignación activa antes de modificar al jurado.')
         }
-        const updated = await repository.updateUser(id, input, passwordHash, client)
+        const updated = await repository.updateUser(id, input, client)
         if (!updated) throw errors.notFound('Usuario')
         if (input.activo === false) await repository.revokeUserSessions(id, client)
         await audit(actor, context, 'admin.user_updated', 'users', id, { changedFields: Object.keys(input) }, client)
@@ -108,7 +115,8 @@ export class AdminService {
       return await withTransaction(async (client) => {
         const created = await repository.createNight(input, client)
         if (!created) throw new Error('Night insert returned no row')
-        await audit(actor, context, 'admin.night_created', 'noches', String(created.id), undefined, client)
+        await repository.seedFixedComparsasForNight(Number(created.id), client)
+        await audit(actor, context, 'admin.night_created', 'noches', String(created.id), { fixedComparsas: fixedComparsaNames }, client)
         return created
       })
     } catch (error) { mapDatabaseError(error) }
@@ -149,13 +157,36 @@ export class AdminService {
     })
   }
 
-  async createComparsa(actor: AuthenticatedUser, input: CreateComparsaInput, context: Context) {
+  createComparsa(actor: AuthenticatedUser, input: CreateComparsaInput, context: Context): never {
+    void actor
+    void input
+    void context
+    throw new AppError('COMPARSA_CATALOG_FIXED', 'Las comparsas oficiales ya están predefinidas; solo se puede modificar su orden por noche.', 409)
+  }
+
+  async reorderComparsas(actor: AuthenticatedUser, nightId: number, input: ReorderComparsasInput, context: Context) {
     try {
       return await withTransaction(async (client) => {
-        const created = await repository.createComparsa(input, client)
-        if (!created) throw new Error('Comparsa insert returned no row')
-        await audit(actor, context, 'admin.comparsa_created', 'comparsas', String(created.id), undefined, client)
-        return created
+        const night = await repository.lockNight(nightId, client)
+        if (!night) throw errors.notFound('Noche')
+        const current = await repository.getComparsasForNight(nightId, client)
+        const currentIds = new Set(current.map((comparsa) => Number(comparsa.id)))
+        const inputIds = new Set(input.comparsas.map((comparsa) => comparsa.comparsaId))
+        const inputOrders = new Set(input.comparsas.map((comparsa) => comparsa.orden))
+        const allOfficial = current.every((comparsa) => isFixedComparsaName(comparsa.nombre))
+
+        if (!allOfficial || current.length !== fixedComparsaNames.length || inputIds.size !== currentIds.size || inputOrders.size !== input.comparsas.length) {
+          throw errors.validation({ reason: 'invalid_comparsa_order' })
+        }
+        for (let order = 1; order <= fixedComparsaNames.length; order += 1) {
+          if (!inputOrders.has(order)) throw errors.validation({ reason: 'invalid_comparsa_order' })
+        }
+        for (const id of currentIds) {
+          if (!inputIds.has(id)) throw errors.validation({ reason: 'invalid_comparsa_order' })
+        }
+        const reordered = await repository.reorderComparsas(nightId, input, client)
+        await audit(actor, context, 'admin.comparsas_reordered', 'noches', String(nightId), { order: input.comparsas }, client)
+        return reordered
       })
     } catch (error) { mapDatabaseError(error) }
   }

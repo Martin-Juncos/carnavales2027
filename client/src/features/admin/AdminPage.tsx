@@ -1,6 +1,7 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '../../api/adminApi'
+import type { AdminComparsa } from '../../api/adminApi'
 import { ApiClientError } from '../../api/apiClient'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -8,9 +9,8 @@ import { Modal } from '../../components/ui/Modal'
 import { Badge } from '../../components/ui/Badge'
 import type { Role } from '../../types/domain'
 
-interface UserForm { nombre: string; dni: string; email: string; password: string; role: Role; activo: boolean }
+interface UserForm { nombre: string; dni: string; email: string; role: Role; activo: boolean }
 interface NightForm { nombre: string; fecha: string }
-interface ComparsaForm { nombre: string; nocheId: string; orden: string; activo: boolean }
 interface ItemForm { nombre: string; parentItemId: string; orden: string; activo: boolean }
 interface AssignmentForm { juradoId: string; nocheId: string; motivo: string }
 interface ReplaceForm { assignmentId: string; replacementJurorId: string; motivo: string }
@@ -20,9 +20,8 @@ type ConfirmAction =
   | { type: 'closeNight'; id: number; label: string }
   | { type: 'replaceAssignment'; form: ReplaceForm }
 
-const initialUser: UserForm = { nombre: '', dni: '', email: '', password: '', role: 'jurado', activo: true }
+const initialUser: UserForm = { nombre: '', dni: '', email: '', role: 'jurado', activo: true }
 const initialNight: NightForm = { nombre: '', fecha: '' }
-const initialComparsa: ComparsaForm = { nombre: '', nocheId: '1', orden: '1', activo: true }
 const initialItem: ItemForm = { nombre: '', parentItemId: '', orden: '1', activo: true }
 const initialAssignment: AssignmentForm = { juradoId: '', nocheId: '1', motivo: '' }
 const initialReplace: ReplaceForm = { assignmentId: '', replacementJurorId: '', motivo: '' }
@@ -35,10 +34,10 @@ export function AdminPage() {
   const queryClient = useQueryClient()
   const [userForm, setUserForm] = useState<UserForm>(initialUser)
   const [nightForm, setNightForm] = useState<NightForm>(initialNight)
-  const [comparsaForm, setComparsaForm] = useState<ComparsaForm>(initialComparsa)
   const [itemForm, setItemForm] = useState<ItemForm>(initialItem)
   const [assignmentForm, setAssignmentForm] = useState<AssignmentForm>(initialAssignment)
   const [replaceForm, setReplaceForm] = useState<ReplaceForm>(initialReplace)
+  const [orderDraft, setOrderDraft] = useState<Record<number, string>>({})
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -66,10 +65,28 @@ export function AdminPage() {
     onSuccess: () => { setNightForm(initialNight); setMessage('Noche creada.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo crear la noche.')),
   })
-  const createComparsa = useMutation({
-    mutationFn: () => adminApi.createComparsa({ nombre: comparsaForm.nombre, nocheId: Number(comparsaForm.nocheId), orden: Number(comparsaForm.orden), activo: comparsaForm.activo }),
-    onSuccess: () => { setComparsaForm(initialComparsa); setMessage('Comparsa creada.'); refreshAdmin() },
-    onError: (caught) => setMessage(errorText(caught, 'No se pudo crear la comparsa.')),
+  const comparsasByNight = useMemo(() => {
+    const grouped = new Map<number, AdminComparsa[]>()
+    for (const comparsa of comparsas.data ?? []) {
+      const current = grouped.get(comparsa.nocheId) ?? []
+      current.push(comparsa)
+      grouped.set(comparsa.nocheId, current)
+    }
+    return Array.from(grouped.entries()).map(([nightId, rows]) => [nightId, rows.sort((a, b) => a.orden - b.orden)] as const)
+  }, [comparsas.data])
+
+  const reorderComparsas = useMutation({
+    mutationFn: (nightId: number) => {
+      const rows = comparsas.data?.filter((comparsa) => comparsa.nocheId === nightId) ?? []
+      return adminApi.reorderComparsas(nightId, {
+        comparsas: rows.map((comparsa) => ({
+          comparsaId: comparsa.id,
+          orden: Number(orderDraft[comparsa.id] ?? comparsa.orden),
+        })),
+      })
+    },
+    onSuccess: () => { setMessage('Orden de comparsas actualizado.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar el orden.')),
   })
   const createItem = useMutation({
     mutationFn: () => adminApi.createItem({
@@ -108,12 +125,11 @@ export function AdminPage() {
 
   const onUser = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createUser.mutate() }
   const onNight = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createNight.mutate() }
-  const onComparsa = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createComparsa.mutate() }
   const onItem = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createItem.mutate() }
   const onAssignment = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createAssignment.mutate() }
   const onReplace = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); setConfirm({ type: 'replaceAssignment', form: replaceForm }) }
 
-  const busy = createUser.isPending || createNight.isPending || createComparsa.isPending || createItem.isPending || createAssignment.isPending || openNight.isPending || closeNight.isPending || replaceAssignment.isPending
+  const busy = createUser.isPending || createNight.isPending || reorderComparsas.isPending || createItem.isPending || createAssignment.isPending || openNight.isPending || closeNight.isPending || replaceAssignment.isPending
 
   return (
     <main className="mx-auto max-w-7xl space-y-4 px-4 py-5">
@@ -125,7 +141,6 @@ export function AdminPage() {
             <input id="admin-user-name" name="nombre" aria-label="Nombre" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.nombre} onChange={(event) => setUserForm({ ...userForm, nombre: event.target.value })} />
             <input id="admin-user-dni" name="dni" aria-label="DNI" placeholder="DNI" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.dni} onChange={(event) => setUserForm({ ...userForm, dni: event.target.value })} />
             <input id="admin-user-email" name="email" aria-label="Email" placeholder="Email" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} />
-            <input id="admin-user-password" name="password" aria-label="Contraseña" placeholder="Contraseña inicial" type="password" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} />
             <select id="admin-user-role" name="role" aria-label="Rol" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value as Role })}><option value="jurado">Jurado</option><option value="fiscal">Fiscal</option><option value="escribano">Escribano</option><option value="admin">Admin</option></select>
             <Button type="submit" disabled={busy}>Crear usuario</Button>
           </form>
@@ -148,13 +163,31 @@ export function AdminPage() {
 
         <Card>
           <h2 className="text-xl font-bold">Comparsas</h2>
-          <form className="mt-3 grid gap-3 sm:grid-cols-4" onSubmit={onComparsa}>
-            <input id="admin-comparsa-name" name="comparsaName" aria-label="Nombre comparsa" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nombre} onChange={(event) => setComparsaForm({ ...comparsaForm, nombre: event.target.value })} />
-            <input id="admin-comparsa-night" name="comparsaNightId" aria-label="Noche ID comparsa" placeholder="Noche ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nocheId} onChange={(event) => setComparsaForm({ ...comparsaForm, nocheId: event.target.value })} />
-            <input id="admin-comparsa-order" name="comparsaOrder" aria-label="Orden comparsa" placeholder="Orden" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.orden} onChange={(event) => setComparsaForm({ ...comparsaForm, orden: event.target.value })} />
-            <Button type="submit" disabled={busy}>Crear comparsa</Button>
-          </form>
-          <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(comparsas.data ?? []).map((comparsa) => <p key={comparsa.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">#{comparsa.id} · {comparsa.nombre} · noche {comparsa.nocheId} · orden {comparsa.orden}</p>)}</div>
+          <p className="mt-2 text-sm text-slate-400">Las comparsas oficiales ya quedan creadas para cada noche. Acá solo se modifica el orden de pasada.</p>
+          <div className="mt-4 max-h-80 space-y-4 overflow-auto">
+            {comparsasByNight.map(([nightId, rows]) => (
+              <div key={nightId} className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="font-semibold">Noche {rows[0]?.nocheNombre ?? nightId}</p>
+                  <Button variant="secondary" disabled={busy} onClick={() => reorderComparsas.mutate(nightId)}>Guardar orden</Button>
+                </div>
+                <div className="grid gap-2">
+                  {rows.map((comparsa) => (
+                    <label key={comparsa.id} className="grid grid-cols-[1fr_5rem] items-center gap-3 text-sm">
+                      <span>{comparsa.nombre}</span>
+                      <input
+                        aria-label={`Orden ${comparsa.nombre}`}
+                        className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3"
+                        inputMode="numeric"
+                        value={orderDraft[comparsa.id] ?? String(comparsa.orden)}
+                        onChange={(event) => setOrderDraft({ ...orderDraft, [comparsa.id]: event.target.value })}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
 
         <Card>

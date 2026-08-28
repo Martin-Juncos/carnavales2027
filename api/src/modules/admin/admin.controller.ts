@@ -7,6 +7,7 @@ import type {
   CreateComparsaInput,
   CreateItemInput,
   CreateNightInput,
+  ReorderComparsasInput,
   CreateUserInput,
   ReplaceAssignmentInput,
   UpdateComparsaInput,
@@ -61,13 +62,16 @@ export function createAdminController(service = new AdminService()) {
       ok(res, await service.transitionNight(actor(req), input.params.id, 'close', context(req)))
     }),
     listComparsas: asyncHandler(async (_req, res) => { ok(res, await service.listComparsas()); }),
-    createComparsa: asyncHandler(async (req, res) => {
-      const data = await service.createComparsa(actor(req), validated<Body<CreateComparsaInput>>(req).body, context(req))
-      res.status(201).json({ data, meta: {} })
+    createComparsa: asyncHandler((req, _res) => {
+      service.createComparsa(actor(req), validated<Body<CreateComparsaInput>>(req).body, context(req))
     }),
     updateComparsa: asyncHandler(async (req, res) => {
       const input = validated<Id<number, UpdateComparsaInput>>(req)
       ok(res, await service.updateComparsa(actor(req), input.params.id, input.body, context(req)))
+    }),
+    reorderComparsas: asyncHandler(async (req, res) => {
+      const input = validated<Id<number, ReorderComparsasInput>>(req)
+      ok(res, await service.reorderComparsas(actor(req), input.params.id, input.body, context(req)))
     }),
     listItems: asyncHandler(async (_req, res) => { ok(res, await service.listItems()); }),
     createItem: asyncHandler(async (req, res) => {
