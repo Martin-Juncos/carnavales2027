@@ -11,25 +11,48 @@ import type { Role } from '../../types/domain'
 
 interface UserForm { nombre: string; dni: string; email: string; role: Role; activo: boolean }
 interface NightForm { nombre: string; fecha: string }
-interface ComparsaForm { nombre: string; nocheId: string; orden: string; activo: boolean }
+interface ComparsaForm { nombre: string; nocheId: string; activo: boolean }
 interface ItemForm { nombre: string; parentItemId: string; orden: string; activo: boolean }
-interface AssignmentForm { juradoId: string; nocheId: string; motivo: string }
-interface ReplaceForm { assignmentId: string; replacementJurorId: string; motivo: string }
 
 type ConfirmAction =
+  | { type: 'updateUser'; id: string; label: string; body: Partial<Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt'>> }
+  | { type: 'deleteUser'; id: string; label: string }
+  | { type: 'updateNight'; id: number; label: string; body: Partial<Pick<AdminNight, 'nombre' | 'fecha'>> }
+  | { type: 'deleteNight'; id: number; label: string }
   | { type: 'openNight'; id: number; label: string }
   | { type: 'closeNight'; id: number; label: string }
-  | { type: 'replaceAssignment'; form: ReplaceForm }
+  | { type: 'updateComparsa'; id: number; label: string; body: Partial<Pick<AdminComparsa, 'nombre' | 'nocheId' | 'orden' | 'activo'>> }
+  | { type: 'deleteComparsa'; id: number; label: string }
+  | { type: 'reorderComparsas'; id: number; label: string }
+  | { type: 'updateItem'; id: number; label: string; body: Partial<Pick<AdminItem, 'nombre' | 'parentItemId' | 'orden' | 'activo'>> }
+  | { type: 'deleteItem'; id: number; label: string }
 
 const initialUser: UserForm = { nombre: '', dni: '', email: '', role: 'jurado', activo: true }
 const initialNight: NightForm = { nombre: '', fecha: '' }
-const initialComparsa: ComparsaForm = { nombre: '', nocheId: '', orden: '1', activo: true }
+const initialComparsa: ComparsaForm = { nombre: '', nocheId: '', activo: true }
 const initialItem: ItemForm = { nombre: '', parentItemId: '', orden: '1', activo: true }
-const initialAssignment: AssignmentForm = { juradoId: '', nocheId: '1', motivo: '' }
-const initialReplace: ReplaceForm = { assignmentId: '', replacementJurorId: '', motivo: '' }
 
 function errorText(caught: unknown, fallback: string): string {
   return caught instanceof ApiClientError ? caught.message : fallback
+}
+
+function confirmTitle(action: ConfirmAction): string {
+  if (action.type === 'openNight') return 'Abrir noche'
+  if (action.type === 'closeNight') return 'Cerrar noche'
+  if (action.type.startsWith('delete')) return 'Confirmar borrado'
+  if (action.type === 'reorderComparsas') return 'Guardar orden'
+  return 'Confirmar modificación'
+}
+
+function confirmDescription(action: ConfirmAction): string {
+  if (action.type.startsWith('delete')) {
+    return 'Esta acción intentará borrar el registro. Si ya tiene historial, el backend lo va a bloquear para preservar evidencia.'
+  }
+  return 'Acción operativa sensible: quedará auditada en backend. Verificá que corresponde antes de confirmar.'
+}
+
+function isDangerAction(action: ConfirmAction): boolean {
+  return action.type !== 'openNight'
 }
 
 export function AdminPage() {
@@ -38,8 +61,6 @@ export function AdminPage() {
   const [nightForm, setNightForm] = useState<NightForm>(initialNight)
   const [comparsaForm, setComparsaForm] = useState<ComparsaForm>(initialComparsa)
   const [itemForm, setItemForm] = useState<ItemForm>(initialItem)
-  const [assignmentForm, setAssignmentForm] = useState<AssignmentForm>(initialAssignment)
-  const [replaceForm, setReplaceForm] = useState<ReplaceForm>(initialReplace)
   const [orderDraft, setOrderDraft] = useState<Record<number, string>>({})
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -48,14 +69,12 @@ export function AdminPage() {
   const nights = useQuery({ queryKey: ['admin-nights'], queryFn: adminApi.nights })
   const comparsas = useQuery({ queryKey: ['admin-comparsas'], queryFn: adminApi.comparsas })
   const items = useQuery({ queryKey: ['admin-items'], queryFn: adminApi.items })
-  const assignments = useQuery({ queryKey: ['admin-assignments'], queryFn: adminApi.assignments })
 
   const refreshAdmin = (): void => {
     void queryClient.invalidateQueries({ queryKey: ['admin-users'] })
     void queryClient.invalidateQueries({ queryKey: ['admin-nights'] })
     void queryClient.invalidateQueries({ queryKey: ['admin-comparsas'] })
     void queryClient.invalidateQueries({ queryKey: ['admin-items'] })
-    void queryClient.invalidateQueries({ queryKey: ['admin-assignments'] })
   }
 
   const createUser = useMutation({
@@ -72,7 +91,12 @@ export function AdminPage() {
     mutationFn: () => adminApi.createComparsa({
       nombre: comparsaForm.nombre,
       nocheId: Number(comparsaForm.nocheId),
-      orden: Number(comparsaForm.orden),
+      orden: Math.max(
+        0,
+        ...(comparsas.data ?? [])
+          .filter((comparsa) => comparsa.nocheId === Number(comparsaForm.nocheId))
+          .map((comparsa) => comparsa.orden),
+      ) + 1,
       activo: comparsaForm.activo,
     }),
     onSuccess: () => { setComparsaForm(initialComparsa); setMessage('Comparsa creada.'); refreshAdmin() },
@@ -80,22 +104,22 @@ export function AdminPage() {
   })
   const updateUser = useMutation({
     mutationFn: ({ id, body }: { id: string; body: Partial<Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt'>> }) => adminApi.updateUser(id, body),
-    onSuccess: () => { setMessage('Usuario actualizado.'); refreshAdmin() },
+    onSuccess: () => { setConfirm(null); setMessage('Usuario actualizado.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar el usuario.')),
   })
   const deleteUser = useMutation({
     mutationFn: adminApi.deleteUser,
-    onSuccess: () => { setMessage('Usuario dado de baja.'); refreshAdmin() },
+    onSuccess: () => { setConfirm(null); setMessage('Usuario borrado.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo borrar el usuario.')),
   })
   const updateNight = useMutation({
     mutationFn: ({ id, body }: { id: number; body: Partial<Pick<AdminNight, 'nombre' | 'fecha'>> }) => adminApi.updateNight(id, body),
-    onSuccess: () => { setMessage('Noche actualizada.'); refreshAdmin() },
+    onSuccess: () => { setConfirm(null); setMessage('Noche actualizada.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar la noche.')),
   })
   const deleteNight = useMutation({
     mutationFn: adminApi.deleteNight,
-    onSuccess: () => { setMessage('Noche borrada.'); refreshAdmin() },
+    onSuccess: () => { setConfirm(null); setMessage('Noche borrada.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo borrar la noche.')),
   })
   const comparsasByNight = useMemo(() => {
@@ -108,6 +132,8 @@ export function AdminPage() {
     return Array.from(grouped.entries()).map(([nightId, rows]) => [nightId, rows.sort((a, b) => a.orden - b.orden)] as const)
   }, [comparsas.data])
 
+  const comparsasByNightMap = useMemo(() => new Map(comparsasByNight), [comparsasByNight])
+
   const reorderComparsas = useMutation({
     mutationFn: (nightId: number) => {
       const rows = comparsas.data?.filter((comparsa) => comparsa.nocheId === nightId) ?? []
@@ -118,17 +144,17 @@ export function AdminPage() {
         })),
       })
     },
-    onSuccess: () => { setMessage('Orden de comparsas actualizado.'); refreshAdmin() },
+    onSuccess: () => { setConfirm(null); setMessage('Orden de comparsas actualizado.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar el orden.')),
   })
   const updateComparsa = useMutation({
     mutationFn: ({ id, body }: { id: number; body: Partial<Pick<AdminComparsa, 'nombre' | 'nocheId' | 'orden' | 'activo'>> }) => adminApi.updateComparsa(id, body),
-    onSuccess: () => { setMessage('Comparsa actualizada.'); refreshAdmin() },
+    onSuccess: () => { setConfirm(null); setMessage('Comparsa actualizada.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar la comparsa.')),
   })
   const deleteComparsa = useMutation({
     mutationFn: adminApi.deleteComparsa,
-    onSuccess: () => { setMessage('Comparsa dada de baja.'); refreshAdmin() },
+    onSuccess: () => { setConfirm(null); setMessage('Comparsa borrada.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo borrar la comparsa.')),
   })
   const createItem = useMutation({
@@ -143,22 +169,13 @@ export function AdminPage() {
   })
   const updateItem = useMutation({
     mutationFn: ({ id, body }: { id: number; body: Partial<Pick<AdminItem, 'nombre' | 'parentItemId' | 'orden' | 'activo'>> }) => adminApi.updateItem(id, body),
-    onSuccess: () => { setMessage('Ítem actualizado.'); refreshAdmin() },
+    onSuccess: () => { setConfirm(null); setMessage('Ítem actualizado.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar el ítem.')),
   })
   const deleteItem = useMutation({
     mutationFn: adminApi.deleteItem,
-    onSuccess: () => { setMessage('Ítem dado de baja.'); refreshAdmin() },
+    onSuccess: () => { setConfirm(null); setMessage('Ítem borrado.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo borrar el ítem.')),
-  })
-  const createAssignment = useMutation({
-    mutationFn: () => adminApi.createAssignment({
-      juradoId: assignmentForm.juradoId,
-      nocheId: Number(assignmentForm.nocheId),
-      ...(assignmentForm.motivo.trim() ? { motivo: assignmentForm.motivo.trim() } : {}),
-    }),
-    onSuccess: () => { setAssignmentForm(initialAssignment); setMessage('Asignación creada.'); refreshAdmin() },
-    onError: (caught) => setMessage(errorText(caught, 'No se pudo crear la asignación.')),
   })
   const openNight = useMutation({
     mutationFn: (id: number) => adminApi.openNight(id),
@@ -170,20 +187,12 @@ export function AdminPage() {
     onSuccess: () => { setConfirm(null); setMessage('Noche cerrada.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo cerrar la noche.')),
   })
-  const replaceAssignment = useMutation({
-    mutationFn: (form: ReplaceForm) => adminApi.replaceAssignment(form.assignmentId, { replacementJurorId: form.replacementJurorId, motivo: form.motivo }),
-    onSuccess: () => { setConfirm(null); setReplaceForm(initialReplace); setMessage('Jurado reemplazado con trazabilidad.'); refreshAdmin() },
-    onError: (caught) => setMessage(errorText(caught, 'No se pudo reemplazar el jurado.')),
-  })
-
   const onUser = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createUser.mutate() }
   const onNight = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createNight.mutate() }
   const onComparsa = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createComparsa.mutate() }
   const onItem = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createItem.mutate() }
-  const onAssignment = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createAssignment.mutate() }
-  const onReplace = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); setConfirm({ type: 'replaceAssignment', form: replaceForm }) }
 
-  const busy = createUser.isPending || createNight.isPending || createComparsa.isPending || reorderComparsas.isPending || createItem.isPending || createAssignment.isPending || openNight.isPending || closeNight.isPending || replaceAssignment.isPending || updateUser.isPending || deleteUser.isPending || updateNight.isPending || deleteNight.isPending || updateComparsa.isPending || deleteComparsa.isPending || updateItem.isPending || deleteItem.isPending
+  const busy = createUser.isPending || createNight.isPending || createComparsa.isPending || reorderComparsas.isPending || createItem.isPending || openNight.isPending || closeNight.isPending || updateUser.isPending || deleteUser.isPending || updateNight.isPending || deleteNight.isPending || updateComparsa.isPending || deleteComparsa.isPending || updateItem.isPending || deleteItem.isPending
 
   return (
     <main className="mx-auto max-w-7xl space-y-4 px-4 py-5">
@@ -206,9 +215,9 @@ export function AdminPage() {
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button variant="secondary" disabled={busy} onClick={() => {
                     const nombre = window.prompt('Nuevo nombre', user.nombre)
-                    if (nombre?.trim()) updateUser.mutate({ id: user.id, body: { nombre: nombre.trim() } })
+                    if (nombre?.trim()) setConfirm({ type: 'updateUser', id: user.id, label: user.nombre, body: { nombre: nombre.trim() } })
                   }}>Modificar</Button>
-                  <Button variant="danger" disabled={busy || !user.activo} onClick={() => deleteUser.mutate(user.id)}>Borrar</Button>
+                  <Button variant="danger" disabled={busy || !user.activo} onClick={() => setConfirm({ type: 'deleteUser', id: user.id, label: user.nombre })}>Borrar</Button>
                 </div>
               </div>
             ))}
@@ -225,30 +234,57 @@ export function AdminPage() {
           <div className="mt-4 space-y-2">
             {(nights.data ?? []).map((night) => <div key={night.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><div><p className="font-semibold">#{night.id} · {night.nombre}</p><p className="text-slate-400">{night.fecha}</p></div><Badge tone={night.estado === 'open' ? 'success' : 'warning'}>{night.estado}</Badge><div className="flex gap-2"><Button variant="secondary" onClick={() => {
               const nombre = window.prompt('Nuevo nombre de noche', night.nombre)
-              if (nombre?.trim()) updateNight.mutate({ id: night.id, body: { nombre: nombre.trim() } })
-            }}>Modificar</Button><Button variant="secondary" onClick={() => setConfirm({ type: 'openNight', id: night.id, label: night.nombre })}>Abrir</Button><Button variant="danger" onClick={() => setConfirm({ type: 'closeNight', id: night.id, label: night.nombre })}>Cerrar</Button><Button variant="danger" disabled={busy} onClick={() => deleteNight.mutate(night.id)}>Borrar</Button></div></div>)}
+              if (nombre?.trim()) setConfirm({ type: 'updateNight', id: night.id, label: night.nombre, body: { nombre: nombre.trim() } })
+            }}>Modificar</Button><Button variant="secondary" onClick={() => setConfirm({ type: 'openNight', id: night.id, label: night.nombre })}>Abrir</Button><Button variant="danger" onClick={() => setConfirm({ type: 'closeNight', id: night.id, label: night.nombre })}>Cerrar</Button><Button variant="danger" disabled={busy} onClick={() => setConfirm({ type: 'deleteNight', id: night.id, label: night.nombre })}>Borrar</Button></div></div>)}
           </div>
         </Card>
 
         <Card>
           <h2 className="text-xl font-bold">Comparsas</h2>
-          <p className="mt-2 text-sm text-slate-400">El administrador crea comparsas por noche y define el orden de pasada.</p>
-          <form className="mt-3 grid gap-3 sm:grid-cols-4" onSubmit={onComparsa}>
+          <p className="mt-2 text-sm text-slate-400">CRUD de comparsas. El orden de pasada se administra en una sección separada por noche.</p>
+          <form className="mt-3 grid gap-3 sm:grid-cols-3" onSubmit={onComparsa}>
             <input aria-label="Nombre comparsa" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nombre} onChange={(event) => setComparsaForm({ ...comparsaForm, nombre: event.target.value })} />
-            <input aria-label="Noche ID comparsa" placeholder="Noche ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nocheId} onChange={(event) => setComparsaForm({ ...comparsaForm, nocheId: event.target.value })} />
-            <input aria-label="Orden comparsa" placeholder="Orden" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.orden} onChange={(event) => setComparsaForm({ ...comparsaForm, orden: event.target.value })} />
+            <select aria-label="Noche de comparsa" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nocheId} onChange={(event) => setComparsaForm({ ...comparsaForm, nocheId: event.target.value })}>
+              <option value="">Seleccionar noche</option>
+              {(nights.data ?? []).map((night) => <option key={night.id} value={night.id}>{night.nombre}</option>)}
+            </select>
             <Button type="submit" disabled={busy}>Crear comparsa</Button>
           </form>
-          <div className="mt-4 max-h-80 space-y-4 overflow-auto">
-            {comparsasByNight.map(([nightId, rows]) => (
-              <div key={nightId} className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <p className="font-semibold">Noche {rows[0]?.nocheNombre ?? nightId}</p>
-                  <Button variant="secondary" disabled={busy} onClick={() => reorderComparsas.mutate(nightId)}>Guardar orden</Button>
+          <div className="mt-4 max-h-80 space-y-2 overflow-auto">
+            {(comparsas.data ?? []).map((comparsa) => (
+              <div key={comparsa.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">
+                <p className="font-semibold">{comparsa.nombre} {!comparsa.activo ? <em className="text-rose-200">(inactiva)</em> : null}</p>
+                <p className="text-slate-400">Noche: {comparsa.nocheNombre ?? comparsa.nocheId}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button variant="secondary" disabled={busy} onClick={() => {
+                    const nombre = window.prompt('Nuevo nombre de comparsa', comparsa.nombre)
+                    if (nombre?.trim()) setConfirm({ type: 'updateComparsa', id: comparsa.id, label: comparsa.nombre, body: { nombre: nombre.trim() } })
+                  }}>Modificar</Button>
+                  <Button variant="danger" disabled={busy || !comparsa.activo} onClick={() => setConfirm({ type: 'deleteComparsa', id: comparsa.id, label: comparsa.nombre })}>Borrar</Button>
                 </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="text-xl font-bold">Orden de comparsas por noche</h2>
+          <p className="mt-2 text-sm text-slate-400">Cada noche tiene su propio orden. Modificá los números y guardá el orden de esa noche.</p>
+          <div className="mt-4 max-h-80 space-y-4 overflow-auto">
+            {(nights.data ?? []).map((night) => {
+              const rows = comparsasByNightMap.get(night.id) ?? []
+              return (
+                <div key={night.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">{night.nombre}</p>
+                      <p className="text-sm text-slate-400">{night.fecha}</p>
+                    </div>
+                    <Button variant="secondary" disabled={busy || rows.length === 0} onClick={() => setConfirm({ type: 'reorderComparsas', id: night.id, label: night.nombre })}>Guardar orden</Button>
+                  </div>
                 <div className="grid gap-2">
                   {rows.map((comparsa) => (
-                    <label key={comparsa.id} className="grid grid-cols-[1fr_5rem_auto] items-center gap-3 text-sm">
+                    <label key={comparsa.id} className="grid grid-cols-[1fr_5rem] items-center gap-3 text-sm">
                       <span>{comparsa.nombre} {!comparsa.activo ? <em className="text-rose-200">(inactiva)</em> : null}</span>
                       <input
                         aria-label={`Orden ${comparsa.nombre}`}
@@ -257,18 +293,13 @@ export function AdminPage() {
                         value={orderDraft[comparsa.id] ?? String(comparsa.orden)}
                         onChange={(event) => setOrderDraft({ ...orderDraft, [comparsa.id]: event.target.value })}
                       />
-                      <span className="flex gap-2">
-                        <Button variant="secondary" disabled={busy} onClick={() => {
-                          const nombre = window.prompt('Nuevo nombre de comparsa', comparsa.nombre)
-                          if (nombre?.trim()) updateComparsa.mutate({ id: comparsa.id, body: { nombre: nombre.trim() } })
-                        }}>Modificar</Button>
-                        <Button variant="danger" disabled={busy || !comparsa.activo} onClick={() => deleteComparsa.mutate(comparsa.id)}>Borrar</Button>
-                      </span>
                     </label>
                   ))}
+                  {rows.length === 0 ? <p className="text-sm text-slate-400">Esta noche todavía no tiene comparsas.</p> : null}
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         </Card>
 
@@ -282,46 +313,35 @@ export function AdminPage() {
           </form>
           <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(items.data ?? []).map((item) => <div key={item.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><p>#{item.id} · {item.nombre} · padre {item.parentItemId ?? '-'} · orden {item.orden} · {item.activo ? 'activo' : 'inactivo'}</p><div className="mt-2 flex gap-2"><Button variant="secondary" disabled={busy} onClick={() => {
             const nombre = window.prompt('Nuevo nombre de ítem', item.nombre)
-            if (nombre?.trim()) updateItem.mutate({ id: item.id, body: { nombre: nombre.trim() } })
-          }}>Modificar</Button><Button variant="danger" disabled={busy || !item.activo} onClick={() => deleteItem.mutate(item.id)}>Borrar</Button></div></div>)}</div>
-        </Card>
-
-        <Card className="xl:col-span-2">
-          <h2 className="text-xl font-bold">Asignaciones y reemplazos</h2>
-          <div className="mt-3 grid gap-4 lg:grid-cols-2">
-            <form className="grid gap-3" onSubmit={onAssignment}>
-              <input id="admin-assignment-juror" name="juradoId" aria-label="Jurado ID" placeholder="Jurado ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={assignmentForm.juradoId} onChange={(event) => setAssignmentForm({ ...assignmentForm, juradoId: event.target.value })} />
-              <input id="admin-assignment-night" name="assignmentNightId" aria-label="Noche ID asignación" placeholder="Noche ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={assignmentForm.nocheId} onChange={(event) => setAssignmentForm({ ...assignmentForm, nocheId: event.target.value })} />
-              <input id="admin-assignment-reason" name="assignmentReason" aria-label="Motivo asignación" placeholder="Motivo opcional" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={assignmentForm.motivo} onChange={(event) => setAssignmentForm({ ...assignmentForm, motivo: event.target.value })} />
-              <Button type="submit" disabled={busy}>Asignar jurado</Button>
-            </form>
-            <form className="grid gap-3" onSubmit={onReplace}>
-              <input id="admin-replacement-assignment" name="assignmentId" aria-label="Asignación ID" placeholder="Asignación ID activa" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={replaceForm.assignmentId} onChange={(event) => setReplaceForm({ ...replaceForm, assignmentId: event.target.value })} />
-              <input id="admin-replacement-juror" name="replacementJurorId" aria-label="Jurado reemplazante ID" placeholder="Jurado reemplazante ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={replaceForm.replacementJurorId} onChange={(event) => setReplaceForm({ ...replaceForm, replacementJurorId: event.target.value })} />
-              <input id="admin-replacement-reason" name="replacementReason" aria-label="Motivo reemplazo" placeholder="Motivo obligatorio" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={replaceForm.motivo} onChange={(event) => setReplaceForm({ ...replaceForm, motivo: event.target.value })} />
-              <Button type="submit" variant="danger" disabled={busy || replaceForm.motivo.trim().length < 3}>Reemplazar jurado</Button>
-            </form>
-          </div>
-          <div className="mt-4 max-h-96 space-y-2 overflow-auto">{(assignments.data ?? []).map((assignment) => <div key={assignment.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><p className="font-semibold">{assignment.juradoNombre} · {assignment.nocheNombre}</p><p className="text-slate-400">{assignment.estado} · {assignment.id}</p></div>)}</div>
+            if (nombre?.trim()) setConfirm({ type: 'updateItem', id: item.id, label: item.nombre, body: { nombre: nombre.trim() } })
+          }}>Modificar</Button><Button variant="danger" disabled={busy || !item.activo} onClick={() => setConfirm({ type: 'deleteItem', id: item.id, label: item.nombre })}>Borrar</Button></div></div>)}</div>
         </Card>
       </div>
 
       <Modal
         open={Boolean(confirm)}
-        title={confirm?.type === 'replaceAssignment' ? 'Reemplazar jurado' : confirm?.type === 'closeNight' ? 'Cerrar noche' : 'Abrir noche'}
-        description="Acción operativa sensible: quedará auditada en backend. Verificá que corresponde antes de confirmar."
+        title={confirm ? confirmTitle(confirm) : 'Confirmar acción'}
+        description={confirm ? confirmDescription(confirm) : ''}
         confirmLabel="Confirmar"
-        danger={confirm?.type !== 'openNight'}
+        danger={confirm ? isDangerAction(confirm) : true}
         busy={busy}
         onCancel={() => setConfirm(null)}
         onConfirm={() => {
           if (!confirm) return
+          if (confirm.type === 'updateUser') updateUser.mutate({ id: confirm.id, body: confirm.body })
+          if (confirm.type === 'deleteUser') deleteUser.mutate(confirm.id)
+          if (confirm.type === 'updateNight') updateNight.mutate({ id: confirm.id, body: confirm.body })
+          if (confirm.type === 'deleteNight') deleteNight.mutate(confirm.id)
           if (confirm.type === 'openNight') openNight.mutate(confirm.id)
           if (confirm.type === 'closeNight') closeNight.mutate(confirm.id)
-          if (confirm.type === 'replaceAssignment') replaceAssignment.mutate(confirm.form)
+          if (confirm.type === 'updateComparsa') updateComparsa.mutate({ id: confirm.id, body: confirm.body })
+          if (confirm.type === 'deleteComparsa') deleteComparsa.mutate(confirm.id)
+          if (confirm.type === 'reorderComparsas') reorderComparsas.mutate(confirm.id)
+          if (confirm.type === 'updateItem') updateItem.mutate({ id: confirm.id, body: confirm.body })
+          if (confirm.type === 'deleteItem') deleteItem.mutate(confirm.id)
         }}
       >
-        {confirm?.type === 'replaceAssignment' ? <p className="break-all text-slate-100">Asignación: {confirm.form.assignmentId}</p> : <p className="text-slate-100">{confirm?.label}</p>}
+        <p className="text-slate-100">{confirm?.label}</p>
       </Modal>
     </main>
   )

@@ -151,14 +151,25 @@ export class AdminService {
     try {
       return await withTransaction(async (client) => {
         if (!await repository.lockUser(id, client)) throw errors.notFound('Usuario')
-        if (await repository.hasActiveAssignment(id, client)) {
-          throw errors.conflict('ASSIGNMENT_INACTIVE', 'Debe reemplazar o finalizar la asignación activa antes de dar de baja al jurado.')
+        const dependencies = await repository.userDependencySummary(id, client)
+        const hasEvidence = Boolean(dependencies && (
+          dependencies.assignments > 0
+          || dependencies.votes > 0
+          || dependencies.closes > 0
+          || dependencies.penalties > 0
+          || dependencies.acts > 0
+          || dependencies.otpChallenges > 0
+          || dependencies.sessions > 0
+          || dependencies.auditEntries > 0
+          || dependencies.fiscalEvents > 0
+        ))
+        if (hasEvidence) {
+          throw errors.conflict('USER_HAS_DEPENDENCIES', 'El usuario tiene sesiones, votos, auditoría u otros datos asociados y no puede borrarse.')
         }
-        const updated = await repository.deactivateUser(id, client)
-        if (!updated) throw errors.notFound('Usuario')
-        await repository.revokeUserSessions(id, client)
-        await audit(actor, context, 'admin.user_deleted', 'users', id, { softDelete: true }, client)
-        return updated
+        const deleted = await repository.deleteUserById(id, client)
+        if (!deleted) throw errors.notFound('Usuario')
+        await audit(actor, context, 'admin.user_deleted', 'users', id, { hardDelete: true }, client)
+        return deleted
       })
     } catch (error) {
       if (error instanceof AppError) throw error
@@ -246,10 +257,20 @@ export class AdminService {
   async deleteComparsa(actor: AuthenticatedUser, id: number, context: Context) {
     try {
       return await withTransaction(async (client) => {
-        const updated = await repository.deactivateComparsa(id, client)
-        if (!updated) throw errors.notFound('Comparsa')
-        await audit(actor, context, 'admin.comparsa_deleted', 'comparsas', String(id), { softDelete: true }, client)
-        return updated
+        const dependencies = await repository.comparsaDependencySummary(id, client)
+        const hasEvidence = Boolean(dependencies && (
+          dependencies.votes > 0
+          || dependencies.closes > 0
+          || dependencies.penalties > 0
+          || dependencies.fiscalEvents > 0
+        ))
+        if (hasEvidence) {
+          throw errors.conflict('COMPARSA_HAS_DEPENDENCIES', 'La comparsa tiene votos, cierres, penalizaciones o eventos asociados y no puede borrarse.')
+        }
+        const deleted = await repository.deleteComparsaById(id, client)
+        if (!deleted) throw errors.notFound('Comparsa')
+        await audit(actor, context, 'admin.comparsa_deleted', 'comparsas', String(id), { hardDelete: true }, client)
+        return deleted
       })
     } catch (error) {
       if (error instanceof AppError) throw error
@@ -285,10 +306,18 @@ export class AdminService {
   async deleteItem(actor: AuthenticatedUser, id: number, context: Context) {
     try {
       return await withTransaction(async (client) => {
-        const updated = await repository.deactivateItem(id, client)
-        if (!updated) throw errors.notFound('Item')
-        await audit(actor, context, 'admin.item_deleted', 'items', String(id), { softDelete: true }, client)
-        return updated
+        const dependencies = await repository.itemDependencySummary(id, client)
+        const hasEvidence = Boolean(dependencies && (
+          dependencies.votes > 0
+          || dependencies.children > 0
+        ))
+        if (hasEvidence) {
+          throw errors.conflict('ITEM_HAS_DEPENDENCIES', 'El ítem tiene votos o subítems asociados y no puede borrarse.')
+        }
+        const deleted = await repository.deleteItemById(id, client)
+        if (!deleted) throw errors.notFound('Item')
+        await audit(actor, context, 'admin.item_deleted', 'items', String(id), { hardDelete: true }, client)
+        return deleted
       })
     } catch (error) {
       if (error instanceof AppError) throw error

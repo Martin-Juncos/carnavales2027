@@ -58,8 +58,45 @@ export async function updateUser(id: string, input: UpdateUserInput, passwordHas
   return result.rows[0]
 }
 
-export async function deactivateUser(id: string, client?: DatabaseClient) {
-  return updateUser(id, { activo: false }, undefined, client)
+export async function userDependencySummary(id: string, client?: DatabaseClient) {
+  const result = await query<{
+    assignments: number
+    votes: number
+    closes: number
+    penalties: number
+    acts: number
+    otpChallenges: number
+    sessions: number
+    auditEntries: number
+    fiscalEvents: number
+  }>(
+    `SELECT
+       (SELECT count(*)::int FROM jurado_asignaciones
+        WHERE jurado_id = $1 OR asignado_por = $1 OR finalizado_por = $1) AS assignments,
+       (SELECT count(*)::int FROM puntuaciones WHERE jurado_id = $1) AS votes,
+       (SELECT count(*)::int FROM cierres_comparsa WHERE jurado_id = $1) AS closes,
+       (SELECT count(*)::int FROM penalizaciones
+        WHERE registrada_por = $1 OR anulada_por = $1) AS penalties,
+       (SELECT count(*)::int FROM actas
+        WHERE generada_por = $1 OR certificada_por = $1) AS acts,
+       (SELECT count(*)::int FROM otp_challenges WHERE user_id = $1) AS "otpChallenges",
+       (SELECT count(*)::int FROM sessions WHERE user_id = $1) AS sessions,
+       (SELECT count(*)::int FROM audit_log WHERE actor_user_id = $1) AS "auditEntries",
+       (SELECT count(*)::int FROM eventos_fiscal WHERE jurado_id = $1) AS "fiscalEvents"`,
+    [id],
+    client,
+  )
+  return result.rows[0]
+}
+
+export async function deleteUserById(id: string, client?: DatabaseClient) {
+  return (await query<PublicUserRow>(
+    `DELETE FROM users
+     WHERE id = $1
+     RETURNING ${publicUserColumns}`,
+    [id],
+    client,
+  )).rows[0]
 }
 
 export async function lockUser(userId: string, client: PoolClient): Promise<boolean> {
@@ -138,8 +175,32 @@ export async function updateComparsa(id: number, input: UpdateComparsaInput, cli
   )).rows[0]
 }
 
-export async function deactivateComparsa(id: number, client?: DatabaseClient) {
-  return updateComparsa(id, { activo: false }, client)
+export async function comparsaDependencySummary(id: number, client?: DatabaseClient) {
+  const result = await query<{
+    votes: number
+    closes: number
+    penalties: number
+    fiscalEvents: number
+  }>(
+    `SELECT
+       (SELECT count(*)::int FROM puntuaciones WHERE comparsa_id = $1) AS votes,
+       (SELECT count(*)::int FROM cierres_comparsa WHERE comparsa_id = $1) AS closes,
+       (SELECT count(*)::int FROM penalizaciones WHERE comparsa_id = $1) AS penalties,
+       (SELECT count(*)::int FROM eventos_fiscal WHERE comparsa_id = $1) AS "fiscalEvents"`,
+    [id],
+    client,
+  )
+  return result.rows[0]
+}
+
+export async function deleteComparsaById(id: number, client?: DatabaseClient) {
+  return (await query(
+    `DELETE FROM comparsas
+     WHERE id = $1
+     RETURNING id, nombre, noche_id AS "nocheId", orden, activo, created_at AS "createdAt", updated_at AS "updatedAt"`,
+    [id],
+    client,
+  )).rows[0]
 }
 
 export async function nightDependencySummary(id: number, client?: DatabaseClient) {
@@ -236,8 +297,29 @@ export async function updateItem(id: number, input: UpdateItemInput, client?: Da
   )).rows[0]
 }
 
-export async function deactivateItem(id: number, client?: DatabaseClient) {
-  return updateItem(id, { activo: false }, client)
+export async function itemDependencySummary(id: number, client?: DatabaseClient) {
+  const result = await query<{
+    votes: number
+    children: number
+  }>(
+    `SELECT
+       (SELECT count(*)::int FROM puntuaciones WHERE item_id = $1) AS votes,
+       (SELECT count(*)::int FROM items WHERE parent_item_id = $1) AS children`,
+    [id],
+    client,
+  )
+  return result.rows[0]
+}
+
+export async function deleteItemById(id: number, client?: DatabaseClient) {
+  return (await query(
+    `DELETE FROM items
+     WHERE id = $1
+     RETURNING id, nombre, parent_item_id AS "parentItemId", orden, activo,
+               created_at AS "createdAt", updated_at AS "updatedAt"`,
+    [id],
+    client,
+  )).rows[0]
 }
 
 export async function listAssignments() {

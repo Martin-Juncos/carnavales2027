@@ -219,7 +219,7 @@ Las acciones irreversibles deben utilizar confirmación anti-error.
 
 La navegación entre comparsas debe respetar las reglas funcionales definidas.
 
-Las comparsas se administran por noche. La UI Admin debe permitir crear, modificar, ordenar y dar de baja comparsas, preservando el historial cuando el backend responda baja lógica o bloqueo por dependencias.
+Las comparsas se administran por noche. La UI Admin debe permitir crear, modificar, ordenar y borrar comparsas. El backend solo permite borrado físico cuando no hay historial asociado; si hay dependencias, debe bloquear la acción y la UI debe mostrar el error.
 
 Cuando exista una restricción por puntuaciones pendientes, mostrar qué elementos faltan.
 
@@ -375,7 +375,6 @@ Debe poder administrar las entidades permitidas por RBAC.
 
 Las operaciones destructivas deben utilizar:
 
-* baja lógica cuando corresponda;
 * confirmación;
 * indicación del impacto;
 * respuesta de API clara.

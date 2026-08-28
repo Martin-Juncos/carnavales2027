@@ -11,26 +11,25 @@ Define qué debe hacer el Sistema de Votación Digital de Carnavales 2027. Es la
 - **Jurado:** elige una noche creada después de autenticarse y registra puntuaciones de las comparsas activas de esa noche.
 - **Fiscal:** supervisa el avance de votación, consulta planillas y registra penalizaciones autorizadas.
 - **Escribano/Veedor:** supervisa la integridad del proceso, consulta información de auditoría, valida penalizaciones cuando corresponda y certifica actas.
-- **Administrador:** configura el concurso, usuarios, noches, orden de comparsas, rubros, asignaciones y operación técnica. No puede editar votos confirmados.
+- **Administrador:** configura el concurso, usuarios, noches, orden de comparsas, rubros y operación técnica. No puede editar votos confirmados.
 
 ## 3. Configuración del concurso
 El Administrador puede:
 - Crear/editar/borrar noches, bloqueando el borrado destructivo cuando exista evidencia asociada.
-- Crear/editar/desactivar/borrar comparsas por noche y definir su orden de presentación.
-- Crear/editar/desactivar ítems y subítems, incluyendo orden y jerarquía.
-- Crear/editar/desactivar/borrar usuarios.
-- Asignar/reemplazar jurados cuando el operativo lo requiera.
-- Reemplazar un jurado antes o durante una noche dejando trazabilidad.
+- Crear/editar/borrar comparsas por noche y definir su orden de presentación.
+- Crear/editar/borrar ítems y subítems, incluyendo orden y jerarquía.
+- Crear/editar/borrar usuarios.
 
 ### Regla de selección de noche
 - El Jurado elige una noche creada al ingresar.
 - El backend valida que la noche exista y que las comparsas pertenezcan a esa noche; el estado de noche es informativo para la operación, no un bloqueo de voto del jurado.
-- Las asignaciones/reemplazos de jurados se mantienen como herramienta operativa auditable, pero no bloquean la selección inicial de noche.
+- No se requiere asignación administrativa de jurados para votar: el jurado autenticado elige la noche creada.
 
 ### Regla de comparsas
 - Las comparsas son administradas por noche.
-- El Administrador puede crear, modificar, ordenar, activar/desactivar y borrar comparsas.
-- Si existen datos asociados, el borrado operativo se realiza como baja lógica para no destruir votos, cierres, penalizaciones ni auditoría.
+- El Administrador puede crear, modificar, ordenar y borrar comparsas.
+- Usuarios, noches, comparsas e ítems se borran físicamente solo cuando no tienen historial asociado; si existen votos, cierres, penalizaciones, actas, sesiones, auditoría u otras dependencias, el backend bloquea el borrado para preservar evidencia.
+- En el panel de Administración, las acciones sensibles de modificación, borrado, apertura/cierre y guardado de orden requieren confirmación explícita mediante modal.
 
 ## 4. Autenticación y sesión
 - El acceso utiliza identidad previamente creada por Administración.
@@ -85,8 +84,7 @@ Al autenticar:
 - Debe poder verificar hash, fecha de emisión y versión de un acta.
 
 ## 8. Flujo del Administrador
-- CRUD de usuarios, noches, comparsas y rubros/ítems, usando baja lógica cuando hay historial.
-- Asignación/reemplazo de jurados por noche.
+- CRUD de usuarios, noches, comparsas y rubros/ítems; el borrado se permite solo sin historial asociado y se bloquea cuando hay evidencia que preservar.
 - Apertura y cierre administrativo de noches.
 - Consulta de auditoría y estado de sincronización.
 - Generación de reportes técnicos y operativos.
@@ -105,7 +103,6 @@ El sistema debe producir:
 - Reintento de la misma operación.
 - Doble click/reenvío accidental.
 - Cierre de comparsa con votos pendientes de sincronización.
-- Reemplazo de jurado a último momento.
 - Jurado desactivado con sesión abierta.
 - Noche cerrada mientras un dispositivo está desconectado.
 - Intento de voto fuera de término.

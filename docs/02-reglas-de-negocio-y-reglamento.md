@@ -11,13 +11,13 @@
 - Un voto confirmado no se modifica ni elimina.
 - Un ítem padre con hijos es calculado; un ítem hoja es puntuable.
 - No se descartan nota máxima ni mínima con la información disponible actualmente.
-- Las comparsas se administran por noche: el Admin puede crearlas, editarlas, ordenar su pasada y darlas de baja.
+- Las comparsas se administran por noche: el Admin puede crearlas, editarlas, ordenar su pasada y borrarlas si no tienen historial asociado.
+- Usuarios, noches, comparsas e ítems con evidencia asociada no se borran físicamente; el backend debe bloquear la operación para preservar trazabilidad.
 
-## 2. Selección y reemplazo de jurados
+## 2. Selección de jurados
 - Al ingresar, el Jurado elige una de las noches creadas.
 - El servidor valida existencia de noche y pertenencia de comparsa; la UI no es autoridad.
-- Las asignaciones/reemplazos administrativos siguen existiendo para trazabilidad operativa cuando se usen.
-- Un jurado reemplazado conserva todos los votos ya emitidos.
+- No se requiere que Administración asigne jurados a una noche para poder votar.
 
 ## 3. Puntuación
 Para cada jurado, comparsa e ítem hoja:

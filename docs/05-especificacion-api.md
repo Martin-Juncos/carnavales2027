@@ -77,14 +77,14 @@ Operaciones implementadas:
 - `GET|POST /admin/noches`, `PATCH|DELETE /admin/noches/:id`
 - `GET|POST /admin/comparsas`, `PATCH|DELETE /admin/comparsas/:id` y `PATCH /admin/noches/:id/comparsas/orden`
 - `GET|POST /admin/items`, `PATCH|DELETE /admin/items/:id`
-- `GET|POST /admin/asignaciones`
 
-Usuarios, comparsas e ítems se dan de baja lógicamente cuando corresponde. Una noche solo se borra físicamente si no tiene votos, cierres, actas, asignaciones, penalizaciones ni eventos asociados. El endpoint bulk de orden recibe `{ "comparsas": [{ "comparsaId": number, "orden": number }] }`.
+Usuarios, noches, comparsas e ítems se borran físicamente solo si no tienen historial asociado. Si existen sesiones, OTP, votos, cierres, penalizaciones, actas, eventos, auditoría o subítems relacionados, el backend bloquea el borrado para preservar evidencia. El endpoint bulk de orden recibe `{ "comparsas": [{ "comparsaId": number, "orden": number }] }` y la UI exige confirmación antes de enviarlo.
 
 Operaciones críticas:
 - `POST /admin/noches/:id/abrir`
 - `POST /admin/noches/:id/cerrar`
-- `POST /admin/asignaciones/:id/reemplazar`
+
+Los endpoints históricos de asignaciones pueden permanecer disponibles por compatibilidad técnica, pero no forman parte del flujo operativo visible del Administrador.
 
 ## 7. Códigos de error de negocio
 - `AUTH_REQUIRED`
@@ -95,6 +95,9 @@ Operaciones críticas:
 - `JUDGE_CAPACITY_EXCEEDED`
 - `NIGHT_CLOSED`
 - `NIGHT_HAS_DEPENDENCIES`
+- `USER_HAS_DEPENDENCIES`
+- `COMPARSA_HAS_DEPENDENCIES`
+- `ITEM_HAS_DEPENDENCIES`
 - `COMPARSA_CLOSED`
 - `ITEM_NOT_SCORABLE`
 - `INVALID_SCORE`

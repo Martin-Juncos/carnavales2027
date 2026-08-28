@@ -42,10 +42,12 @@ Las asignaciones no son la única fuente para votar: el Jurado elige una noche c
 ### `comparsas`
 `id`, `nombre`, `noche_id`, `orden`, `activo`, timestamps. `UNIQUE(noche_id, orden)`.
 
-Las comparsas pertenecen a una noche y son administradas por CRUD. El borrado normal es baja lógica (`activo=false`) cuando hay historial; no se destruye evidencia asociada.
+Las comparsas pertenecen a una noche y son administradas por CRUD. El borrado físico solo se permite si no hay historial asociado; si hay evidencia, el backend bloquea la operación.
 
 ### `items`
 `id`, `nombre`, `parent_item_id`, `orden`, `activo`, timestamps.
+
+El borrado físico de ítems solo se permite cuando no tienen votos ni subítems asociados.
 
 ### `puntuaciones`
 - `id UUID PK` o UUID server-side.
@@ -81,7 +83,7 @@ Registro derivado/transaccional de cierres y eventos relevantes para polling.
 - unicidad de voto por jurado/comparsa/item.
 - unicidad de `operation_uuid`.
 - no update/delete sobre votos y audit log para el rol de runtime.
-- toda operación de voto/cierre debe usar una comparsa activa cuya noche exista y esté abierta; validar transaccionalmente.
+- toda operación de voto/cierre debe usar una comparsa activa cuya noche exista y coincida con la noche elegida; validar transaccionalmente.
 
 ## 5. Migraciones
 El esquema debe mantenerse mediante migraciones versionadas. No editar producción manualmente ni usar el archivo SQL como único historial.

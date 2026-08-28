@@ -97,7 +97,9 @@ Los reemplazos de jurados deben preservar la trazabilidad de:
 
 Las comparsas son administradas por noche.
 
-El Administrador puede crear, ver, modificar, ordenar y dar de baja comparsas. Si existen votos, cierres, penalizaciones o auditoría asociados, el borrado debe preservar evidencia mediante baja lógica.
+El Administrador puede crear, ver, modificar, ordenar y borrar comparsas. Usuarios, noches, comparsas e ítems solo se borran físicamente si no tienen historial asociado; si hay votos, cierres, penalizaciones, actas, sesiones, auditoría u otras dependencias, el backend debe bloquear el borrado para preservar evidencia.
+
+Toda acción administrativa sensible de modificación, borrado, apertura/cierre, reemplazo o guardado de orden debe requerir confirmación explícita en modal antes de llamar a la API.
 
 La interfaz de votación presenta las comparsas activas correspondientes a la noche elegida por el jurado.
 

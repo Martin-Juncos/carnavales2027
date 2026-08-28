@@ -20,7 +20,7 @@ PWA React/TypeScript para el sistema de votación digital.
 - Escribano: actas, certificación, verificación de hash, auditoría y anulaciones.
 - Admin: CRUD de usuarios, noches, comparsas por noche, rubros/ítems, asignaciones/reemplazos y orden de pasada.
 
-Las comparsas ya no son catálogo fijo: Administración las crea, modifica, ordena y da de baja por noche según el programa del evento.
+Las comparsas ya no son catálogo fijo: Administración las crea, modifica, ordena y borra por noche según el programa del evento. Los borrados y cambios sensibles se confirman con modal; si hay historial asociado, el backend bloquea el borrado.
 
 ## Comandos
 
