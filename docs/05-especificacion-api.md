@@ -35,7 +35,9 @@ Request:
 El DNI actúa como clave operativa del usuario. No existe una contraseña separada para el login. El código OTP no se devuelve en la respuesta ni debe registrarse en logs.
 
 ## 3. Jurado
-- `GET /jurado/contexto` — noche asignada, comparsas, ítems, progreso y estado.
+- `GET /jurado/noches` — noches creadas disponibles para selección.
+- `GET /jurado/noches/:nocheId/contexto` — contexto de la noche elegida: comparsas, ítems, progreso y estado.
+- `GET /jurado/contexto` — contexto heredado por asignación activa, mantenido por compatibilidad.
 - `POST /jurado/votos` — crea voto idempotente.
 - `GET /jurado/votos` — reconciliación del dispositivo.
 - `POST /jurado/comparsas/:id/cerrar` — cierre idempotente.
@@ -71,13 +73,13 @@ Respuesta exitosa: `201` la primera vez; un reintento idéntico puede responder 
 
 ## 6. Admin
 Operaciones implementadas:
-- `GET|POST /admin/users` y `PATCH /admin/users/:id`
-- `GET|POST /admin/noches` y `PATCH /admin/noches/:id`
-- `GET /admin/comparsas`, `PATCH /admin/comparsas/:id` y `PATCH /admin/noches/:id/comparsas/orden`
-- `GET|POST /admin/items` y `PATCH /admin/items/:id`
+- `GET|POST /admin/users`, `PATCH|DELETE /admin/users/:id`
+- `GET|POST /admin/noches`, `PATCH|DELETE /admin/noches/:id`
+- `GET|POST /admin/comparsas`, `PATCH|DELETE /admin/comparsas/:id` y `PATCH /admin/noches/:id/comparsas/orden`
+- `GET|POST /admin/items`, `PATCH|DELETE /admin/items/:id`
 - `GET|POST /admin/asignaciones`
 
-Las comparsas oficiales están predefinidas y se crean automáticamente por noche. `PATCH /admin/comparsas/:id` solo acepta `{ "orden": number }`; el endpoint bulk por noche recibe `{ "comparsas": [{ "comparsaId": number, "orden": number }] }`.
+Usuarios, comparsas e ítems se dan de baja lógicamente cuando corresponde. Una noche solo se borra físicamente si no tiene votos, cierres, actas, asignaciones, penalizaciones ni eventos asociados. El endpoint bulk de orden recibe `{ "comparsas": [{ "comparsaId": number, "orden": number }] }`.
 
 Operaciones críticas:
 - `POST /admin/noches/:id/abrir`
@@ -92,13 +94,12 @@ Operaciones críticas:
 - `ASSIGNMENT_INACTIVE`
 - `JUDGE_CAPACITY_EXCEEDED`
 - `NIGHT_CLOSED`
+- `NIGHT_HAS_DEPENDENCIES`
 - `COMPARSA_CLOSED`
 - `ITEM_NOT_SCORABLE`
 - `INVALID_SCORE`
 - `VOTE_ALREADY_CONFIRMED`
 - `COMPARSA_INCOMPLETE`
-- `COMPARSA_CATALOG_FIXED`
-- `COMPARSA_ONLY_ORDER_MUTABLE`
 - `IDEMPOTENCY_CONFLICT`
 - `SYNC_REVIEW_REQUIRED`
 - `RATE_LIMITED`
@@ -109,4 +110,4 @@ Si el mismo `operationUuid` llega nuevamente:
 - mismo payload → devolver resultado original;
 - payload diferente → `409 IDEMPOTENCY_CONFLICT`, preservando evidencia auditable.
 
-`POST /jurado/sync/reconcile` responde por operación con `APPLIED`, `ALREADY_APPLIED`, `REJECTED` o `CONFLICT`. La decisión reglamentaria final sobre operaciones recibidas después del cierre continúa pendiente; el backend actual las conserva como conflicto y no las aplica silenciosamente.
+`POST /jurado/sync/reconcile` responde por operación con `APPLIED`, `ALREADY_APPLIED`, `REJECTED` o `CONFLICT`. La decisión reglamentaria final sobre operaciones recibidas después del cierre continúa pendiente; el flujo actual permite votar al jurado autenticado sobre comparsas activas de la noche elegida.

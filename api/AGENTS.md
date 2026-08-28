@@ -167,27 +167,26 @@ Además del rol, validar contexto.
 
 Ejemplo:
 
-Un jurado autenticado no puede votar cualquier noche por poseer rol `jurado`.
+Un jurado autenticado puede elegir una noche creada, pero no puede votar si el backend no la considera operativa.
 
 También debe verificarse que:
 
 ```text
 jurado
-→ tiene una asignación activa
-→ para esa noche
-→ y está autorizado a votar esa comparsa
+→ seleccionó una noche existente
+→ la comparsa activa pertenece a esa noche
 → y la votación continúa abierta
 ```
 
 ---
 
-# 7. Asignación de jurados
+# 7. Selección/asignación de noche
 
-La noche nunca se obtiene de una selección arbitraria del cliente.
+La noche puede ser seleccionada por el jurado desde el catálogo creado por Administración.
 
-Resolverla mediante la asignación persistida en servidor.
+Resolver la autorización crítica validando en servidor que la noche exista, que la comparsa activa pertenezca a esa noche y que el estado permita votar.
 
-El sistema debe preservar:
+Si se usan asignaciones operativas, el sistema debe preservar:
 
 ```text
 máximo 3 jurados activos por noche
@@ -290,8 +289,8 @@ Antes de insertar una puntuación validar como mínimo:
 
 1. usuario autenticado;
 2. rol jurado;
-3. asignación activa;
-4. noche correcta;
+3. noche existente y abierta;
+4. comparsa activa;
 5. comparsa perteneciente a esa noche;
 6. ítem válido;
 7. ítem puntuable;
@@ -516,7 +515,7 @@ Priorizar:
 
 Especialmente:
 
-* asignación simultánea de jurados;
+* selección concurrente de noche/voto;
 * doble confirmación de voto;
 * reintentos simultáneos.
 

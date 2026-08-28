@@ -12,7 +12,7 @@ const createUserBody = z.object({
   activo: z.boolean().default(true),
 }).strict()
 
-const updateUserBody = createUserBody.omit({ dni: true }).partial().refine((value) => Object.keys(value).length > 0)
+const updateUserBody = createUserBody.partial().refine((value) => Object.keys(value).length > 0)
 const createNightBody = z.object({ nombre: z.string().trim().min(2).max(50), fecha: z.iso.date() }).strict()
 const updateNightBody = createNightBody.partial().refine((value) => Object.keys(value).length > 0)
 const createComparsaBody = z.object({
@@ -21,9 +21,7 @@ const createComparsaBody = z.object({
   orden: z.coerce.number().int().positive(),
   activo: z.boolean().default(true),
 }).strict()
-const updateComparsaBody = z.object({
-  orden: z.coerce.number().int().positive(),
-}).strict()
+const updateComparsaBody = createComparsaBody.partial().refine((value) => Object.keys(value).length > 0)
 const reorderComparsasBody = z.object({
   comparsas: z.array(z.object({
     comparsaId: z.coerce.number().int().positive(),

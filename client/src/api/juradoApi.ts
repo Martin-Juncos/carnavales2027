@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient'
-import type { JuradoContext, SyncOperation, SyncResultStatus } from '../types/domain'
+import type { JuradoContext, NightSummary, SyncOperation, SyncResultStatus } from '../types/domain'
 
 function numberFrom(value: unknown): number {
   if (typeof value === 'number') return value
@@ -39,8 +39,14 @@ export interface ReconcileResponse {
 }
 
 export const juradoApi = {
+  nights(): Promise<NightSummary[]> {
+    return apiClient.get<NightSummary[]>('/jurado/noches')
+  },
   async context(): Promise<JuradoContext> {
     return normalizeJuradoContext(await apiClient.get<JuradoContext>('/jurado/contexto'))
+  },
+  async nightContext(nightId: number): Promise<JuradoContext> {
+    return normalizeJuradoContext(await apiClient.get<JuradoContext>(`/jurado/noches/${nightId}/contexto`))
   },
   votos() {
     return apiClient.get<JuradoContext['votes']>('/jurado/votos')

@@ -110,6 +110,9 @@ export const apiClient = {
   async patch<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
     return (await requestEnvelope<T>(`${appConfig.apiBaseUrl}${path}`, { ...options, method: 'PATCH', body })).data
   },
+  async delete<T>(path: string, options?: RequestOptions): Promise<T> {
+    return (await requestEnvelope<T>(`${appConfig.apiBaseUrl}${path}`, { ...options, method: 'DELETE' })).data
+  },
   async health(): Promise<boolean> {
     try {
       await requestEnvelope<{ status: string }>(appConfig.apiHealthUrl, { method: 'GET', timeoutMs: 3_000 })

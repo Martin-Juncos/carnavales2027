@@ -64,7 +64,7 @@ Elegir status HTTP según la semántica documentada. Nunca exponer stack traces,
 ## Autenticación, autorización e idempotencia
 
 - Obtener identidad/rol de sesión o token validado; no confiar en `userId`, `role`, permisos o headers arbitrarios enviados por el cliente.
-- Autorizar en servidor por rol y contexto: identidad → rol → asignación activa → noche/recurso correcto → operación permitida.
+- Autorizar en servidor por rol y contexto: identidad → rol → noche elegida existente → comparsa activa de esa noche → operación permitida.
 - No definir aquí detalles internos de 2FA.
 - Preservar el `operationId` recibido en endpoints críticos y entregarlo intacto al caso de uso. No reemplazarlo ni convertir un conflicto idempotente en éxito.
 

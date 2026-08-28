@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '../../api/adminApi'
-import type { AdminComparsa } from '../../api/adminApi'
+import type { AdminComparsa, AdminItem, AdminNight, AdminUser } from '../../api/adminApi'
 import { ApiClientError } from '../../api/apiClient'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -11,6 +11,7 @@ import type { Role } from '../../types/domain'
 
 interface UserForm { nombre: string; dni: string; email: string; role: Role; activo: boolean }
 interface NightForm { nombre: string; fecha: string }
+interface ComparsaForm { nombre: string; nocheId: string; orden: string; activo: boolean }
 interface ItemForm { nombre: string; parentItemId: string; orden: string; activo: boolean }
 interface AssignmentForm { juradoId: string; nocheId: string; motivo: string }
 interface ReplaceForm { assignmentId: string; replacementJurorId: string; motivo: string }
@@ -22,6 +23,7 @@ type ConfirmAction =
 
 const initialUser: UserForm = { nombre: '', dni: '', email: '', role: 'jurado', activo: true }
 const initialNight: NightForm = { nombre: '', fecha: '' }
+const initialComparsa: ComparsaForm = { nombre: '', nocheId: '', orden: '1', activo: true }
 const initialItem: ItemForm = { nombre: '', parentItemId: '', orden: '1', activo: true }
 const initialAssignment: AssignmentForm = { juradoId: '', nocheId: '1', motivo: '' }
 const initialReplace: ReplaceForm = { assignmentId: '', replacementJurorId: '', motivo: '' }
@@ -34,6 +36,7 @@ export function AdminPage() {
   const queryClient = useQueryClient()
   const [userForm, setUserForm] = useState<UserForm>(initialUser)
   const [nightForm, setNightForm] = useState<NightForm>(initialNight)
+  const [comparsaForm, setComparsaForm] = useState<ComparsaForm>(initialComparsa)
   const [itemForm, setItemForm] = useState<ItemForm>(initialItem)
   const [assignmentForm, setAssignmentForm] = useState<AssignmentForm>(initialAssignment)
   const [replaceForm, setReplaceForm] = useState<ReplaceForm>(initialReplace)
@@ -65,6 +68,36 @@ export function AdminPage() {
     onSuccess: () => { setNightForm(initialNight); setMessage('Noche creada.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo crear la noche.')),
   })
+  const createComparsa = useMutation({
+    mutationFn: () => adminApi.createComparsa({
+      nombre: comparsaForm.nombre,
+      nocheId: Number(comparsaForm.nocheId),
+      orden: Number(comparsaForm.orden),
+      activo: comparsaForm.activo,
+    }),
+    onSuccess: () => { setComparsaForm(initialComparsa); setMessage('Comparsa creada.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo crear la comparsa.')),
+  })
+  const updateUser = useMutation({
+    mutationFn: ({ id, body }: { id: string; body: Partial<Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt'>> }) => adminApi.updateUser(id, body),
+    onSuccess: () => { setMessage('Usuario actualizado.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar el usuario.')),
+  })
+  const deleteUser = useMutation({
+    mutationFn: adminApi.deleteUser,
+    onSuccess: () => { setMessage('Usuario dado de baja.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo borrar el usuario.')),
+  })
+  const updateNight = useMutation({
+    mutationFn: ({ id, body }: { id: number; body: Partial<Pick<AdminNight, 'nombre' | 'fecha'>> }) => adminApi.updateNight(id, body),
+    onSuccess: () => { setMessage('Noche actualizada.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar la noche.')),
+  })
+  const deleteNight = useMutation({
+    mutationFn: adminApi.deleteNight,
+    onSuccess: () => { setMessage('Noche borrada.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo borrar la noche.')),
+  })
   const comparsasByNight = useMemo(() => {
     const grouped = new Map<number, AdminComparsa[]>()
     for (const comparsa of comparsas.data ?? []) {
@@ -88,6 +121,16 @@ export function AdminPage() {
     onSuccess: () => { setMessage('Orden de comparsas actualizado.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar el orden.')),
   })
+  const updateComparsa = useMutation({
+    mutationFn: ({ id, body }: { id: number; body: Partial<Pick<AdminComparsa, 'nombre' | 'nocheId' | 'orden' | 'activo'>> }) => adminApi.updateComparsa(id, body),
+    onSuccess: () => { setMessage('Comparsa actualizada.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar la comparsa.')),
+  })
+  const deleteComparsa = useMutation({
+    mutationFn: adminApi.deleteComparsa,
+    onSuccess: () => { setMessage('Comparsa dada de baja.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo borrar la comparsa.')),
+  })
   const createItem = useMutation({
     mutationFn: () => adminApi.createItem({
       nombre: itemForm.nombre,
@@ -97,6 +140,16 @@ export function AdminPage() {
     }),
     onSuccess: () => { setItemForm(initialItem); setMessage('Ítem creado.'); refreshAdmin() },
     onError: (caught) => setMessage(errorText(caught, 'No se pudo crear el ítem.')),
+  })
+  const updateItem = useMutation({
+    mutationFn: ({ id, body }: { id: number; body: Partial<Pick<AdminItem, 'nombre' | 'parentItemId' | 'orden' | 'activo'>> }) => adminApi.updateItem(id, body),
+    onSuccess: () => { setMessage('Ítem actualizado.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo modificar el ítem.')),
+  })
+  const deleteItem = useMutation({
+    mutationFn: adminApi.deleteItem,
+    onSuccess: () => { setMessage('Ítem dado de baja.'); refreshAdmin() },
+    onError: (caught) => setMessage(errorText(caught, 'No se pudo borrar el ítem.')),
   })
   const createAssignment = useMutation({
     mutationFn: () => adminApi.createAssignment({
@@ -125,11 +178,12 @@ export function AdminPage() {
 
   const onUser = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createUser.mutate() }
   const onNight = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createNight.mutate() }
+  const onComparsa = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createComparsa.mutate() }
   const onItem = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createItem.mutate() }
   const onAssignment = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); createAssignment.mutate() }
   const onReplace = (event: FormEvent<HTMLFormElement>): void => { event.preventDefault(); setConfirm({ type: 'replaceAssignment', form: replaceForm }) }
 
-  const busy = createUser.isPending || createNight.isPending || reorderComparsas.isPending || createItem.isPending || createAssignment.isPending || openNight.isPending || closeNight.isPending || replaceAssignment.isPending
+  const busy = createUser.isPending || createNight.isPending || createComparsa.isPending || reorderComparsas.isPending || createItem.isPending || createAssignment.isPending || openNight.isPending || closeNight.isPending || replaceAssignment.isPending || updateUser.isPending || deleteUser.isPending || updateNight.isPending || deleteNight.isPending || updateComparsa.isPending || deleteComparsa.isPending || updateItem.isPending || deleteItem.isPending
 
   return (
     <main className="mx-auto max-w-7xl space-y-4 px-4 py-5">
@@ -145,7 +199,19 @@ export function AdminPage() {
             <Button type="submit" disabled={busy}>Crear usuario</Button>
           </form>
           <div className="mt-4 max-h-80 space-y-2 overflow-auto">
-            {(users.data ?? []).map((user) => <div key={user.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><p className="font-semibold">{user.nombre}</p><p className="text-slate-400">{user.email} · {user.role}</p></div>)}
+            {(users.data ?? []).map((user) => (
+              <div key={user.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">
+                <p className="font-semibold">{user.nombre}</p>
+                <p className="text-slate-400">{user.email} · {user.role} · {user.activo ? 'activo' : 'inactivo'}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button variant="secondary" disabled={busy} onClick={() => {
+                    const nombre = window.prompt('Nuevo nombre', user.nombre)
+                    if (nombre?.trim()) updateUser.mutate({ id: user.id, body: { nombre: nombre.trim() } })
+                  }}>Modificar</Button>
+                  <Button variant="danger" disabled={busy || !user.activo} onClick={() => deleteUser.mutate(user.id)}>Borrar</Button>
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
 
@@ -157,13 +223,22 @@ export function AdminPage() {
             <Button type="submit" disabled={busy}>Crear noche</Button>
           </form>
           <div className="mt-4 space-y-2">
-            {(nights.data ?? []).map((night) => <div key={night.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><div><p className="font-semibold">#{night.id} · {night.nombre}</p><p className="text-slate-400">{night.fecha}</p></div><Badge tone={night.estado === 'open' ? 'success' : 'warning'}>{night.estado}</Badge><div className="flex gap-2"><Button variant="secondary" onClick={() => setConfirm({ type: 'openNight', id: night.id, label: night.nombre })}>Abrir</Button><Button variant="danger" onClick={() => setConfirm({ type: 'closeNight', id: night.id, label: night.nombre })}>Cerrar</Button></div></div>)}
+            {(nights.data ?? []).map((night) => <div key={night.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><div><p className="font-semibold">#{night.id} · {night.nombre}</p><p className="text-slate-400">{night.fecha}</p></div><Badge tone={night.estado === 'open' ? 'success' : 'warning'}>{night.estado}</Badge><div className="flex gap-2"><Button variant="secondary" onClick={() => {
+              const nombre = window.prompt('Nuevo nombre de noche', night.nombre)
+              if (nombre?.trim()) updateNight.mutate({ id: night.id, body: { nombre: nombre.trim() } })
+            }}>Modificar</Button><Button variant="secondary" onClick={() => setConfirm({ type: 'openNight', id: night.id, label: night.nombre })}>Abrir</Button><Button variant="danger" onClick={() => setConfirm({ type: 'closeNight', id: night.id, label: night.nombre })}>Cerrar</Button><Button variant="danger" disabled={busy} onClick={() => deleteNight.mutate(night.id)}>Borrar</Button></div></div>)}
           </div>
         </Card>
 
         <Card>
           <h2 className="text-xl font-bold">Comparsas</h2>
-          <p className="mt-2 text-sm text-slate-400">Las comparsas oficiales ya quedan creadas para cada noche. Acá solo se modifica el orden de pasada.</p>
+          <p className="mt-2 text-sm text-slate-400">El administrador crea comparsas por noche y define el orden de pasada.</p>
+          <form className="mt-3 grid gap-3 sm:grid-cols-4" onSubmit={onComparsa}>
+            <input aria-label="Nombre comparsa" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nombre} onChange={(event) => setComparsaForm({ ...comparsaForm, nombre: event.target.value })} />
+            <input aria-label="Noche ID comparsa" placeholder="Noche ID" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nocheId} onChange={(event) => setComparsaForm({ ...comparsaForm, nocheId: event.target.value })} />
+            <input aria-label="Orden comparsa" placeholder="Orden" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.orden} onChange={(event) => setComparsaForm({ ...comparsaForm, orden: event.target.value })} />
+            <Button type="submit" disabled={busy}>Crear comparsa</Button>
+          </form>
           <div className="mt-4 max-h-80 space-y-4 overflow-auto">
             {comparsasByNight.map(([nightId, rows]) => (
               <div key={nightId} className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
@@ -173,8 +248,8 @@ export function AdminPage() {
                 </div>
                 <div className="grid gap-2">
                   {rows.map((comparsa) => (
-                    <label key={comparsa.id} className="grid grid-cols-[1fr_5rem] items-center gap-3 text-sm">
-                      <span>{comparsa.nombre}</span>
+                    <label key={comparsa.id} className="grid grid-cols-[1fr_5rem_auto] items-center gap-3 text-sm">
+                      <span>{comparsa.nombre} {!comparsa.activo ? <em className="text-rose-200">(inactiva)</em> : null}</span>
                       <input
                         aria-label={`Orden ${comparsa.nombre}`}
                         className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3"
@@ -182,6 +257,13 @@ export function AdminPage() {
                         value={orderDraft[comparsa.id] ?? String(comparsa.orden)}
                         onChange={(event) => setOrderDraft({ ...orderDraft, [comparsa.id]: event.target.value })}
                       />
+                      <span className="flex gap-2">
+                        <Button variant="secondary" disabled={busy} onClick={() => {
+                          const nombre = window.prompt('Nuevo nombre de comparsa', comparsa.nombre)
+                          if (nombre?.trim()) updateComparsa.mutate({ id: comparsa.id, body: { nombre: nombre.trim() } })
+                        }}>Modificar</Button>
+                        <Button variant="danger" disabled={busy || !comparsa.activo} onClick={() => deleteComparsa.mutate(comparsa.id)}>Borrar</Button>
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -198,7 +280,10 @@ export function AdminPage() {
             <input id="admin-item-order" name="itemOrder" aria-label="Orden ítem" placeholder="Orden" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.orden} onChange={(event) => setItemForm({ ...itemForm, orden: event.target.value })} />
             <Button type="submit" disabled={busy}>Crear ítem</Button>
           </form>
-          <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(items.data ?? []).map((item) => <p key={item.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">#{item.id} · {item.nombre} · padre {item.parentItemId ?? '-'} · orden {item.orden}</p>)}</div>
+          <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(items.data ?? []).map((item) => <div key={item.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><p>#{item.id} · {item.nombre} · padre {item.parentItemId ?? '-'} · orden {item.orden} · {item.activo ? 'activo' : 'inactivo'}</p><div className="mt-2 flex gap-2"><Button variant="secondary" disabled={busy} onClick={() => {
+            const nombre = window.prompt('Nuevo nombre de ítem', item.nombre)
+            if (nombre?.trim()) updateItem.mutate({ id: item.id, body: { nombre: nombre.trim() } })
+          }}>Modificar</Button><Button variant="danger" disabled={busy || !item.activo} onClick={() => deleteItem.mutate(item.id)}>Borrar</Button></div></div>)}</div>
         </Card>
 
         <Card className="xl:col-span-2">

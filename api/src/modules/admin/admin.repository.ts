@@ -13,7 +13,6 @@ import type {
   UpdateNightInput,
   UpdateUserInput,
 } from './admin.schemas'
-import { fixedComparsaNames } from './fixed-comparsas'
 
 export interface PublicUserRow {
   id: string
@@ -43,18 +42,24 @@ export async function createUser(input: CreateUserInput, passwordHash: string, c
   return result.rows[0]
 }
 
-export async function updateUser(id: string, input: UpdateUserInput, client?: DatabaseClient) {
+export async function updateUser(id: string, input: UpdateUserInput, passwordHash?: string, client?: DatabaseClient) {
   const result = await query<PublicUserRow>(
     `UPDATE users SET
       nombre = COALESCE($2, nombre),
-      email = COALESCE($3, email),
-      role = COALESCE($4, role),
-      activo = COALESCE($5, activo)
+      dni = COALESCE($3, dni),
+      email = COALESCE($4, email),
+      password_hash = COALESCE($5, password_hash),
+      role = COALESCE($6, role),
+      activo = COALESCE($7, activo)
      WHERE id = $1 RETURNING ${publicUserColumns}`,
-    [id, input.nombre ?? null, input.email?.toLowerCase() ?? null, input.role ?? null, input.activo ?? null],
+    [id, input.nombre ?? null, input.dni ?? null, input.email?.toLowerCase() ?? null, passwordHash ?? null, input.role ?? null, input.activo ?? null],
     client,
   )
   return result.rows[0]
+}
+
+export async function deactivateUser(id: string, client?: DatabaseClient) {
+  return updateUser(id, { activo: false }, undefined, client)
 }
 
 export async function lockUser(userId: string, client: PoolClient): Promise<boolean> {
@@ -92,25 +97,6 @@ export async function createNight(input: CreateNightInput, client?: DatabaseClie
   )).rows[0]
 }
 
-export async function seedFixedComparsasForNight(nightId: number, client: DatabaseClient) {
-  const result = await query(
-    `WITH fixed(nombre, orden) AS (
-       SELECT * FROM unnest($2::text[], $3::int[])
-     )
-     INSERT INTO comparsas (nombre, noche_id, orden, activo)
-     SELECT fixed.nombre, $1, fixed.orden, true
-     FROM fixed
-     WHERE NOT EXISTS (
-       SELECT 1 FROM comparsas c
-       WHERE c.noche_id = $1 AND lower(c.nombre) = lower(fixed.nombre)
-     )
-     RETURNING id, nombre, noche_id AS "nocheId", orden, activo,
-               created_at AS "createdAt", updated_at AS "updatedAt"`,
-    [nightId, fixedComparsaNames, fixedComparsaNames.map((_, index) => index + 1)],
-    client,
-  )
-  return result.rows
-}
 
 export async function updateNight(id: number, input: UpdateNightInput, client?: DatabaseClient) {
   return (await query(
@@ -140,16 +126,60 @@ export async function createComparsa(input: CreateComparsaInput, client?: Databa
 
 export async function updateComparsa(id: number, input: UpdateComparsaInput, client?: DatabaseClient) {
   return (await query(
-    `UPDATE comparsas SET orden = $2
-     WHERE id = $1 RETURNING id, nombre, noche_id AS "nocheId", orden, activo, created_at AS "createdAt", updated_at AS "updatedAt"`,
-    [id, input.orden],
+    `UPDATE comparsas SET
+       nombre = COALESCE($2, nombre),
+       noche_id = COALESCE($3, noche_id),
+       orden = COALESCE($4, orden),
+       activo = COALESCE($5, activo)
+     WHERE id = $1
+     RETURNING id, nombre, noche_id AS "nocheId", orden, activo, created_at AS "createdAt", updated_at AS "updatedAt"`,
+    [id, input.nombre ?? null, input.nocheId ?? null, input.orden ?? null, input.activo ?? null],
+    client,
+  )).rows[0]
+}
+
+export async function deactivateComparsa(id: number, client?: DatabaseClient) {
+  return updateComparsa(id, { activo: false }, client)
+}
+
+export async function nightDependencySummary(id: number, client?: DatabaseClient) {
+  const result = await query<{
+    assignments: number
+    acts: number
+    fiscalEvents: number
+    votes: number
+    closes: number
+    penalties: number
+  }>(
+    `SELECT
+       (SELECT count(*)::int FROM jurado_asignaciones WHERE noche_id = $1) AS assignments,
+       (SELECT count(*)::int FROM actas WHERE noche_id = $1) AS acts,
+       (SELECT count(*)::int FROM eventos_fiscal WHERE noche_id = $1) AS "fiscalEvents",
+       (SELECT count(*)::int FROM puntuaciones p JOIN comparsas c ON c.id = p.comparsa_id WHERE c.noche_id = $1) AS votes,
+       (SELECT count(*)::int FROM cierres_comparsa cc JOIN comparsas c ON c.id = cc.comparsa_id WHERE c.noche_id = $1) AS closes,
+       (SELECT count(*)::int FROM penalizaciones pe JOIN comparsas c ON c.id = pe.comparsa_id WHERE c.noche_id = $1) AS penalties`,
+    [id],
+    client,
+  )
+  return result.rows[0]
+}
+
+export async function deleteComparsasByNight(id: number, client?: DatabaseClient): Promise<void> {
+  await query('DELETE FROM comparsas WHERE noche_id = $1', [id], client)
+}
+
+export async function deleteNightById(id: number, client?: DatabaseClient) {
+  return (await query(
+    `DELETE FROM noches WHERE id = $1
+     RETURNING id, nombre, fecha, estado, created_at AS "createdAt", updated_at AS "updatedAt"`,
+    [id],
     client,
   )).rows[0]
 }
 
 export async function getComparsasForNight(nightId: number, client: PoolClient) {
-  return (await query<{ id: string; nombre: string }>(
-    'SELECT id, nombre FROM comparsas WHERE noche_id = $1 FOR UPDATE',
+  return (await query<{ id: string; nombre: string; orden: number }>(
+    'SELECT id, nombre, orden FROM comparsas WHERE noche_id = $1 AND activo FOR UPDATE',
     [nightId],
     client,
   )).rows
@@ -204,6 +234,10 @@ export async function updateItem(id: number, input: UpdateItemInput, client?: Da
     [id, input.nombre ?? null, Object.hasOwn(input, 'parentItemId'), input.parentItemId ?? null, input.orden ?? null, input.activo ?? null],
     client,
   )).rows[0]
+}
+
+export async function deactivateItem(id: number, client?: DatabaseClient) {
+  return updateItem(id, { activo: false }, client)
 }
 
 export async function listAssignments() {

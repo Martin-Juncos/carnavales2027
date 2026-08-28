@@ -38,6 +38,7 @@ function renderItemNode(
   context: JuradoContext,
   onSelect: (item: ScoringItem, value: number) => void,
   disabled: boolean,
+  depth = 0,
 ): JSX.Element {
   const values = new Map<number, number>()
   for (const item of context.items) {
@@ -49,23 +50,44 @@ function renderItemNode(
   const isParent = node.children.length > 0
 
   return (
-    <div key={node.id} className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-bold text-slate-50">{node.nombre}</h3>
-          <p className="text-sm text-slate-400">{isParent ? 'Ítem calculado por subítems' : 'Ítem puntuable · escala 0 a 5'}</p>
+    <div key={node.id}>
+      <div className={`grid grid-cols-[1fr_auto] items-center gap-3 border-b border-slate-200/70 px-3 py-3 ${depth > 0 ? 'bg-white/40' : 'bg-white/20'}`}>
+        <div style={{ paddingLeft: `${depth * 1.25}rem` }}>
+          <h3 className={isParent ? 'text-base font-black text-slate-950' : 'text-base font-bold text-slate-900'}>{node.nombre}</h3>
+          <p className="text-xs text-slate-600">{isParent ? 'Rubro calculado por subítems' : 'Ítem puntuable'}</p>
         </div>
-        {isParent && subtotal !== undefined ? <Badge tone="info">Subtotal visual: {subtotal}</Badge> : null}
+        {isParent ? (
+          <Badge tone="info">Subtotal: {subtotal ?? '-'}</Badge>
+        ) : (
+          <VoteInput itemName={node.nombre} score={score} disabled={disabled} onSelect={(value) => onSelect(node, value)} />
+        )}
       </div>
       {isParent ? (
-        <div className="mt-4 space-y-3 pl-0 sm:pl-4">
-          {node.children.map((child) => renderItemNode(child, comparsaId, drafts, context, onSelect, disabled))}
+        <div>
+          {node.children.map((child) => renderItemNode(child, comparsaId, drafts, context, onSelect, disabled, depth + 1))}
         </div>
-      ) : (
-        <VoteInput itemName={node.nombre} score={score} disabled={disabled} onSelect={(value) => onSelect(node, value)} />
-      )}
+      ) : null}
     </div>
   )
+}
+
+function tabClass(index: number, active: boolean): string {
+  const colors = [
+    'bg-carnival-gold text-night-950',
+    'bg-blue-600 text-white',
+    'bg-fuchsia-500 text-white',
+    'bg-emerald-500 text-night-950',
+    'bg-orange-500 text-night-950',
+    'bg-cyan-400 text-night-950',
+  ]
+  const color = colors[index % colors.length]
+  return `min-h-14 min-w-36 rounded-t-3xl border-2 border-slate-950 px-4 py-2 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-gold ${color} ${active ? 'translate-y-[2px] shadow-none' : 'opacity-80 shadow-[0_4px_0_rgba(15,23,42,0.75)] hover:opacity-100'}`
+}
+
+function nightStatusTone(status: JuradoContext['assignment']['night']['status']): 'success' | 'warning' | 'neutral' {
+  if (status === 'open') return 'success'
+  if (status === 'draft') return 'warning'
+  return 'neutral'
 }
 
 export function JudgePage() {
@@ -74,6 +96,7 @@ export function JudgePage() {
   const syncSummary = useSyncSummary()
   const connection = useConnectionStatus()
   const [cachedContext, setCachedContext] = useState<JuradoContext | undefined>()
+  const [selectedNightId, setSelectedNightId] = useState<number | undefined>()
   const [selectedComparsaId, setSelectedComparsaId] = useState<number | undefined>()
   const [drafts, setDrafts] = useState<VoteDraft[]>([])
   const [closeDrafts, setCloseDrafts] = useState<ComparsaCloseDraft[]>([])
@@ -81,10 +104,16 @@ export function JudgePage() {
   const [closeConfirm, setCloseConfirm] = useState<Comparsa | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const nightsQuery = useQuery({
+    queryKey: ['jurado-nights'],
+    queryFn: () => juradoApi.nights(),
+  })
+
   const contextQuery = useQuery({
-    queryKey: ['jurado-context'],
+    queryKey: ['jurado-context', selectedNightId],
+    enabled: selectedNightId !== undefined,
     queryFn: async () => {
-      const context = await juradoApi.context()
+      const context = await juradoApi.nightContext(Number(selectedNightId))
       await saveJuradoContextCache(context)
       return context
     },
@@ -108,12 +137,16 @@ export function JudgePage() {
 
   useEffect(() => {
     if (connection.apiReachable) {
-      void processSyncQueue().then(() => queryClient.invalidateQueries({ queryKey: ['jurado-context'] }))
+      void processSyncQueue().then(() => queryClient.invalidateQueries({ queryKey: ['jurado-context', selectedNightId] }))
     }
-  }, [connection.apiReachable, queryClient])
+  }, [connection.apiReachable, queryClient, selectedNightId])
 
-  const context = contextQuery.data ?? cachedContext
+  const context = contextQuery.data ?? (cachedContext?.assignment.night.id === selectedNightId ? cachedContext : undefined)
   const selectedComparsa = context?.comparsas.find((comparsa) => comparsa.id === selectedComparsaId) ?? context?.comparsas[0]
+
+  useEffect(() => {
+    setSelectedComparsaId(undefined)
+  }, [selectedNightId])
 
   useEffect(() => {
     if (!selectedComparsaId && context?.comparsas[0]) setSelectedComparsaId(context.comparsas[0].id)
@@ -121,12 +154,47 @@ export function JudgePage() {
 
   const tree = useMemo(() => buildItemTree(context?.items ?? []), [context?.items])
 
+  if (!selectedNightId) {
+    return (
+      <main className="mx-auto max-w-5xl px-4 py-6">
+        <Card>
+          <p className="text-sm text-slate-400">Paso 1</p>
+          <h2 className="text-2xl font-black">Elegí la noche que vas a votar</h2>
+          <p className="mt-2 text-slate-300">El servidor valida igualmente que la noche exista y esté abierta antes de aceptar votos.</p>
+          {nightsQuery.error ? <p className="mt-3 text-sm text-rose-200">{nightsQuery.error.message}</p> : null}
+          {cachedContext ? <Button className="mt-4" variant="secondary" onClick={() => setSelectedNightId(cachedContext.assignment.night.id)}>Usar última noche cacheada</Button> : null}
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {(nightsQuery.data ?? []).map((night) => (
+              <button
+                key={night.id}
+                type="button"
+                onClick={() => setSelectedNightId(night.id)}
+                className="rounded-3xl border border-slate-800 bg-slate-950 p-4 text-left transition hover:border-carnival-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-gold"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-slate-400">Noche #{night.id}</p>
+                    <h3 className="text-xl font-bold text-slate-50">{night.name}</h3>
+                  </div>
+                  <Badge tone={night.status === 'open' ? 'success' : 'warning'}>{night.status}</Badge>
+                </div>
+              </button>
+            ))}
+          </div>
+          {nightsQuery.isLoading ? <p className="mt-4 text-sm text-slate-400">Cargando noches...</p> : null}
+          {!nightsQuery.isLoading && (nightsQuery.data ?? []).length === 0 ? <p className="mt-4 text-sm text-slate-300">Todavía no hay noches creadas por Administración.</p> : null}
+        </Card>
+      </main>
+    )
+  }
+
   if (!context) {
     return (
       <main className="mx-auto max-w-4xl px-4 py-6">
         <Card>
           <h2 className="text-xl font-bold">No hay contexto de jurado disponible</h2>
           <p className="mt-2 text-slate-300">Necesitamos una sesión válida o datos previamente cacheados para operar sin conexión.</p>
+          {cachedContext ? <Button className="mt-4" onClick={() => setSelectedNightId(cachedContext.assignment.night.id)}>Usar última noche cacheada</Button> : null}
           {contextQuery.error ? <p className="mt-3 text-sm text-rose-200">{contextQuery.error.message}</p> : null}
         </Card>
       </main>
@@ -139,7 +207,7 @@ export function JudgePage() {
   const pendingVoteDraftsForSelected = selectedComparsa
     ? drafts.filter((draft) => draft.comparsaId === selectedComparsa.id && draft.syncStatus !== 'SYNCED')
     : []
-  const canCloseSelected = selectedComparsa && missing.length === 0 && pendingVoteDraftsForSelected.length === 0 && !close && night.status === 'open'
+  const canCloseSelected = selectedComparsa && missing.length === 0 && pendingVoteDraftsForSelected.length === 0 && !close
 
   const confirmVote = async (): Promise<void> => {
     if (!pendingVote) return
@@ -166,81 +234,92 @@ export function JudgePage() {
   }
 
   return (
-    <main className="mx-auto grid max-w-7xl gap-4 px-4 py-5 lg:grid-cols-[340px_1fr]">
-      <aside className="space-y-4">
-        <Card>
-          <p className="text-sm text-slate-400">Noche asignada</p>
-          <h2 className="text-2xl font-black text-slate-50">{night.name}</h2>
-          <p className="mt-1 text-sm text-slate-300">Estado servidor: <span className="font-semibold">{night.status}</span></p>
-          {auth.user ? <p className="mt-2 text-sm text-slate-400">Jurado: {auth.user.nombre}</p> : null}
-        </Card>
+    <main className="mx-auto max-w-7xl space-y-4 px-4 py-5">
+      <Card>
+        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-carnival-gold">Planilla del jurado</p>
+            <h2 className="mt-1 text-3xl font-black text-slate-50">{night.name}</h2>
+            <div className="mt-3 flex flex-wrap gap-2 text-sm text-slate-300">
+              {auth.user ? <Badge tone="info">Jurado: {auth.user.nombre}</Badge> : null}
+              <Badge tone={nightStatusTone(night.status)}>Estado: {night.status}</Badge>
+              <Badge tone={connection.apiReachable ? 'success' : 'warning'}>{connection.label}</Badge>
+            </div>
+          </div>
+          <Button variant="secondary" onClick={() => setSelectedNightId(undefined)}>Cambiar noche</Button>
+        </div>
+      </Card>
+
+      <div className="grid gap-4 lg:grid-cols-2">
         <PendingOperationsIndicator summary={syncSummary} />
         <ConflictBanner summary={syncSummary} />
-        <Card>
-          <h2 className="text-lg font-bold">Comparsas</h2>
-          <div className="mt-3 space-y-2">
-            {context.comparsas.map((comparsa) => {
-              const progress = progressForComparsa(context, comparsa.id, drafts, closeDrafts)
-              const active = selectedComparsa?.id === comparsa.id
-              return (
-                <button
-                  key={comparsa.id}
-                  type="button"
-                  onClick={() => setSelectedComparsaId(comparsa.id)}
-                  className={`w-full rounded-3xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-gold ${active ? 'border-carnival-gold bg-yellow-500/10' : 'border-slate-800 bg-slate-950 hover:border-slate-600'}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="font-bold">{comparsa.orden}. {comparsa.nombre}</span>
-                    <Badge tone={progress.closed ? 'success' : progress.pending > 0 ? 'warning' : progress.confirmed > 0 ? 'info' : 'neutral'}>{progressLabel(progress)}</Badge>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-400">{progress.confirmed}/{progress.totalScorable} ítems · {progress.synced} en servidor</p>
-                </button>
-              )
-            })}
-          </div>
-        </Card>
-      </aside>
+      </div>
 
-      <section className="space-y-4">
+      <section className="rounded-[2rem] border-2 border-slate-950 bg-carnival-gold p-2 shadow-[0_10px_0_rgba(15,23,42,0.75)]">
+        <div className="flex gap-1 overflow-x-auto px-1 pt-1" role="tablist" aria-label="Comparsas de la noche">
+          {context.comparsas.map((comparsa, index) => {
+            const progress = progressForComparsa(context, comparsa.id, drafts, closeDrafts)
+            const active = selectedComparsa?.id === comparsa.id
+            return (
+              <button
+                key={comparsa.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setSelectedComparsaId(comparsa.id)}
+                className={tabClass(index, active)}
+              >
+                <span>{comparsa.orden}. {comparsa.nombre}</span>
+                <span className="mt-1 block text-xs font-semibold opacity-80">{progressLabel(progress)}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="min-h-[28rem] rounded-b-[1.5rem] rounded-tr-[1.5rem] border-2 border-slate-950 bg-[#f6f0df] p-3 text-slate-950">
         {selectedComparsa ? (
           <>
-            <Card className="border-carnival-gold/20">
+            <div className="rounded-3xl border border-slate-300 bg-white/60 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-carnival-gold">Planilla de votación</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Comparsa</p>
                   <h2 className="mt-1 text-3xl font-black">{selectedComparsa.nombre}</h2>
-                  <p className="mt-2 text-sm text-slate-300">Seleccioná una nota, revisá el resumen y confirmá. Una nota confirmada queda bloqueada aunque aún esté pendiente de servidor.</p>
+                  <p className="mt-2 text-sm text-slate-700">Elegí un puntaje de 0 a 5. Antes de fijarlo se abre una confirmación.</p>
                 </div>
                 {close ? <SyncStatusBadge status={close} /> : null}
               </div>
-              {night.status !== 'open' ? <p className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-100">La noche no está abierta. El frontend no habilita nuevas confirmaciones.</p> : null}
-            </Card>
-
-            <div className="space-y-3">
-              {tree.map((node) => renderItemNode(node, selectedComparsa.id, drafts, context, (item, value) => setPendingVote({ comparsa: selectedComparsa, item, value }), night.status !== 'open' || Boolean(close)))}
             </div>
 
-            <Card>
+            <div className="mt-4 overflow-hidden rounded-3xl border border-slate-300 bg-white/70">
+              <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-slate-300 bg-slate-950 px-3 py-3 text-sm font-black uppercase tracking-[0.15em] text-white">
+                <span>Rubro / ítem</span>
+                <span>Puntaje</span>
+              </div>
+              {tree.map((node) => renderItemNode(node, selectedComparsa.id, drafts, context, (item, value) => setPendingVote({ comparsa: selectedComparsa, item, value }), Boolean(close)))}
+            </div>
+
+            <div className="mt-4 rounded-3xl border border-slate-300 bg-white/60 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-lg font-bold">Cierre de comparsa</h3>
                   {missing.length > 0 ? (
-                    <p className="mt-1 text-sm text-yellow-100">Faltan puntuar: {missing.map((item) => item.nombre).join(', ')}</p>
+                    <p className="mt-1 text-sm font-semibold text-amber-700">Faltan puntuar: {missing.map((item) => item.nombre).join(', ')}</p>
                   ) : pendingVoteDraftsForSelected.length > 0 ? (
-                    <p className="mt-1 text-sm text-yellow-100">La planilla está completa localmente, pero hay votos pendientes de servidor. Sin eso NO cierres: primero sincronizamos.</p>
+                    <p className="mt-1 text-sm font-semibold text-amber-700">La planilla está completa localmente, pero hay votos pendientes de servidor. Sin eso NO cierres: primero sincronizamos.</p>
                   ) : close ? (
-                    <p className="mt-1 text-sm text-emerald-100">La comparsa tiene cierre registrado.</p>
+                    <p className="mt-1 text-sm font-semibold text-emerald-700">La comparsa tiene cierre registrado.</p>
                   ) : (
-                    <p className="mt-1 text-sm text-slate-300">Todos los ítems están completos y sincronizados.</p>
+                    <p className="mt-1 text-sm text-slate-700">Todos los ítems están completos y sincronizados.</p>
                   )}
                 </div>
                 <Button size="lg" disabled={!canCloseSelected} onClick={() => setCloseConfirm(selectedComparsa)}>Cerrar comparsa</Button>
               </div>
-            </Card>
+            </div>
           </>
         ) : (
-          <Card><p>No hay comparsas habilitadas para tu noche asignada.</p></Card>
+          <p className="p-6 font-semibold">No hay comparsas habilitadas para la noche seleccionada.</p>
         )}
+        </div>
       </section>
 
       <Modal

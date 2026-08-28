@@ -18,7 +18,6 @@ import type {
   UpdateNightInput,
   UpdateUserInput,
 } from './admin.schemas'
-import { fixedComparsaNames, isFixedComparsaName } from './fixed-comparsas'
 
 interface Context { requestId: string; ip?: string }
 
@@ -36,12 +35,6 @@ function mapDatabaseError(error: unknown): never {
   }
   if (databaseCode(error) === 'P0001' && error instanceof Error && error.message.includes('JUROR_TOTAL_CAPACITY_EXCEEDED')) {
     throw new AppError('JUDGE_CAPACITY_EXCEEDED', 'El sistema ya tiene nueve jurados activos.', 409)
-  }
-  if (databaseCode(error) === 'P0001' && error instanceof Error && error.message.includes('COMPARSA_CATALOG_FIXED')) {
-    throw new AppError('COMPARSA_CATALOG_FIXED', 'Las comparsas oficiales ya están predefinidas.', 409)
-  }
-  if (databaseCode(error) === 'P0001' && error instanceof Error && error.message.includes('COMPARSA_ONLY_ORDER_MUTABLE')) {
-    throw new AppError('COMPARSA_ONLY_ORDER_MUTABLE', 'Solo se puede modificar el orden de una comparsa.', 409)
   }
   throw error
 }
@@ -98,7 +91,8 @@ export class AdminService {
         ) {
           throw errors.conflict('ASSIGNMENT_INACTIVE', 'Debe reemplazar o finalizar la asignación activa antes de modificar al jurado.')
         }
-        const updated = await repository.updateUser(id, input, client)
+        const passwordHash = input.dni ? await argon2.hash(input.dni) : undefined
+        const updated = await repository.updateUser(id, input, passwordHash, client)
         if (!updated) throw errors.notFound('Usuario')
         if (input.activo === false) await repository.revokeUserSessions(id, client)
         await audit(actor, context, 'admin.user_updated', 'users', id, { changedFields: Object.keys(input) }, client)
@@ -115,8 +109,7 @@ export class AdminService {
       return await withTransaction(async (client) => {
         const created = await repository.createNight(input, client)
         if (!created) throw new Error('Night insert returned no row')
-        await repository.seedFixedComparsasForNight(Number(created.id), client)
-        await audit(actor, context, 'admin.night_created', 'noches', String(created.id), { fixedComparsas: fixedComparsaNames }, client)
+        await audit(actor, context, 'admin.night_created', 'noches', String(created.id), undefined, client)
         return created
       })
     } catch (error) { mapDatabaseError(error) }
@@ -144,9 +137,6 @@ export class AdminService {
       if (!current || current.estado !== expected) {
         throw errors.conflict('NIGHT_CLOSED', `La noche no puede pasar de ${expected} a ${next}.`)
       }
-      if (action === 'open' && await repository.countActiveAssignments(id, client) !== 3) {
-        throw new AppError('JUDGE_CAPACITY_EXCEEDED', 'La noche debe tener exactamente tres jurados activos para abrirse.', 409)
-      }
       const night = await repository.transitionNight(id, expected, next, client)
       if (!night) throw errors.conflict('NIGHT_CLOSED', `La noche no puede pasar de ${expected} a ${next}.`)
       await writeAudit({
@@ -157,11 +147,63 @@ export class AdminService {
     })
   }
 
-  createComparsa(actor: AuthenticatedUser, input: CreateComparsaInput, context: Context): never {
-    void actor
-    void input
-    void context
-    throw new AppError('COMPARSA_CATALOG_FIXED', 'Las comparsas oficiales ya están predefinidas; solo se puede modificar su orden por noche.', 409)
+  async deleteUser(actor: AuthenticatedUser, id: string, context: Context) {
+    try {
+      return await withTransaction(async (client) => {
+        if (!await repository.lockUser(id, client)) throw errors.notFound('Usuario')
+        if (await repository.hasActiveAssignment(id, client)) {
+          throw errors.conflict('ASSIGNMENT_INACTIVE', 'Debe reemplazar o finalizar la asignación activa antes de dar de baja al jurado.')
+        }
+        const updated = await repository.deactivateUser(id, client)
+        if (!updated) throw errors.notFound('Usuario')
+        await repository.revokeUserSessions(id, client)
+        await audit(actor, context, 'admin.user_deleted', 'users', id, { softDelete: true }, client)
+        return updated
+      })
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      mapDatabaseError(error)
+    }
+  }
+
+  async deleteNight(actor: AuthenticatedUser, id: number, context: Context) {
+    try {
+      return await withTransaction(async (client) => {
+        const current = await repository.lockNight(id, client)
+        if (!current) throw errors.notFound('Noche')
+        const dependencies = await repository.nightDependencySummary(id, client)
+        const hasEvidence = Boolean(dependencies && (
+          dependencies.assignments > 0
+          || dependencies.acts > 0
+          || dependencies.fiscalEvents > 0
+          || dependencies.votes > 0
+          || dependencies.closes > 0
+          || dependencies.penalties > 0
+        ))
+        if (hasEvidence) {
+          throw errors.conflict('NIGHT_HAS_DEPENDENCIES', 'La noche tiene datos asociados y no puede borrarse.')
+        }
+        await repository.deleteComparsasByNight(id, client)
+        const deleted = await repository.deleteNightById(id, client)
+        if (!deleted) throw errors.notFound('Noche')
+        await audit(actor, context, 'admin.night_deleted', 'noches', String(id), { hardDelete: true }, client)
+        return deleted
+      })
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      mapDatabaseError(error)
+    }
+  }
+
+  async createComparsa(actor: AuthenticatedUser, input: CreateComparsaInput, context: Context) {
+    try {
+      return await withTransaction(async (client) => {
+        const created = await repository.createComparsa(input, client)
+        if (!created) throw new Error('Comparsa insert returned no row')
+        await audit(actor, context, 'admin.comparsa_created', 'comparsas', String(created.id), { nightId: input.nocheId }, client)
+        return created
+      })
+    } catch (error) { mapDatabaseError(error) }
   }
 
   async reorderComparsas(actor: AuthenticatedUser, nightId: number, input: ReorderComparsasInput, context: Context) {
@@ -173,16 +215,12 @@ export class AdminService {
         const currentIds = new Set(current.map((comparsa) => Number(comparsa.id)))
         const inputIds = new Set(input.comparsas.map((comparsa) => comparsa.comparsaId))
         const inputOrders = new Set(input.comparsas.map((comparsa) => comparsa.orden))
-        const allOfficial = current.every((comparsa) => isFixedComparsaName(comparsa.nombre))
-
-        if (!allOfficial || current.length !== fixedComparsaNames.length || inputIds.size !== currentIds.size || inputOrders.size !== input.comparsas.length) {
-          throw errors.validation({ reason: 'invalid_comparsa_order' })
-        }
-        for (let order = 1; order <= fixedComparsaNames.length; order += 1) {
-          if (!inputOrders.has(order)) throw errors.validation({ reason: 'invalid_comparsa_order' })
-        }
+        if (inputIds.size !== input.comparsas.length || inputOrders.size !== input.comparsas.length) throw errors.validation({ reason: 'invalid_comparsa_order' })
         for (const id of currentIds) {
           if (!inputIds.has(id)) throw errors.validation({ reason: 'invalid_comparsa_order' })
+        }
+        for (const { comparsaId } of input.comparsas) {
+          if (!currentIds.has(comparsaId)) throw errors.validation({ reason: 'invalid_comparsa_order' })
         }
         const reordered = await repository.reorderComparsas(nightId, input, client)
         await audit(actor, context, 'admin.comparsas_reordered', 'noches', String(nightId), { order: input.comparsas }, client)
@@ -197,6 +235,20 @@ export class AdminService {
         const updated = await repository.updateComparsa(id, input, client)
         if (!updated) throw errors.notFound('Comparsa')
         await audit(actor, context, 'admin.comparsa_updated', 'comparsas', String(id), { changedFields: Object.keys(input) }, client)
+        return updated
+      })
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      mapDatabaseError(error)
+    }
+  }
+
+  async deleteComparsa(actor: AuthenticatedUser, id: number, context: Context) {
+    try {
+      return await withTransaction(async (client) => {
+        const updated = await repository.deactivateComparsa(id, client)
+        if (!updated) throw errors.notFound('Comparsa')
+        await audit(actor, context, 'admin.comparsa_deleted', 'comparsas', String(id), { softDelete: true }, client)
         return updated
       })
     } catch (error) {
@@ -222,6 +274,20 @@ export class AdminService {
         const updated = await repository.updateItem(id, input, client)
         if (!updated) throw errors.notFound('Item')
         await audit(actor, context, 'admin.item_updated', 'items', String(id), { changedFields: Object.keys(input) }, client)
+        return updated
+      })
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      mapDatabaseError(error)
+    }
+  }
+
+  async deleteItem(actor: AuthenticatedUser, id: number, context: Context) {
+    try {
+      return await withTransaction(async (client) => {
+        const updated = await repository.deactivateItem(id, client)
+        if (!updated) throw errors.notFound('Item')
+        await audit(actor, context, 'admin.item_deleted', 'items', String(id), { softDelete: true }, client)
         return updated
       })
     } catch (error) {

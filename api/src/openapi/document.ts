@@ -2,7 +2,7 @@ import { OpenAPIRegistry, OpenApiGeneratorV31, type RouteConfig } from '@asteaso
 import { z } from 'zod'
 import { env } from '../config/env'
 import { requestOtpSchema, verifyOtpSchema } from '../modules/auth/auth.schemas'
-import { closeComparsaSchema, createVoteSchema, syncSchema } from '../modules/jurado/jurado.schemas'
+import { closeComparsaSchema, createVoteSchema, nightIdSchema, syncSchema } from '../modules/jurado/jurado.schemas'
 import { annulPenaltySchema, createPenaltySchema } from '../modules/penalties/penalties.schemas'
 import {
   createAssignmentSchema,
@@ -10,12 +10,14 @@ import {
   createItemSchema,
   createNightSchema,
   createUserSchema,
+  numericIdSchema,
   replaceAssignmentSchema,
   reorderComparsasSchema,
   updateComparsaSchema,
   updateItemSchema,
   updateNightSchema,
   updateUserSchema,
+  uuidIdSchema,
 } from '../modules/admin/admin.schemas'
 import { actIdSchema, generateActSchema } from '../modules/acts/acts.schemas'
 
@@ -51,7 +53,7 @@ function responses(created = false) {
   }
 }
 
-type Method = 'get' | 'post' | 'patch'
+type Method = 'get' | 'post' | 'patch' | 'delete'
 type RequestConfig = NonNullable<RouteConfig['request']>
 interface RouteDefinition {
   method: Method
@@ -109,7 +111,9 @@ route({ method: 'post', path: '/auth/otp/request', summary: 'Solicitar desafío 
 route({ method: 'post', path: '/auth/otp/verify', summary: 'Verificar OTP y crear sesión', request: { body: verifyOtpSchema.shape.body }, secured: false })
 route({ method: 'post', path: '/auth/logout', summary: 'Revocar sesión' })
 route({ method: 'get', path: '/auth/me', summary: 'Recuperar sesión actual' })
-route({ method: 'get', path: '/jurado/contexto', summary: 'Obtener contexto y noche asignada' })
+route({ method: 'get', path: '/jurado/noches', summary: 'Listar noches creadas para selección del jurado' })
+route({ method: 'get', path: '/jurado/noches/{nocheId}/contexto', summary: 'Obtener contexto de la noche elegida', request: { params: nightIdSchema.shape.params } })
+route({ method: 'get', path: '/jurado/contexto', summary: 'Obtener contexto por asignación activa heredada' })
 route({ method: 'get', path: '/jurado/votos', summary: 'Reconciliar votos del jurado' })
 route({
   method: 'post',
@@ -132,18 +136,22 @@ const adminRoutes: RouteDefinition[] = [
   { method: 'get', path: '/admin/users', summary: 'Listar usuarios' },
   { method: 'post', path: '/admin/users', summary: 'Crear usuario', request: { body: createUserSchema.shape.body }, created: true },
   { method: 'patch', path: '/admin/users/{id}', summary: 'Actualizar usuario', request: { params: updateUserSchema.shape.params, body: updateUserSchema.shape.body } },
+  { method: 'delete', path: '/admin/users/{id}', summary: 'Dar de baja usuario', request: { params: uuidIdSchema.shape.params } },
   { method: 'get', path: '/admin/noches', summary: 'Listar noches' },
   { method: 'post', path: '/admin/noches', summary: 'Crear noche', request: { body: createNightSchema.shape.body }, created: true },
   { method: 'patch', path: '/admin/noches/{id}', summary: 'Actualizar noche', request: { params: updateNightSchema.shape.params, body: updateNightSchema.shape.body } },
+  { method: 'delete', path: '/admin/noches/{id}', summary: 'Borrar noche sin evidencia asociada', request: { params: numericIdSchema.shape.params } },
   { method: 'post', path: '/admin/noches/{id}/abrir', summary: 'Abrir noche' },
   { method: 'post', path: '/admin/noches/{id}/cerrar', summary: 'Cerrar noche' },
   { method: 'get', path: '/admin/comparsas', summary: 'Listar comparsas' },
   { method: 'post', path: '/admin/comparsas', summary: 'Crear comparsa', request: { body: createComparsaSchema.shape.body }, created: true },
-  { method: 'patch', path: '/admin/comparsas/{id}', summary: 'Actualizar orden de comparsa', request: { params: updateComparsaSchema.shape.params, body: updateComparsaSchema.shape.body } },
+  { method: 'patch', path: '/admin/comparsas/{id}', summary: 'Actualizar comparsa', request: { params: updateComparsaSchema.shape.params, body: updateComparsaSchema.shape.body } },
+  { method: 'delete', path: '/admin/comparsas/{id}', summary: 'Dar de baja comparsa', request: { params: numericIdSchema.shape.params } },
   { method: 'patch', path: '/admin/noches/{id}/comparsas/orden', summary: 'Actualizar orden de comparsas de una noche', request: { params: reorderComparsasSchema.shape.params, body: reorderComparsasSchema.shape.body } },
   { method: 'get', path: '/admin/items', summary: 'Listar items' },
   { method: 'post', path: '/admin/items', summary: 'Crear item', request: { body: createItemSchema.shape.body }, created: true },
   { method: 'patch', path: '/admin/items/{id}', summary: 'Actualizar item', request: { params: updateItemSchema.shape.params, body: updateItemSchema.shape.body } },
+  { method: 'delete', path: '/admin/items/{id}', summary: 'Dar de baja item', request: { params: numericIdSchema.shape.params } },
   { method: 'get', path: '/admin/asignaciones', summary: 'Listar asignaciones' },
   { method: 'post', path: '/admin/asignaciones', summary: 'Asignar jurado', request: { body: createAssignmentSchema.shape.body }, created: true },
   { method: 'post', path: '/admin/asignaciones/{id}/reemplazar', summary: 'Reemplazar jurado', request: { params: replaceAssignmentSchema.shape.params, body: replaceAssignmentSchema.shape.body } },

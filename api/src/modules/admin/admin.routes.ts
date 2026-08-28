@@ -10,6 +10,7 @@ import {
   numericIdSchema,
   replaceAssignmentSchema,
   reorderComparsasSchema,
+  uuidIdSchema,
   updateComparsaSchema,
   updateItemSchema,
   updateNightSchema,
@@ -25,18 +26,22 @@ export function createAdminRouter(): Router {
   router.get('/users', controller.listUsers)
   router.post('/users', validate(createUserSchema), controller.createUser)
   router.patch('/users/:id', validate(updateUserSchema), controller.updateUser)
+  router.delete('/users/:id', validate(uuidIdSchema), controller.deleteUser)
   router.get('/noches', controller.listNights)
   router.post('/noches', validate(createNightSchema), controller.createNight)
   router.patch('/noches/:id', validate(updateNightSchema), controller.updateNight)
+  router.delete('/noches/:id', validate(numericIdSchema), controller.deleteNight)
   router.post('/noches/:id/abrir', validate(numericIdSchema), controller.openNight)
   router.post('/noches/:id/cerrar', validate(numericIdSchema), controller.closeNight)
   router.get('/comparsas', controller.listComparsas)
   router.post('/comparsas', validate(createComparsaSchema), controller.createComparsa)
   router.patch('/comparsas/:id', validate(updateComparsaSchema), controller.updateComparsa)
+  router.delete('/comparsas/:id', validate(numericIdSchema), controller.deleteComparsa)
   router.patch('/noches/:id/comparsas/orden', validate(reorderComparsasSchema), controller.reorderComparsas)
   router.get('/items', controller.listItems)
   router.post('/items', validate(createItemSchema), controller.createItem)
   router.patch('/items/:id', validate(updateItemSchema), controller.updateItem)
+  router.delete('/items/:id', validate(numericIdSchema), controller.deleteItem)
   router.get('/asignaciones', controller.listAssignments)
   router.post('/asignaciones', validate(createAssignmentSchema), controller.createAssignment)
   router.post('/asignaciones/:id/reemplazar', validate(replaceAssignmentSchema), controller.replaceAssignment)

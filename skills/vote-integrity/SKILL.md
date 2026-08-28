@@ -29,13 +29,13 @@ Antes de persistir, comprobar:
 1. usuario autenticado;
 2. rol `jurado`;
 3. jurado activo;
-4. asignación activa a una noche;
-5. comparsa perteneciente a esa noche;
+4. noche seleccionada existente;
+5. comparsa activa perteneciente a esa noche;
 6. ítem existente;
 7. ítem puntuable;
 8. valor dentro de `0..5`;
 9. ausencia de voto previo del jurado para esa comparsa + ítem;
-10. noche y comparsa abiertas para votar;
+10. comparsa activa y perteneciente a la noche;
 11. `operationId` válido;
 12. ausencia de conflicto idempotente.
 
@@ -55,4 +55,4 @@ Antes de persistir, comprobar:
 
 Resolver explícitamente doble click/tap, request duplicada, timeout post-commit, reintentos, dos requests concurrentes para el mismo voto, jurado reemplazado con sesión abierta, noche cerrada antes de recibir la operación, desconexión, reloj local incorrecto, sesión expirada y voto existente. Ningún caso debe duplicar, sobrescribir o dejar un voto confirmado sin auditoría.
 
-Errores de dominio disponibles: `JUROR_NOT_ASSIGNED`, `ASSIGNMENT_INACTIVE`, `NIGHT_CLOSED`, `COMPARSA_CLOSED`, `ITEM_NOT_SCORABLE`, `INVALID_SCORE`, `VOTE_ALREADY_CONFIRMED`, `IDEMPOTENCY_CONFLICT`. No fijar aquí su transporte HTTP.
+Errores de dominio disponibles: `NIGHT_CLOSED`, `COMPARSA_CLOSED`, `ITEM_NOT_SCORABLE`, `INVALID_SCORE`, `VOTE_ALREADY_CONFIRMED`, `IDEMPOTENCY_CONFLICT`. No fijar aquí su transporte HTTP.

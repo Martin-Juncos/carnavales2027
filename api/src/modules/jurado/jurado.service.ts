@@ -60,9 +60,19 @@ async function auditIdempotencyConflict(
 }
 
 export class JuradoService {
+  nights() {
+    return repository.listAvailableNights()
+  }
+
   async context(user: AuthenticatedUser) {
     const result = await repository.getJurorContext(user.id)
     if (!result) throw new AppError('JUROR_NOT_ASSIGNED', 'El jurado no tiene una asignación activa.', 403)
+    return result
+  }
+
+  async contextForNight(user: AuthenticatedUser, nightId: number) {
+    const result = await repository.getJurorContextForNight(user.id, nightId)
+    if (!result) throw errors.notFound('Noche')
     return result
   }
 
@@ -83,11 +93,6 @@ export class JuradoService {
 
     try {
       const outcome = await withTransaction(async (client) => {
-        const assignment = await repository.lockAssignment(user.id, client)
-        if (!assignment) throw new AppError('JUROR_NOT_ASSIGNED', 'El jurado no tiene una asignación activa.', 403)
-        if (assignment.assignment_status !== 'active') throw new AppError('ASSIGNMENT_INACTIVE', 'La asignación del jurado no está activa.', 409)
-        if (assignment.noche_estado !== 'open') throw new AppError('NIGHT_CLOSED', 'La noche no está abierta.', 409)
-
         await repository.lockJurorComparsaScope(user.id, input.comparsaId, client)
 
         const concurrentOperation = await repository.findVoteByOperation(input.operationUuid, client)
@@ -99,9 +104,7 @@ export class JuradoService {
         }
 
         const comparsa = await repository.lockComparsa(input.comparsaId, client)
-        if (!comparsa || !comparsa.activo || comparsa.noche_id !== assignment.noche_id) {
-          throw errors.forbidden()
-        }
+        if (!comparsa || !comparsa.activo) throw errors.forbidden()
         const item = await repository.lockScorableItem(input.itemId, client)
         if (!item || !item.activo || !item.scorable) {
           throw new AppError('ITEM_NOT_SCORABLE', 'El item no es puntuable.', 422)
@@ -133,7 +136,7 @@ export class JuradoService {
           operationUuid: input.operationUuid,
           ip: context.ip,
           deviceId: context.deviceId,
-          metadata: { comparsaId: input.comparsaId, itemId: input.itemId, value: input.valor },
+          metadata: { comparsaId: input.comparsaId, itemId: input.itemId, nightId: comparsa.noche_id, value: input.valor },
         }, client)
         return { kind: 'vote' as const, record: created, replayed: false }
       })
@@ -169,10 +172,6 @@ export class JuradoService {
 
     try {
       const outcome = await withTransaction(async (client) => {
-        const assignment = await repository.lockAssignment(user.id, client)
-        if (!assignment) throw new AppError('JUROR_NOT_ASSIGNED', 'El jurado no tiene una asignación activa.', 403)
-        if (assignment.assignment_status !== 'active') throw new AppError('ASSIGNMENT_INACTIVE', 'La asignación del jurado no está activa.', 409)
-        if (assignment.noche_estado !== 'open') throw new AppError('NIGHT_CLOSED', 'La noche no está abierta.', 409)
         await repository.lockJurorComparsaScope(user.id, input.comparsaId, client)
 
         const concurrentOperation = await repository.findCloseByOperation(input.operationUuid, client)
@@ -184,7 +183,7 @@ export class JuradoService {
         }
 
         const comparsa = await repository.lockComparsa(input.comparsaId, client)
-        if (!comparsa || !comparsa.activo || comparsa.noche_id !== assignment.noche_id) throw errors.forbidden()
+        if (!comparsa || !comparsa.activo) throw errors.forbidden()
 
         const logicalClose = await repository.findLogicalClose(user.id, input.comparsaId, client)
         if (logicalClose) throw new AppError('COMPARSA_CLOSED', 'La comparsa ya fue cerrada por el jurado.', 409)
@@ -210,13 +209,13 @@ export class JuradoService {
           operationUuid: input.operationUuid,
           ip: context.ip,
           deviceId: context.deviceId,
-          metadata: { comparsaId: input.comparsaId },
+          metadata: { comparsaId: input.comparsaId, nightId: comparsa.noche_id },
         }, client)
         await repository.insertFiscalEvent({
           type: 'comparsa_closed',
           jurorId: user.id,
           comparsaId: input.comparsaId,
-          nightId: assignment.noche_id,
+          nightId: comparsa.noche_id,
           payload: { closeId: created.id },
         }, client)
         return { kind: 'close' as const, record: created, replayed: false }

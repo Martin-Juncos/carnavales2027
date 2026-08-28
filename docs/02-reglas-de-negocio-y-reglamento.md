@@ -6,17 +6,17 @@
 
 ## 1. Reglas confirmadas
 - 3 noches de concurso.
-- 9 jurados totales, 3 asignados por noche.
+- Los jurados autenticados eligen una noche creada y pueden votar sus comparsas activas al ingresar.
 - La escala de cada ítem puntuable es **0 a 5**.
 - Un voto confirmado no se modifica ni elimina.
 - Un ítem padre con hijos es calculado; un ítem hoja es puntuable.
 - No se descartan nota máxima ni mínima con la información disponible actualmente.
-- Las comparsas oficiales son Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba; participan todas las noches y solo cambia su orden de pasada por noche.
+- Las comparsas se administran por noche: el Admin puede crearlas, editarlas, ordenar su pasada y darlas de baja.
 
-## 2. Asignación de jurados
-- Una noche admite como máximo 3 asignaciones activas de jurado.
-- La asignación la realiza Administración.
-- Un reemplazo no sobrescribe la asignación anterior: la cierra y crea una nueva, con motivo, actor y timestamp.
+## 2. Selección y reemplazo de jurados
+- Al ingresar, el Jurado elige una de las noches creadas.
+- El servidor valida existencia de noche y pertenencia de comparsa; la UI no es autoridad.
+- Las asignaciones/reemplazos administrativos siguen existiendo para trazabilidad operativa cuando se usen.
 - Un jurado reemplazado conserva todos los votos ya emitidos.
 
 ## 3. Puntuación
@@ -48,8 +48,7 @@ Los cálculos oficiales se realizan en backend/base de datos, nunca confiando en
 ## 5. Cierre de comparsa
 Una comparsa puede cerrarse para un jurado cuando:
 - todos los ítems hoja activos tienen una puntuación aceptada;
-- la noche está abierta para ese jurado;
-- el jurado mantiene una asignación válida.
+- la comparsa pertenece a la noche seleccionada.
 
 El cierre es irreversible desde la interfaz normal y queda auditado.
 

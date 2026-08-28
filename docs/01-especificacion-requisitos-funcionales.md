@@ -8,29 +8,29 @@
 Define qué debe hacer el Sistema de Votación Digital de Carnavales 2027. Es la referencia funcional para frontend, backend y QA.
 
 ## 2. Roles
-- **Jurado:** registra y confirma puntuaciones de las comparsas correspondientes a su noche asignada.
+- **Jurado:** elige una noche creada después de autenticarse y registra puntuaciones de las comparsas activas de esa noche.
 - **Fiscal:** supervisa el avance de votación, consulta planillas y registra penalizaciones autorizadas.
 - **Escribano/Veedor:** supervisa la integridad del proceso, consulta información de auditoría, valida penalizaciones cuando corresponda y certifica actas.
 - **Administrador:** configura el concurso, usuarios, noches, orden de comparsas, rubros, asignaciones y operación técnica. No puede editar votos confirmados.
 
 ## 3. Configuración del concurso
 El Administrador puede:
-- Crear/editar/desactivar noches.
-- Definir el orden de presentación por noche de las comparsas oficiales precreadas.
+- Crear/editar/borrar noches, bloqueando el borrado destructivo cuando exista evidencia asociada.
+- Crear/editar/desactivar/borrar comparsas por noche y definir su orden de presentación.
 - Crear/editar/desactivar ítems y subítems, incluyendo orden y jerarquía.
-- Crear/desactivar usuarios.
-- Asignar jurados a noches.
+- Crear/editar/desactivar/borrar usuarios.
+- Asignar/reemplazar jurados cuando el operativo lo requiera.
 - Reemplazar un jurado antes o durante una noche dejando trazabilidad.
 
-### Regla de asignación
-- Existen **9 jurados**, con **3 jurados asignados por noche**.
-- Un jurado **no elige libremente la noche**: el backend determina su asignación activa.
-- El sistema debe impedir una cuarta asignación activa a la misma noche.
+### Regla de selección de noche
+- El Jurado elige una noche creada al ingresar.
+- El backend valida que la noche exista y que las comparsas pertenezcan a esa noche; el estado de noche es informativo para la operación, no un bloqueo de voto del jurado.
+- Las asignaciones/reemplazos de jurados se mantienen como herramienta operativa auditable, pero no bloquean la selección inicial de noche.
 
-### Regla de comparsas oficiales
-- Las comparsas oficiales son: **Tropicala**, **Ita Vera**, **Arami**, **Aymara**, **Oh Bahia** y **Poramba**.
-- Todas pasan en todas las noches.
-- El Administrador no crea, renombra ni desactiva comparsas oficiales durante la operación normal; solo modifica el orden de pasada de cada noche.
+### Regla de comparsas
+- Las comparsas son administradas por noche.
+- El Administrador puede crear, modificar, ordenar, activar/desactivar y borrar comparsas.
+- Si existen datos asociados, el borrado operativo se realiza como baja lógica para no destruir votos, cierres, penalizaciones ni auditoría.
 
 ## 4. Autenticación y sesión
 - El acceso utiliza identidad previamente creada por Administración.
@@ -43,8 +43,8 @@ El Administrador puede:
 ### 5.1 Inicio
 Al autenticar:
 1. El sistema identifica al jurado.
-2. Recupera su noche asignada y el estado de la votación.
-3. Muestra las comparsas habilitadas y el progreso existente.
+2. Muestra las noches creadas para que el jurado elija.
+3. Recupera el contexto de la noche elegida: estado, comparsas, ítems y progreso.
 
 ### 5.2 Pantalla de votación
 - Encabezado con noche, jurado, estado de conexión/sincronización y progreso.
@@ -67,7 +67,7 @@ Al autenticar:
 - El Fiscal recibe un evento de finalización.
 
 ### 5.5 Fin de la noche
-- El botón **Terminar** se habilita cuando todas las comparsas asignadas están cerradas y no existen operaciones locales pendientes críticas.
+- El botón **Terminar** se habilita cuando todas las comparsas de la noche seleccionada están cerradas y no existen operaciones locales pendientes críticas.
 - El cierre de sesión no borra registros locales aún no sincronizados.
 
 ## 6. Flujo del Fiscal
@@ -85,7 +85,7 @@ Al autenticar:
 - Debe poder verificar hash, fecha de emisión y versión de un acta.
 
 ## 8. Flujo del Administrador
-- CRUD lógico de configuración y usuarios.
+- CRUD de usuarios, noches, comparsas y rubros/ítems, usando baja lógica cuando hay historial.
 - Asignación/reemplazo de jurados por noche.
 - Apertura y cierre administrativo de noches.
 - Consulta de auditoría y estado de sincronización.

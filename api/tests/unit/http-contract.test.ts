@@ -31,11 +31,14 @@ describe('HTTP contract', () => {
 
   it('publishes an OpenAPI document', async () => {
     const response = await request(app).get('/openapi.json')
-    const body = response.body as { openapi: string; paths: Record<string, { post?: unknown }> }
+    const body = response.body as { openapi: string; paths: Record<string, { get?: unknown; post?: unknown; delete?: unknown }> }
 
     expect(response.status).toBe(200)
     expect(body.openapi).toBe('3.1.0')
     expect(body.paths['/jurado/votos']?.post).toBeDefined()
+    expect(body.paths['/jurado/noches']?.get).toBeDefined()
+    expect(body.paths['/jurado/noches/{nocheId}/contexto']?.get).toBeDefined()
+    expect(body.paths['/admin/comparsas/{id}']?.delete).toBeDefined()
   })
 
   it('protects juror routes without consulting client-provided roles', async () => {

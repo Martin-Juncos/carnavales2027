@@ -5,7 +5,7 @@
 
 | Acción | Jurado | Fiscal | Escribano | Admin |
 |---|---:|---:|---:|---:|
-| Ver propia asignación/progreso | Sí | No | No | Sí |
+| Seleccionar noche y ver progreso propio | Sí | No | No | Sí |
 | Emitir voto | Sí, propio | No | No | No |
 | Editar/eliminar voto | No | No | No | No |
 | Cerrar comparsa propia | Sí | No | No | No |

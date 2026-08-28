@@ -9,6 +9,7 @@ export const voteBodySchema = z.object({
 }).strict()
 
 export const createVoteSchema = z.object({ body: voteBodySchema })
+export const nightIdSchema = z.object({ params: z.object({ nocheId: z.coerce.number().int().positive() }) })
 
 export const closeComparsaBodySchema = z.object({
   operationUuid: z.uuid(),

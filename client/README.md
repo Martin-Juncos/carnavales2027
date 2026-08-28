@@ -15,12 +15,12 @@ PWA React/TypeScript para el sistema de votación digital.
 ## Flujos implementados
 
 - Login con `nombre + email + DNI` y verificación OTP.
-- Jurado offline-first: contexto de noche asignada, comparsas, planilla 0–5, confirmación inmutable, cierre y reconciliación.
+- Jurado offline-first: selector de noche, comparsas de esa noche, planilla 0–5, confirmación inmutable, cierre y reconciliación.
 - Fiscal/Supervisión: avance por noche, eventos, reportes y penalizaciones.
 - Escribano: actas, certificación, verificación de hash, auditoría y anulaciones.
-- Admin: usuarios, noches, rubros, asignaciones/reemplazos y orden de comparsas.
+- Admin: CRUD de usuarios, noches, comparsas por noche, rubros/ítems, asignaciones/reemplazos y orden de pasada.
 
-Las comparsas oficiales son fijas por noche: Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba. En Admin solo se modifica su orden de pasada.
+Las comparsas ya no son catálogo fijo: Administración las crea, modifica, ordena y da de baja por noche según el programa del evento.
 
 ## Comandos
 
@@ -32,7 +32,6 @@ npm run typecheck
 npm test
 npm run test:e2e:mock
 npm run test:system
-npm run build
 ```
 
 `test:e2e:mock` ejecuta el escenario offline rápido con API simulada. `test:system` delega al runner de la API, exige `carnavales2027_test` y Mailpit, y levanta temporalmente API `3100` y preview `5174`.

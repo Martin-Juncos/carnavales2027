@@ -79,11 +79,9 @@ Cuando una implementación requiera una regla inexistente, dejar claramente iden
 
 ## Jurados
 
-Existen **9 jurados**, distribuidos en **3 jurados por noche**.
+El Jurado elige una noche creada después de autenticarse.
 
-La noche correspondiente al jurado debe obtenerse desde la asignación realizada por el sistema.
-
-El jurado no debe seleccionar libremente la noche que desea votar.
+El backend debe validar que la noche exista y que la comparsa activa pertenezca a esa noche antes de aceptar votos o cierres.
 
 Los reemplazos de jurados deben preservar la trazabilidad de:
 
@@ -97,17 +95,11 @@ Los reemplazos de jurados deben preservar la trazabilidad de:
 
 ## Comparsas
 
-Las comparsas oficiales son:
+Las comparsas son administradas por noche.
 
-```text
-Tropicala, Ita Vera, Arami, Aymara, Oh Bahia, Poramba
-```
+El Administrador puede crear, ver, modificar, ordenar y dar de baja comparsas. Si existen votos, cierres, penalizaciones o auditoría asociados, el borrado debe preservar evidencia mediante baja lógica.
 
-Todas participan en todas las noches. La implementación actual conserva una fila de comparsa por noche para preservar compatibilidad con votos, cierres, penalizaciones y reportes.
-
-Durante la operación normal no se crean, renombran ni desactivan comparsas oficiales; solo se modifica el orden de pasada por noche.
-
-La interfaz de votación presenta las comparsas correspondientes a la noche asignada al jurado.
+La interfaz de votación presenta las comparsas activas correspondientes a la noche elegida por el jurado.
 
 ---
 

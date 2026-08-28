@@ -48,7 +48,7 @@ Adaptar esta estructura si el repositorio ya usa otra consistente.
 
 ## Flujo del Jurado
 
-Al iniciar: obtener identidad, asignación/noche activas, comparsas, ítems/subítems y estado previo; luego reconciliar pendientes locales. El Jurado no elige noche: mostrarla como contexto no editable y listar solo sus comparsas.
+Al iniciar: obtener identidad, listar noches creadas, permitir que el Jurado elija una noche, obtener comparsas/ítems/subítems y estado previo de esa noche; luego reconciliar pendientes locales. El jurado puede votar al entrar; el estado de noche es informativo para UI operativa, no bloqueo de confirmación.
 
 La pantalla principal muestra nombre, noche, comparsas, rubros/subrubros, notas, progreso, conexión, sincronización y cantidad pendiente.
 

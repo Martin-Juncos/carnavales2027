@@ -189,19 +189,11 @@ La inmutabilidad real también será garantizada por API y base de datos.
 
 ---
 
-# 10. Asignación de noche
+# 10. Selección de noche
 
-El jurado no debe elegir libremente:
+Después del login, el jurado debe elegir una noche creada por Administración.
 
-```text
-Noche 1
-Noche 2
-Noche 3
-```
-
-La noche se obtiene de la sesión/contexto devuelto por el backend.
-
-La UI puede mostrarla, pero no modificarla.
+La UI puede guiar y deshabilitar acciones si la noche no está abierta, pero la validación real corresponde al backend.
 
 ---
 
@@ -227,7 +219,7 @@ Las acciones irreversibles deben utilizar confirmación anti-error.
 
 La navegación entre comparsas debe respetar las reglas funcionales definidas.
 
-Las comparsas oficiales son fijas por noche: Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba. La UI Admin no debe ofrecer creación, renombre o desactivación normal de comparsas oficiales; solo edición del orden de pasada por noche.
+Las comparsas se administran por noche. La UI Admin debe permitir crear, modificar, ordenar y dar de baja comparsas, preservando el historial cuando el backend responda baja lógica o bloqueo por dependencias.
 
 Cuando exista una restricción por puntuaciones pendientes, mostrar qué elementos faltan.
 

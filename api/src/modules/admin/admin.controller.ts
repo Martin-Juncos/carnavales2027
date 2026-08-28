@@ -44,6 +44,10 @@ export function createAdminController(service = new AdminService()) {
       const input = validated<Id<string, UpdateUserInput>>(req)
       ok(res, await service.updateUser(actor(req), input.params.id, input.body, context(req)))
     }),
+    deleteUser: asyncHandler(async (req, res) => {
+      const input = validated<Id<string>>(req)
+      ok(res, await service.deleteUser(actor(req), input.params.id, context(req)))
+    }),
     listNights: asyncHandler(async (_req, res) => { ok(res, await service.listNights()); }),
     createNight: asyncHandler(async (req, res) => {
       const data = await service.createNight(actor(req), validated<Body<CreateNightInput>>(req).body, context(req))
@@ -52,6 +56,10 @@ export function createAdminController(service = new AdminService()) {
     updateNight: asyncHandler(async (req, res) => {
       const input = validated<Id<number, UpdateNightInput>>(req)
       ok(res, await service.updateNight(actor(req), input.params.id, input.body, context(req)))
+    }),
+    deleteNight: asyncHandler(async (req, res) => {
+      const input = validated<Id<number>>(req)
+      ok(res, await service.deleteNight(actor(req), input.params.id, context(req)))
     }),
     openNight: asyncHandler(async (req, res) => {
       const input = validated<Id<number>>(req)
@@ -62,12 +70,17 @@ export function createAdminController(service = new AdminService()) {
       ok(res, await service.transitionNight(actor(req), input.params.id, 'close', context(req)))
     }),
     listComparsas: asyncHandler(async (_req, res) => { ok(res, await service.listComparsas()); }),
-    createComparsa: asyncHandler((req, _res) => {
-      service.createComparsa(actor(req), validated<Body<CreateComparsaInput>>(req).body, context(req))
+    createComparsa: asyncHandler(async (req, res) => {
+      const data = await service.createComparsa(actor(req), validated<Body<CreateComparsaInput>>(req).body, context(req))
+      res.status(201).json({ data, meta: {} })
     }),
     updateComparsa: asyncHandler(async (req, res) => {
       const input = validated<Id<number, UpdateComparsaInput>>(req)
       ok(res, await service.updateComparsa(actor(req), input.params.id, input.body, context(req)))
+    }),
+    deleteComparsa: asyncHandler(async (req, res) => {
+      const input = validated<Id<number>>(req)
+      ok(res, await service.deleteComparsa(actor(req), input.params.id, context(req)))
     }),
     reorderComparsas: asyncHandler(async (req, res) => {
       const input = validated<Id<number, ReorderComparsasInput>>(req)
@@ -81,6 +94,10 @@ export function createAdminController(service = new AdminService()) {
     updateItem: asyncHandler(async (req, res) => {
       const input = validated<Id<number, UpdateItemInput>>(req)
       ok(res, await service.updateItem(actor(req), input.params.id, input.body, context(req)))
+    }),
+    deleteItem: asyncHandler(async (req, res) => {
+      const input = validated<Id<number>>(req)
+      ok(res, await service.deleteItem(actor(req), input.params.id, context(req)))
     }),
     listAssignments: asyncHandler(async (_req, res) => { ok(res, await service.listAssignments()); }),
     createAssignment: asyncHandler(async (req, res) => {

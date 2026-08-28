@@ -33,7 +33,7 @@ Límites deben ser configurables y registrar abusos sin almacenar secretos.
 ## 5. Autorización
 - RBAC del Documento 6 aplicado en middleware + servicio de dominio.
 - El identificador del actor proviene de la sesión autenticada, nunca del payload del cliente.
-- Verificación de pertenencia/asignación para cada voto.
+- Verificación transaccional de comparsa activa y pertenencia a noche existente para cada voto.
 
 ## 6. Inmutabilidad de votos
 - `INSERT` únicamente para el rol de aplicación.

@@ -7,6 +7,7 @@ import { JuradoService } from './jurado.service'
 import { SyncService } from './sync.service'
 
 interface Body<T> { body: T }
+interface NightRequest { params: { nocheId: number } }
 interface CloseRequest { params: { id: number }; body: Omit<CloseComparsaInput, 'comparsaId'> }
 
 function user(request: Request) {
@@ -24,6 +25,15 @@ function context(request: Request) {
 export function createJuradoController(service = new JuradoService()) {
   const sync = new SyncService(service)
   return {
+    nights: asyncHandler(async (_request, response) => {
+      response.json({ data: await service.nights(), meta: {} })
+    }),
+
+    nightContext: asyncHandler(async (request, response) => {
+      const input = validated<NightRequest>(request)
+      response.json({ data: await service.contextForNight(user(request), input.params.nocheId), meta: {} })
+    }),
+
     context: asyncHandler(async (request, response) => {
       response.json({ data: await service.context(user(request)), meta: {} })
     }),

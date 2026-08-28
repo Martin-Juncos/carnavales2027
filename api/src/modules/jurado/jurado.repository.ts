@@ -33,13 +33,26 @@ export async function lockJurorComparsaScope(jurorId: string, comparsaId: number
   )
 }
 
-export async function lockComparsa(comparsaId: number, client: PoolClient): Promise<{ id: string; noche_id: string; activo: boolean } | undefined> {
-  const result = await query<{ id: string; noche_id: string; activo: boolean }>(
-    'SELECT id, noche_id, activo FROM comparsas WHERE id = $1 FOR SHARE',
+export async function lockComparsa(comparsaId: number, client: PoolClient): Promise<{ id: string; noche_id: string; noche_estado: string; activo: boolean } | undefined> {
+  const result = await query<{ id: string; noche_id: string; noche_estado: string; activo: boolean }>(
+    `SELECT c.id, c.noche_id, n.estado AS noche_estado, c.activo
+     FROM comparsas c
+     JOIN noches n ON n.id = c.noche_id
+     WHERE c.id = $1
+     FOR SHARE OF c, n`,
     [comparsaId],
     client,
   )
   return result.rows[0]
+}
+
+export async function listAvailableNights() {
+  const result = await query(
+    `SELECT id, nombre AS name, estado AS status
+     FROM noches
+     ORDER BY fecha, id`,
+  )
+  return result.rows
 }
 
 export async function lockScorableItem(itemId: number, client: PoolClient): Promise<{ id: string; activo: boolean; scorable: boolean } | undefined> {
@@ -202,6 +215,50 @@ export async function getJurorContext(jurorId: string) {
     assignment: {
       id: current.assignment_id,
       night: { id: current.noche_id, name: current.noche_nombre, status: current.noche_estado },
+    },
+    comparsas: comparsas.rows,
+    items: items.rows,
+    votes: votes.rows,
+    closes: closes.rows,
+  }
+}
+
+export async function getJurorContextForNight(jurorId: string, nightId: number) {
+  const night = await query<{ id: string; name: string; status: 'draft' | 'open' | 'closed' | 'certified' }>(
+    `SELECT id, nombre AS name, estado AS status
+     FROM noches
+     WHERE id = $1`,
+    [nightId],
+  )
+  const current = night.rows[0]
+  if (!current) return undefined
+
+  const [comparsas, items, votes, closes] = await Promise.all([
+    query('SELECT id, nombre, orden FROM comparsas WHERE noche_id = $1 AND activo ORDER BY orden', [current.id]),
+    query('SELECT id, nombre, parent_item_id AS "parentItemId", orden FROM items WHERE activo ORDER BY orden, id'),
+    query(
+      `SELECT p.id, p.operation_uuid AS "operationUuid", p.comparsa_id AS "comparsaId", p.item_id AS "itemId",
+              p.valor, p.server_received_at AS "serverReceivedAt"
+       FROM puntuaciones p
+       JOIN comparsas c ON c.id = p.comparsa_id
+       WHERE p.jurado_id = $1 AND c.noche_id = $2
+       ORDER BY p.server_received_at`,
+      [jurorId, current.id],
+    ),
+    query(
+      `SELECT cc.id, cc.operation_uuid AS "operationUuid", cc.comparsa_id AS "comparsaId",
+              cc.server_received_at AS "serverReceivedAt"
+       FROM cierres_comparsa cc
+       JOIN comparsas c ON c.id = cc.comparsa_id
+       WHERE cc.jurado_id = $1 AND c.noche_id = $2`,
+      [jurorId, current.id],
+    ),
+  ])
+
+  return {
+    assignment: {
+      id: `selected-night-${current.id}`,
+      night: current,
     },
     comparsas: comparsas.rows,
     items: items.rows,

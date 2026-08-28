@@ -34,15 +34,15 @@ Roles iniciales: `jurado`, `fiscal`, `escribano`, `admin`.
 `id`, `nombre`, `fecha`, `estado` (`draft|open|closed|certified`), timestamps.
 
 ### `jurado_asignaciones`
-Relaciona jurado+noche con vigencia.
+Relaciona jurado+noche con vigencia cuando Administración necesita registrar asignaciones o reemplazos operativos auditables.
 Campos: `id`, `jurado_id`, `noche_id`, `estado`, `asignado_at`, `finalizado_at`, `reemplaza_asignacion_id`, `motivo`.
 
-Debe garantizarse un máximo de **3 asignaciones activas por noche** mediante transacción/lock en backend y verificación DB cuando sea viable.
+Las asignaciones no son la única fuente para votar: el Jurado elige una noche creada y el backend valida el estado de esa noche.
 
 ### `comparsas`
 `id`, `nombre`, `noche_id`, `orden`, `activo`, timestamps. `UNIQUE(noche_id, orden)`.
 
-El catálogo operativo de comparsas queda fijo por noche con las seis comparsas oficiales: Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba. La mutación normal permitida sobre esas filas es únicamente `orden`; el nombre, la noche y el estado activo quedan protegidos.
+Las comparsas pertenecen a una noche y son administradas por CRUD. El borrado normal es baja lógica (`activo=false`) cuando hay historial; no se destruye evidencia asociada.
 
 ### `items`
 `id`, `nombre`, `parent_item_id`, `orden`, `activo`, timestamps.
@@ -81,7 +81,7 @@ Registro derivado/transaccional de cierres y eventos relevantes para polling.
 - unicidad de voto por jurado/comparsa/item.
 - unicidad de `operation_uuid`.
 - no update/delete sobre votos y audit log para el rol de runtime.
-- toda comparsa debe pertenecer a la misma noche de la asignación del jurado; validar transaccionalmente.
+- toda operación de voto/cierre debe usar una comparsa activa cuya noche exista y esté abierta; validar transaccionalmente.
 
 ## 5. Migraciones
 El esquema debe mantenerse mediante migraciones versionadas. No editar producción manualmente ni usar el archivo SQL como único historial.

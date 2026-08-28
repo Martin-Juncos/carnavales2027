@@ -48,7 +48,7 @@ Casos obligatorios de voto:
 
 Usar concurrencia real del runtime/framework, no llamadas secuenciales disfrazadas. Probar requests simultáneos para mismo voto, mismo `operationId`, último cupo de jurados, reemplazo concurrente con voto y cierre de noche concurrente con operación entrante.
 
-En asignaciones verificar máximo activo por noche, asignación válida, cuarta asignación rechazada, reemplazo con historial, asignación inactiva sin voto y jurado de otra noche rechazado.
+En selección de noche verificar noche inexistente/cerrada rechazada, comparsa de otra noche rechazada por contexto de backend y reemplazos auditados cuando se usen asignaciones.
 
 ## API, auth y RBAC
 
@@ -64,7 +64,7 @@ También: servidor procesa y pierde respuesta -> cliente reintenta mismo `operat
 
 E2E esenciales, sin mega-flujos si pruebas menores bastan:
 
-- Jurado: login/OTP -> noche asignada -> comparsa -> puntuar/confirmar -> completar -> continuar -> terminar noche.
+- Jurado: login/OTP -> selector de noche -> comparsa -> puntuar/confirmar -> completar -> continuar -> terminar noche.
 - Pérdida de red: votar -> desconectar -> continuar local -> recargar/recuperar -> reconectar/sincronizar.
 - Fiscal: progreso, comparsa completa y resultados disponibles.
 - Admin: entidades permitidas, asignaciones y restricciones.

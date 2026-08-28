@@ -1,4 +1,3 @@
-import { Button } from '../../components/ui/Button'
 import { SyncStatusBadge } from '../../components/domain/SyncStatusBadge'
 import type { ScoreState } from './voteCalculations'
 
@@ -14,33 +13,35 @@ const values = [0, 1, 2, 3, 4, 5]
 export function VoteInput({ itemName, score, disabled = false, onSelect }: VoteInputProps) {
   const locked = Boolean(score) || disabled
   return (
-    <div className="mt-3">
+    <div className="flex items-center justify-end gap-3">
       {score ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-700 bg-slate-950 p-3">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-carnival-gold text-2xl font-black text-night-950" aria-label={`Nota confirmada ${score.value}`}>{score.value}</span>
-          <div>
-            <p className="text-sm font-semibold text-slate-100">Nota bloqueada</p>
-            <p className="text-xs text-slate-400">No se puede modificar desde la interfaz normal.</p>
-          </div>
+        <>
+          <select
+            aria-label={`Nota bloqueada para ${itemName}`}
+            className="min-h-12 w-24 rounded-2xl border border-carnival-gold bg-carnival-gold px-3 text-center text-xl font-black text-night-950 disabled:opacity-100"
+            value={score.value}
+            disabled
+          >
+            <option value={score.value}>{score.value}</option>
+          </select>
           <SyncStatusBadge status={score.status} />
-        </div>
+        </>
       ) : (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6" role="group" aria-label={`Seleccionar nota para ${itemName}`}>
+        <select
+          aria-label={`Seleccionar nota para ${itemName}`}
+          className="min-h-12 w-28 rounded-2xl border border-slate-700 bg-slate-950 px-3 text-center text-lg font-bold text-slate-50 outline-none transition focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40 disabled:cursor-not-allowed disabled:opacity-50"
+          value=""
+          disabled={locked}
+          onChange={(event) => {
+            const value = Number(event.target.value)
+            if (Number.isInteger(value)) onSelect(value)
+          }}
+        >
+          <option value="" disabled>Puntaje</option>
           {values.map((value) => (
-            <Button
-              key={value}
-              type="button"
-              variant="secondary"
-              size="lg"
-              disabled={locked}
-              aria-label={`Confirmar nota ${value} para ${itemName}`}
-              onClick={() => onSelect(value)}
-              className="text-2xl font-black"
-            >
-              {value}
-            </Button>
+            <option key={value} value={value}>{value}</option>
           ))}
-        </div>
+        </select>
       )}
     </div>
   )
