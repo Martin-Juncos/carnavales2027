@@ -97,7 +97,15 @@ Los reemplazos de jurados deben preservar la trazabilidad de:
 
 ## Comparsas
 
-Las comparsas pertenecen a una noche.
+Las comparsas oficiales son:
+
+```text
+Tropicala, Ita Vera, Arami, Aymara, Oh Bahia, Poramba
+```
+
+Todas participan en todas las noches. La implementación actual conserva una fila de comparsa por noche para preservar compatibilidad con votos, cierres, penalizaciones y reportes.
+
+Durante la operación normal no se crean, renombran ni desactivan comparsas oficiales; solo se modifica el orden de pasada por noche.
 
 La interfaz de votación presenta las comparsas correspondientes a la noche asignada al jurado.
 

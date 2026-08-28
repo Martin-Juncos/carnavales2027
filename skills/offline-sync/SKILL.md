@@ -20,7 +20,7 @@ Solo `carnavales-orchestrator` selecciona skills: no enrutar, encadenar, cargar 
 - Diferenciar confirmación local de confirmación remota. La hora del dispositivo no es autoridad reglamentaria.
 - `navigator.onLine === true` no prueba que la API sea alcanzable; confirmar conectividad con respuestas reales.
 
-Estados mínimos: `pending`, `syncing`, `synced`, `error`, `conflict` o equivalentes existentes.
+Estados actuales del proyecto: `LOCAL`, `PENDING`, `SYNCING`, `SYNCED`, `CONFLICT`, `REJECTED`.
 
 ```ts
 type PendingOperation = {
@@ -28,7 +28,7 @@ type PendingOperation = {
   type: string
   payload: unknown
   createdAt: string
-  status: 'pending' | 'syncing' | 'synced' | 'error' | 'conflict'
+  status: 'LOCAL' | 'PENDING' | 'SYNCING' | 'SYNCED' | 'CONFLICT' | 'REJECTED'
   attempts: number
   lastError?: string
 }
@@ -42,8 +42,8 @@ Adaptar el modelo si ya existe uno.
 
 | Resultado | Acción |
 |---|---|
-| API confirma | Marcar `synced`. |
-| Timeout/red/DNS/servidor temporal | Volver a `pending`, preservar y reintentar con backoff. |
+| API confirma | Marcar `SYNCED`. |
+| Timeout/red/DNS/servidor temporal | Volver a `PENDING`, preservar y reintentar con backoff. |
 | `NIGHT_CLOSED`, `COMPARSA_CLOSED`, `JUROR_NOT_ASSIGNED`, `ASSIGNMENT_INACTIVE`, `ITEM_NOT_SCORABLE` | Marcar `conflict`/`error`, preservar evidencia y no reintentar indefinidamente. |
 | Mismo `operationId` + mismo payload ya procesado | Tratar como duplicate retry y marcar `synced`, incluso si la respuesta original se perdió. |
 | Mismo `operationId` + payload distinto | Marcar `IDEMPOTENCY_CONFLICT`; preservar y nunca generar otro UUID para forzar el envío. |

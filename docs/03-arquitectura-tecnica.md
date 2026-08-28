@@ -38,20 +38,22 @@ flowchart LR
 
 ## 5. Resiliencia de voto
 Estados locales recomendados:
-- `pending`: persistido localmente, no confirmado por servidor.
-- `syncing`: intento en curso.
-- `synced`: servidor confirmó aceptación/idempotencia.
-- `rejected`: servidor rechazó por regla de negocio; requiere mostrar causa.
-- `review_required`: operación creada bajo una condición temporal dudosa (por ejemplo cierre durante desconexión).
+- `LOCAL`: operación creada y persistida localmente.
+- `PENDING`: pendiente de envío o reintento.
+- `SYNCING`: intento en curso.
+- `SYNCED`: servidor confirmó aceptación o idempotencia.
+- `CONFLICT`: conflicto preservado para revisión.
+- `REJECTED`: servidor rechazó por regla de negocio y debe mostrarse la causa.
 
 El Service Worker/background sync puede ayudar, pero la app debe poseer además un reconciliador explícito al abrir, recuperar foco y detectar conectividad.
 
 ## 6. Autenticación
 - Identidad centralizada en una tabla `users` con rol.
 - Perfil de jurado y asignaciones separados de la identidad.
-- Contraseña o mecanismo primario + OTP de 6 dígitos según Documento 8.
+- Validación primaria con `nombre + email + DNI` y OTP de 6 dígitos según Documento 8.
 - Tokens/sesiones nunca se almacenan en texto plano en IndexedDB.
 - Preferencia: sesión segura mediante cookie `HttpOnly`, `Secure`, `SameSite` cuando la topología lo permita.
+- Entrega OTP: `OTP_DEV_LOG` solo para desarrollo local; correo real por Resend o SMTP según configuración.
 
 ## 7. Tiempo real
 Para la primera versión, polling corto del Fiscal es aceptable. El contrato debe permitir migrar a SSE/WebSocket sin cambiar el modelo funcional.

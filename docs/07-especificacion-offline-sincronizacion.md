@@ -17,13 +17,15 @@ Cada operación almacena:
 - último error;
 - `serverResourceId` cuando sincroniza.
 
+Estados visibles actuales: `LOCAL`, `PENDING`, `SYNCING`, `SYNCED`, `CONFLICT`, `REJECTED`.
+
 ## 3. Flujo de voto
 1. Validación local básica.
 2. Confirmación del jurado.
 3. Escritura transaccional en IndexedDB.
 4. UI marca voto como confirmado localmente/pendiente.
 5. Envío al servidor.
-6. Confirmación server → `synced`.
+6. Confirmación server → `SYNCED`.
 
 Nunca se elimina una operación pendiente por logout, refresh o cierre de pestaña.
 
@@ -34,7 +36,7 @@ Nunca se elimina una operación pendiente por logout, refresh o cierre de pesta�
 
 ## 5. Orden
 - Los votos de una comparsa pueden sincronizarse independientemente.
-- `close_comparsa` solo se envía cuando todos los votos locales de esa comparsa están `synced` o reconciliados.
+- `close_comparsa` solo se envía cuando todos los votos locales de esa comparsa están `SYNCED` o reconciliados.
 
 ## 6. Idempotencia
 `operationUuid` es estable durante todos los reintentos. El servidor almacena su asociación con el resultado aceptado.
@@ -43,12 +45,13 @@ Nunca se elimina una operación pendiente por logout, refresh o cierre de pesta�
 Al iniciar/reconectar:
 - consultar estado del servidor;
 - comparar operaciones locales;
-- marcar como `synced` las ya existentes;
+- marcar como `SYNCED` las ya existentes;
+- tratar `APPLIED` y `ALREADY_APPLIED` como sincronización exitosa;
 - detectar conflictos;
 - nunca sobrescribir automáticamente un voto distinto.
 
 ## 8. Cierre de noche durante desconexión
-Una operación pendiente se envía igualmente para que el servidor decida. Si su validez temporal no puede determinarse inequívocamente, queda `review_required` y se registra auditoría. No se pierde ni se incorpora silenciosamente.
+Una operación pendiente se envía igualmente para que el servidor decida. Si su validez temporal no puede determinarse inequívocamente, queda en conflicto/revisión y se registra auditoría. No se pierde ni se incorpora silenciosamente.
 
 ## 9. Indicadores de UI
 Siempre visible:

@@ -31,6 +31,7 @@
     "tests",
     "vitest.setup.ts",
     "playwright.config.ts",
+    "playwright.system.config.ts",
     "eslint.config.mjs",
     "vite.config.ts",
     "tailwind.config.ts"

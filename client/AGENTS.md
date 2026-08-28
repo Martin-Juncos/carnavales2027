@@ -104,7 +104,7 @@ type PendingVote = {
   itemId: string
   value: number
   createdAt: string
-  status: 'pending' | 'syncing' | 'synced' | 'error'
+  status: 'LOCAL' | 'PENDING' | 'SYNCING' | 'SYNCED' | 'CONFLICT' | 'REJECTED'
 }
 ```
 
@@ -226,6 +226,8 @@ Las acciones irreversibles deben utilizar confirmación anti-error.
 # 12. Comparsas
 
 La navegación entre comparsas debe respetar las reglas funcionales definidas.
+
+Las comparsas oficiales son fijas por noche: Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba. La UI Admin no debe ofrecer creación, renombre o desactivación normal de comparsas oficiales; solo edición del orden de pasada por noche.
 
 Cuando exista una restricción por puntuaciones pendientes, mostrar qué elementos faltan.
 

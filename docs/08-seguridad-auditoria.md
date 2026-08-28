@@ -8,10 +8,12 @@ Proteger identidad, autorización, integridad de votos, trazabilidad de acciones
 
 ## 2. Autenticación
 - Usuarios precreados por Administración.
+- Login operativo con `nombre + email + DNI`.
 - Segundo factor/código de **6 dígitos** para accesos/acciones definidas como sensibles.
 - OTP de un solo uso, expiración corta (referencia inicial: 5 min) y almacenamiento hash, nunca texto plano.
 - Máximo de intentos por OTP y bloqueo temporal.
 - Respuestas de login que no faciliten enumeración de usuarios.
+- En desarrollo, `OTP_DEV_LOG=true` puede escribir el código en `storage/dev-otp.txt`; en correo real se usa Resend si hay API key configurada o SMTP como fallback.
 
 ## 3. Sesiones
 - Expiración absoluta e inactividad configurable.
@@ -48,7 +50,7 @@ Debe registrar al menos:
 - reemplazo de jurados;
 - penalizaciones y anulaciones;
 - generación/certificación de actas;
-- decisiones sobre operaciones `review_required`.
+- decisiones sobre operaciones de sincronización en conflicto o revisión.
 
 Campos mínimos: actor, acción, entidad, ID, timestamp servidor, request ID, operation UUID, metadata segura.
 
@@ -64,6 +66,7 @@ El `audit_log` es append-only para el rol de aplicación.
 ## 9. Secretos y datos
 - Secretos solo en variables/secret manager.
 - `.env` fuera del repositorio.
+- App Passwords SMTP y API keys de proveedores de email nunca deben versionarse ni aparecer en logs.
 - TLS en tránsito.
 - Backups cifrados cuando el proveedor lo permita.
 - Logs sin OTP, contraseñas, cookies/tokens ni PII innecesaria.

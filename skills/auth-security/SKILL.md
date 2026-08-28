@@ -30,7 +30,7 @@ No asumir proveedor de email/SMS. No inventar flujo de password si continúa ema
 - Si persiste, guardar representación segura, nunca texto plano. Modelo conceptual: `userId`, `codeHash`, `expiresAt`, `attempts`, `consumedAt`, `createdAt`; respetar nombres existentes.
 - Usar tiempo del servidor. Obtener expiración e intentos máximos de configuración/documentación; si faltan, configurarlos explícitamente y marcar la decisión pendiente, sin inventar valores permanentes.
 - Al exceder intentos, invalidar/bloquear el desafío y exigir uno nuevo según la política vigente.
-- Nunca loguear ni devolver el OTP. Evitar mensajes que permitan enumerar usuarios.
+- Nunca devolver el OTP por API. No loguearlo salvo en `NODE_ENV=development` con `OTP_DEV_LOG=true`, donde puede escribirse en consola y `storage/dev-otp.txt` para pruebas locales.
 
 ## Sesiones y credenciales
 

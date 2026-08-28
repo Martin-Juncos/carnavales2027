@@ -16,7 +16,7 @@ Solo el Skill Orchestrator selecciona skills. Esta skill no selecciona, enruta, 
 ## Reglas
 
 - Hay 9 jurados totales y 3 asignados por noche. El jurado no elige noche: la asignación proviene del servidor. Todo reemplazo conserva trazabilidad.
-- Cada comparsa pertenece a una noche.
+- Las comparsas oficiales son Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba. Todas participan en todas las noches; la implementación actual conserva filas por noche para mantener integridad de votos/cierres/reportes, y solo permite variar el orden de pasada por noche.
 - La escala válida es de 0 a 5.
 - Un ítem padre con hijos no se puntúa directamente: vale la suma de sus subítems. Un ítem hoja sí se puntúa directamente.
 - Una puntuación confirmada es inmutable; modificarla o eliminarla no forma parte del flujo normal.

@@ -12,6 +12,16 @@ PWA React/TypeScript para el sistema de votación digital.
 - Vitest + React Testing Library
 - Playwright para E2E
 
+## Flujos implementados
+
+- Login con `nombre + email + DNI` y verificación OTP.
+- Jurado offline-first: contexto de noche asignada, comparsas, planilla 0–5, confirmación inmutable, cierre y reconciliación.
+- Fiscal/Supervisión: avance por noche, eventos, reportes y penalizaciones.
+- Escribano: actas, certificación, verificación de hash, auditoría y anulaciones.
+- Admin: usuarios, noches, rubros, asignaciones/reemplazos y orden de comparsas.
+
+Las comparsas oficiales son fijas por noche: Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba. En Admin solo se modifica su orden de pasada.
+
 ## Comandos
 
 ```bash
@@ -26,6 +36,8 @@ npm run build
 ```
 
 `test:e2e:mock` ejecuta el escenario offline rápido con API simulada. `test:system` delega al runner de la API, exige `carnavales2027_test` y Mailpit, y levanta temporalmente API `3100` y preview `5174`.
+
+No colocar secretos en el cliente. Todo valor `VITE_*` queda visible en el bundle.
 
 ## Variables públicas
 

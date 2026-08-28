@@ -130,6 +130,14 @@ Obtener identidad y rol desde la sesión/token validado.
 
 El login debe contemplar el mecanismo 2FA definido por el proyecto.
 
+El login operativo actual valida:
+
+```text
+nombre + email + DNI
+```
+
+El DNI actúa como credencial operativa del usuario; no introducir una contraseña separada sin actualizar primero la documentación funcional y de seguridad.
+
 Los códigos temporales:
 
 * deben expirar;
@@ -137,6 +145,8 @@ Los códigos temporales:
 * deben limitar intentos;
 * no deben almacenarse en logs;
 * no deben devolverse mediante la API.
+
+En desarrollo, `OTP_DEV_LOG=true` puede escribir el último OTP en `storage/dev-otp.txt` y mostrarlo en consola para pruebas locales. Con `OTP_DEV_LOG=false`, la prioridad de entrega es Resend si `RESEND_API_KEY` está configurada; si no, SMTP.
 
 ---
 

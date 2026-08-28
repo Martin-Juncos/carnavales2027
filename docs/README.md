@@ -1,16 +1,23 @@
-# Documentación del proyecto
+# Documentación — Carnavales 2027
 
-Esta carpeta reúne la documentación funcional y técnica de **Carnavales 2027**.
+Esta carpeta es la fuente de verdad funcional y técnica del sistema.
 
-Podés guardar aquí archivos Markdown (`.md`), texto, especificaciones, decisiones, imágenes y otros documentos relacionados con el proyecto. Codex podrá consultarlos para entender el contexto antes de realizar cambios.
+## Documentos
 
-## Organización sugerida
+1. `01-especificacion-requisitos-funcionales.md` — alcance funcional por rol.
+2. `02-reglas-de-negocio-y-reglamento.md` — reglas confirmadas y pendientes.
+3. `03-arquitectura-tecnica.md` — componentes, resiliencia y despliegue.
+4. `04-modelo-de-datos-erd.md` — modelo lógico y restricciones.
+5. `05-especificacion-api.md` — contratos HTTP vigentes.
+6. `06-matriz-roles-permisos.md` — RBAC.
+7. `07-especificacion-offline-sincronizacion.md` — IndexedDB, cola y reconciliación.
+8. `08-seguridad-auditoria.md` — autenticación, sesiones, secretos y audit log.
 
-- `producto.md`: objetivo, alcance y público del proyecto.
-- `requisitos.md`: funcionalidades y reglas de negocio.
-- `diseno.md`: identidad visual, referencias y decisiones de interfaz.
-- `arquitectura.md`: estructura técnica e integraciones.
-- `pendientes.md`: tareas, dudas y próximos pasos.
-- `assets/`: imágenes, diagramas y material de referencia.
+## Decisiones vigentes
 
-Mantené esta documentación actualizada cuando cambien decisiones importantes del proyecto.
+- Login: `nombre + email + DNI` y luego OTP de 6 dígitos.
+- Entrega OTP: `OTP_DEV_LOG=true` solo para desarrollo local; con `OTP_DEV_LOG=false`, la API prioriza Resend si hay `RESEND_API_KEY` y luego SMTP.
+- Comparsas oficiales: Tropicala, Ita Vera, Arami, Aymara, Oh Bahia y Poramba. Pasan todas las noches; solo se modifica el orden.
+- Votos confirmados: append-only, idempotentes y auditados.
+
+Cuando cambie un contrato, una regla de negocio o un flujo crítico, actualizar el documento correspondiente en el mismo cambio.

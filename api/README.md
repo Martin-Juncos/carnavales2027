@@ -7,7 +7,7 @@ Backend transaccional y auditable para el sistema de votación. Usa Node.js 20+,
 - Node.js 20 o superior.
 - npm.
 - PostgreSQL 16. Opcionalmente puede iniciarse con Docker Compose.
-- Resend o un servidor SMTP para entregar OTP. En desarrollo puede usarse Mailpit u otro servidor local, o `OTP_DEV_LOG=true` para imprimir el OTP en la terminal.
+- Resend o un servidor SMTP para entregar OTP. En desarrollo puede usarse Mailpit, Gmail SMTP u `OTP_DEV_LOG=true` para imprimir el OTP en la terminal.
 
 ## Instalación
 
@@ -24,7 +24,15 @@ Copy-Item .env.example .env
 
 Reemplazar `SESSION_SECRET`, `OTP_PEPPER` y configurar `RESEND_API_KEY` o las variables SMTP. Los valores `dev-*` son rechazados en producción.
 
-## Correo OTP real con Resend
+## Correo OTP
+
+La prioridad de entrega es:
+
+1. `OTP_DEV_LOG=true` en desarrollo: escribe el código en `storage/dev-otp.txt` y consola, sin enviar correo real.
+2. `RESEND_API_KEY`: envía por Resend.
+3. SMTP: envía por el servidor configurado.
+
+### Resend
 
 Crear una API key en Resend y configurar:
 
@@ -35,6 +43,23 @@ OTP_DEV_LOG=false
 ```
 
 Para producción, verificar un dominio propio en Resend y usar un remitente de ese dominio. Si `RESEND_API_KEY` está configurada, la API usa Resend; si no, intenta SMTP.
+
+### Gmail SMTP
+
+Para enviar a bandejas reales sin dominio propio, crear una App Password de Gmail y configurar:
+
+```env
+OTP_DEV_LOG=false
+RESEND_API_KEY=
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=prof.mcjuncos@gmail.com
+SMTP_PASSWORD=app-password-local
+MAIL_FROM=Carnavales 2027 <prof.mcjuncos@gmail.com>
+```
+
+No versionar `SMTP_PASSWORD`. Debe vivir solo en `.env` o en el secret manager del entorno.
 
 ## Base de datos
 
@@ -76,6 +101,19 @@ npm run seed:admin
 ```
 
 El DNI actúa como credencial operativa y se persiste hasheado con Argon2. El script no imprime credenciales ni secretos.
+
+## Usuarios core locales
+
+Para dejar el entorno local con los usuarios operativos acordados:
+
+```bash
+npm run seed:core-users
+```
+
+Estado esperado:
+
+- Martin Juncos — `admin` — `prof.mcjuncos@gmail.com` — DNI `25609038`.
+- Modo Beta — `jurado` — `modo.beta.developer@gmail.com` — DNI `12345678`.
 
 ## Ejecución
 
@@ -133,7 +171,7 @@ El runner crea datos deterministas en un esquema temporal de `carnavales2027_tes
 ## Decisiones operativas
 
 - Sesiones opacas del lado servidor en cookie `HttpOnly`; no se expone JWT al navegador.
-- OTP de seis dígitos, de un solo uso, con expiración e intentos limitados; nunca se devuelve por API. En desarrollo, `OTP_DEV_LOG=true` lo imprime en la terminal para pruebas locales.
+- OTP de seis dígitos, de un solo uso, con expiración e intentos limitados; nunca se devuelve por API. En desarrollo, `OTP_DEV_LOG=true` lo escribe en `storage/dev-otp.txt` y lo imprime en terminal para pruebas locales.
 - CORS por allowlist y validación de `Origin` en escrituras con cookie.
 - Votos y auditoría se escriben en la misma transacción.
 - `operationUuid` identifica una operación lógica: mismo payload reproduce el resultado; payload distinto genera conflicto.

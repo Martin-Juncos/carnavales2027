@@ -18,10 +18,22 @@ const schema = `carnavales_system_${runId}`
 interface Fixture {
   schema: string
   password: string
-  users: Record<'admin' | 'fiscal' | 'escribano' | 'jurado', { email: string; id: string }>
+  users: Record<'admin' | 'fiscal' | 'escribano' | 'jurado', { dni: string; email: string; id: string; nombre: string }>
   nightId: number
   comparsaId: number
   itemNames: string[]
+}
+
+function firstRow<T>(rows: T[], label: string): T {
+  const row = rows[0]
+  if (!row) throw new Error(`${label}: no devolvió filas.`)
+  return row
+}
+
+function requiredAt<T>(values: T[], index: number, label: string): T {
+  const value = values[index]
+  if (!value) throw new Error(`${label}: falta índice ${index}.`)
+  return value
 }
 
 function requireTestDatabaseUrl(): string {
@@ -82,7 +94,7 @@ async function initializeFixture(client: PoolClient): Promise<Fixture> {
          VALUES ($1, $2, $3, $4, $5) RETURNING id`,
         [actor.nombre, actor.dni, email, passwordHash, actor.role],
       )
-      users[actor.key] = { email, id: result.rows[0]!.id }
+      users[actor.key] = { dni: actor.dni, email, id: firstRow(result.rows, `user ${actor.key}`).id, nombre: actor.nombre }
     }
 
     const jurors: Array<{ id: string; email: string }> = []
@@ -93,9 +105,9 @@ async function initializeFixture(client: PoolClient): Promise<Fixture> {
          VALUES ($1, $2, $3, $4, 'jurado') RETURNING id`,
         [`Jurado ${index}`, `9100000${index}`, email, passwordHash],
       )
-      jurors.push({ id: result.rows[0]!.id, email })
+      jurors.push({ id: firstRow(result.rows, `jurado ${index}`).id, email })
     }
-    users.jurado = jurors[0]!
+    users.jurado = { ...requiredAt(jurors, 0, 'jurados'), dni: '91000001', nombre: 'Jurado 1' }
 
     const nights: number[] = []
     for (let index = 1; index <= 3; index += 1) {
@@ -104,13 +116,13 @@ async function initializeFixture(client: PoolClient): Promise<Fixture> {
          VALUES ($1, $2, 'open') RETURNING id`,
         [`Noche ${index}`, `2027-02-0${index + 5}`],
       )
-      nights.push(Number(result.rows[0]!.id))
+      nights.push(Number(firstRow(result.rows, `noche ${index}`).id))
     }
     for (let index = 0; index < jurors.length; index += 1) {
       await client.query(
         `INSERT INTO jurado_asignaciones(jurado_id, noche_id, asignado_por)
          VALUES ($1, $2, $3)`,
-        [jurors[index]!.id, nights[Math.floor(index / 3)]!, users.admin.id],
+        [requiredAt(jurors, index, 'jurados').id, requiredAt(nights, Math.floor(index / 3), 'noches'), users.admin.id],
       )
     }
 
@@ -119,15 +131,15 @@ async function initializeFixture(client: PoolClient): Promise<Fixture> {
       const result = await client.query<{ id: string }>(
         `INSERT INTO comparsas(nombre, noche_id, orden)
          VALUES ($1, $2, 1) RETURNING id`,
-        [["Ará Berá", 'Imperio', 'Sapucay'][index], nights[index]],
+        [requiredAt(["Ará Berá", 'Imperio', 'Sapucay'], index, 'nombres de comparsas'), requiredAt(nights, index, 'noches')],
       )
-      comparsas.push(Number(result.rows[0]!.id))
+      comparsas.push(Number(firstRow(result.rows, `comparsa ${index}`).id))
     }
 
     const parent = await client.query<{ id: string }>(
       "INSERT INTO items(nombre, orden) VALUES ('Presentación', 1) RETURNING id",
     )
-    const parentId = Number(parent.rows[0]!.id)
+    const parentId = Number(firstRow(parent.rows, 'item padre').id)
     for (const [name, order] of [['Diseño', 1], ['Terminación', 2]] as const) {
       await client.query('INSERT INTO items(nombre, parent_item_id, orden) VALUES ($1, $2, $3)', [name, parentId, order])
     }
@@ -138,8 +150,8 @@ async function initializeFixture(client: PoolClient): Promise<Fixture> {
       schema,
       password,
       users,
-      nightId: nights[0]!,
-      comparsaId: comparsas[0]!,
+      nightId: requiredAt(nights, 0, 'noches'),
+      comparsaId: requiredAt(comparsas, 0, 'comparsas'),
       itemNames: ['Diseño', 'Terminación', 'Música'],
     }
   } catch (error) {
@@ -160,7 +172,10 @@ async function runNode(script: string, args: string[], cwd: string, env: NodeJS.
   await new Promise<void>((resolve, reject) => {
     const child = startNode(script, args, cwd, env)
     child.once('error', reject)
-    child.once('exit', (code) => code === 0 ? resolve() : reject(new Error(`${path.basename(script)} terminó con código ${String(code)}.`)))
+    child.once('exit', (code) => {
+      if (code === 0) resolve()
+      else reject(new Error(`${path.basename(script)} terminó con código ${String(code)}.`))
+    })
   })
 }
 
@@ -182,11 +197,19 @@ async function waitForUrl(url: string, child: ChildProcess): Promise<void> {
 async function stop(child: ChildProcess | undefined): Promise<void> {
   if (!child || child.exitCode !== null) return
   child.kill('SIGTERM')
-  await Promise.race([
-    new Promise<void>((resolve) => child.once('exit', () => resolve())),
-    new Promise<void>((resolve) => setTimeout(resolve, 5_000)),
+  const exited = await Promise.race([
+    new Promise<boolean>((resolve) => {
+      child.once('exit', () => {
+        resolve(true)
+      })
+    }),
+    new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        resolve(false)
+      }, 5_000)
+    }),
   ])
-  if (child.exitCode === null) child.kill('SIGKILL')
+  if (!exited) child.kill('SIGKILL')
 }
 
 async function main(): Promise<void> {
@@ -241,9 +264,9 @@ async function main(): Promise<void> {
   } finally {
     await stop(preview)
     await stop(api)
-    await client.query('RESET search_path').catch(() => undefined)
+    await client.query('RESET search_path').catch((_error: unknown) => undefined)
     if (/^carnavales_system_[a-f0-9]{12}$/.test(schema)) {
-      await client.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`).catch((error) => {
+      await client.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`).catch((error: unknown) => {
         console.error('No se pudo eliminar el esquema temporal.', error)
       })
     }

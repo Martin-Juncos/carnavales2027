@@ -11,7 +11,7 @@ Define qué debe hacer el Sistema de Votación Digital de Carnavales 2027. Es la
 - **Jurado:** registra y confirma puntuaciones de las comparsas correspondientes a su noche asignada.
 - **Fiscal:** supervisa el avance de votación, consulta planillas y registra penalizaciones autorizadas.
 - **Escribano/Veedor:** supervisa la integridad del proceso, consulta información de auditoría, valida penalizaciones cuando corresponda y certifica actas.
-- **Administrador:** configura el concurso, usuarios, noches, comparsas, rubros, asignaciones y operación técnica. No puede editar votos confirmados.
+- **Administrador:** configura el concurso, usuarios, noches, orden de comparsas, rubros, asignaciones y operación técnica. No puede editar votos confirmados.
 
 ## 3. Configuración del concurso
 El Administrador puede:

@@ -1,3 +1,8 @@
+---
+name: carnavales-orchestrator
+description: Seleccionar la mínima combinación de skills locales para tareas de dominio, API, PWA, migraciones, seguridad, sincronización y pruebas de Carnavales 2027.
+---
+
 # Carnavales 2027 — Skill Orchestrator
 
 ## Purpose
@@ -80,17 +85,13 @@ For:
 - duplicate prevention
 - transactional vote handling
 
-Usually combine with:
-
-`rbac-authorization`
-
-when permissions are involved.
+Combine with `backend-api` when permissions or endpoint contracts are involved.
 
 ### REST API
 
 Use:
 
-`api-contracts`
+`backend-api`
 
 For:
 
@@ -104,7 +105,7 @@ For:
 
 Use:
 
-`authentication-2fa`
+`auth-security`
 
 For:
 
@@ -118,7 +119,7 @@ For:
 
 Use:
 
-`rbac-authorization`
+`backend-api`
 
 For:
 
@@ -132,7 +133,7 @@ For:
 
 Use:
 
-`offline-vote-sync`
+`offline-sync`
 
 For:
 
@@ -146,7 +147,7 @@ For:
 
 Use:
 
-`juror-pwa-ui`
+`frontend-pwa`
 
 For the juror PWA and voting UX.
 
@@ -154,7 +155,7 @@ For the juror PWA and voting UX.
 
 Use:
 
-`admin-fiscal-escribano-ui`
+`frontend-pwa`
 
 for Admin, Fiscal and Escribano interfaces.
 
@@ -162,7 +163,7 @@ for Admin, Fiscal and Escribano interfaces.
 
 Use:
 
-`audit-log`
+`backend-api`
 
 for immutable activity records and traceability.
 
@@ -170,7 +171,7 @@ for immutable activity records and traceability.
 
 Use:
 
-`score-calculation`
+`backend-api`
 
 for totals, item aggregation and penalties.
 
@@ -192,7 +193,7 @@ Do not automatically load it for every small task.
 
 Use:
 
-`official-documents`
+`backend-api`
 
 for:
 
@@ -206,7 +207,7 @@ for:
 
 Use:
 
-`code-review-security`
+`auth-security`
 
 when explicitly reviewing existing code or a completed implementation.
 
@@ -250,8 +251,7 @@ Task:
 Load:
 
 1. vote-integrity
-2. api-contracts
-3. rbac-authorization
+2. backend-api
 
 Do not load anything else.
 
@@ -261,7 +261,7 @@ Task:
 
 Load:
 
-1. offline-vote-sync
+1. offline-sync
 
 Optionally:
 
@@ -273,8 +273,8 @@ Task:
 
 Load:
 
-1. authentication-2fa
-2. api-contracts
+1. auth-security
+2. backend-api
 
 Task:
 
@@ -291,6 +291,5 @@ Task:
 
 Load:
 
-1. code-review-security
+1. auth-security
 2. vote-integrity
-3. rbac-authorization

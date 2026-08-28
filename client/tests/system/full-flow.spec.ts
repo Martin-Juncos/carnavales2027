@@ -2,16 +2,41 @@ import { expect, test, type Page } from '@playwright/test'
 
 interface Fixture {
   password: string
-  users: Record<'admin' | 'fiscal' | 'escribano' | 'jurado', { email: string; id: string }>
+  users: Record<'admin' | 'fiscal' | 'escribano' | 'jurado', { dni: string; email: string; id: string; nombre: string }>
   nightId: number
   comparsaId: number
   itemNames: string[]
 }
 
-const loadedFixture = JSON.parse(process.env.CARNAVALES_SYSTEM_FIXTURE ?? 'null') as Fixture | null
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function isFixtureUser(value: unknown): value is Fixture['users']['admin'] {
+  return isRecord(value)
+    && typeof value.dni === 'string'
+    && typeof value.email === 'string'
+    && typeof value.id === 'string'
+    && typeof value.nombre === 'string'
+}
+
+function isFixture(value: unknown): value is Fixture {
+  if (!isRecord(value) || !isRecord(value.users)) return false
+  return typeof value.password === 'string'
+    && typeof value.nightId === 'number'
+    && typeof value.comparsaId === 'number'
+    && Array.isArray(value.itemNames)
+    && value.itemNames.every((item) => typeof item === 'string')
+    && isFixtureUser(value.users.admin)
+    && isFixtureUser(value.users.fiscal)
+    && isFixtureUser(value.users.escribano)
+    && isFixtureUser(value.users.jurado)
+}
+
+const loadedFixture: unknown = JSON.parse(process.env.CARNAVALES_SYSTEM_FIXTURE ?? 'null')
 const mailpitApi = process.env.MAILPIT_API_URL ?? 'http://127.0.0.1:8025'
 
-if (!loadedFixture) throw new Error('CARNAVALES_SYSTEM_FIXTURE es obligatoria.')
+if (!isFixture(loadedFixture)) throw new Error('CARNAVALES_SYSTEM_FIXTURE es obligatoria y debe tener forma válida.')
 const fixture: Fixture = loadedFixture
 
 async function latestOtp(email: string): Promise<string> {
@@ -24,7 +49,7 @@ async function latestOtp(email: string): Promise<string> {
     if (id) {
       const message = await fetch(`${mailpitApi}/view/${id}.txt`)
       const text = await message.text()
-      const code = text.match(/\b\d{6}\b/)?.[0]
+      const code = /\b\d{6}\b/.exec(text)?.[0]
       if (code) return code
     }
     await new Promise((resolve) => setTimeout(resolve, 250))
@@ -35,8 +60,9 @@ async function latestOtp(email: string): Promise<string> {
 async function login(page: Page, role: keyof Fixture['users']): Promise<void> {
   const account = fixture.users[role]
   await page.goto('/login')
-  await page.getByLabel(/email o dni/i).fill(account.email)
-  await page.getByLabel(/contraseña/i).fill(fixture.password)
+  await page.getByLabel(/^nombre$/i).fill(account.nombre)
+  await page.getByLabel(/^email$/i).fill(account.email)
+  await page.getByLabel(/^dni$/i).fill(account.dni)
   await page.getByRole('button', { name: /solicitar código/i }).click()
   await expect(page.getByLabel(/código otp/i)).toBeVisible()
   await page.getByLabel(/código otp/i).fill(await latestOtp(account.email))
