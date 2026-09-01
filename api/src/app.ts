@@ -40,6 +40,10 @@ export function createApp(dependencies: AppDependencies = {}): Express {
   app.use(express.json({ limit: env.BODY_LIMIT }))
   app.use(cookieParser())
   app.use(enforceTrustedOrigin)
+  app.get('/health', asyncHandler(async (_request, response) => {
+    await query('SELECT 1')
+    response.json({ data: { status: 'ok' }, meta: {} })
+  }))
   app.use(rateLimit({
     windowMs: env.RATE_LIMIT_WINDOW_MS,
     limit: env.RATE_LIMIT_MAX_REQUESTS,
@@ -48,10 +52,6 @@ export function createApp(dependencies: AppDependencies = {}): Express {
     handler: (_request, _response, next) => { next(new AppError('RATE_LIMITED', 'Demasiadas solicitudes.', 429)); },
   }))
 
-  app.get('/health', asyncHandler(async (_request, response) => {
-    await query('SELECT 1')
-    response.json({ data: { status: 'ok' }, meta: {} })
-  }))
   app.get('/openapi.json', (_request, response) => response.json(openApiDocument))
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument))
 

@@ -15,7 +15,7 @@ PWA React/TypeScript para el sistema de votación digital.
 ## Flujos implementados
 
 - Login con `nombre + email + DNI` y verificación OTP.
-- Jurado offline-first: selector de noche, comparsas de esa noche, planilla 0–5, confirmación inmutable, cierre y reconciliación.
+- Jurado online-first: selector de noche, comparsas de esa noche, planilla 0–5, confirmación directa contra API, inmutabilidad y cierre idempotente.
 - Fiscal/Supervisión: panel operativo con selección de noche, avance por comparsa, indicadores en vivo, reportes, eventos y penalizaciones guiadas.
 - Escribano: panel operativo con resultados por noche, actas, verificación SHA-256, certificación, penalizaciones y auditoría.
 - Admin: CRUD de usuarios, noches, comparsas por noche, rubros/ítems y orden de pasada.
@@ -34,7 +34,7 @@ npm run test:e2e:mock
 npm run test:system
 ```
 
-`test:e2e:mock` ejecuta el escenario offline rápido con API simulada. `test:system` delega al runner de la API, exige `carnavales2027_test` y Mailpit, y levanta temporalmente API `3100` y preview `5174`.
+`test:e2e:mock` ejecuta el escenario rápido con API simulada. `test:system` delega al runner de la API, exige `carnavales2027_test` y Mailpit, y levanta temporalmente API `3100` y preview `5174`.
 
 No colocar secretos en el cliente. Todo valor `VITE_*` queda visible en el bundle.
 
@@ -49,24 +49,15 @@ VITE_API_HEALTH_URL=http://localhost:3000/health
 
 No colocar secretos en variables `VITE_*`.
 
-## Arquitectura offline
+## Conectividad del Jurado
 
-El flujo del jurado persiste primero en IndexedDB y después intenta sincronizar:
+El flujo operativo actual es online-first:
 
 ```text
-confirmar voto -> operationId UUID -> IndexedDB -> UI bloqueada -> /jurado/sync/reconcile -> SYNCED/CONFLICT/REJECTED
+confirmar voto -> operationId UUID -> POST /jurado/votos -> voto bloqueado al confirmar servidor
+cerrar comparsa -> operationId UUID -> POST /jurado/comparsas/:id/cerrar
 ```
 
-Tablas locales principales:
+Si no hay conexión, la UI no confirma votos ni cierres: muestra un error claro y permite reintentar manualmente. IndexedDB se conserva para cache de sesión/contexto y recuperación visual, no como cola crítica activa.
 
-- `sessionSnapshots`
-- `referenceData`
-- `voteDrafts`
-- `comparsaCloseDrafts`
-- `syncOperations`
-- `syncMetadata`
-- `device`
-
-Estados visibles: `LOCAL`, `PENDING`, `SYNCING`, `SYNCED`, `CONFLICT`, `REJECTED`.
-
-La UI nunca presenta «guardado localmente» como «confirmado por servidor».
+`POST /jurado/sync/reconcile` y las tablas locales históricas siguen disponibles solo por compatibilidad técnica.

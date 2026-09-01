@@ -35,7 +35,7 @@ El Administrador puede:
 - El acceso utiliza identidad previamente creada por Administración.
 - El usuario inicia sesión con las credenciales definidas por la política de seguridad.
 - Para operaciones sensibles se utiliza un segundo factor/código de 6 dígitos según Documento 8.
-- La sesión debe poder recuperarse ante una reconexión sin perder el estado local pendiente.
+- La sesión debe poder recuperarse ante una reconexión sin perder el contexto visual cacheado.
 - Un usuario desactivado no puede iniciar nuevas sesiones.
 
 ## 5. Flujo del Jurado
@@ -46,7 +46,7 @@ Al autenticar:
 3. Recupera el contexto de la noche elegida: estado, comparsas, ítems y progreso.
 
 ### 5.2 Pantalla de votación
-- Encabezado con noche, jurado, estado de conexión/sincronización y progreso.
+- Encabezado con noche, jurado, estado de conexión y progreso.
 - Navegación por comparsas.
 - Lista de ítems y subítems.
 - Cada ítem hoja se puntúa de **0 a 5**.
@@ -55,9 +55,9 @@ Al autenticar:
 ### 5.3 Confirmación de nota
 1. El jurado selecciona una nota.
 2. El sistema solicita confirmación explícita.
-3. La operación se persiste localmente con UUID antes de enviarse al servidor.
+3. La operación se envía al servidor con `operationUuid` idempotente.
 4. Al aceptarse en servidor, el voto queda **inmutable**.
-5. La interfaz muestra claramente si el voto está sincronizado o pendiente.
+5. Si hay red caída, timeout o API inaccesible, la nota no queda confirmada y el jurado puede reintentar manualmente.
 
 ### 5.4 Cierre de comparsa
 - Solo puede cerrarse una comparsa cuando todos sus ítems puntuables tienen nota confirmada.
@@ -66,8 +66,8 @@ Al autenticar:
 - El Fiscal recibe un evento de finalización.
 
 ### 5.5 Fin de la noche
-- El botón **Terminar** se habilita cuando todas las comparsas de la noche seleccionada están cerradas y no existen operaciones locales pendientes críticas.
-- El cierre de sesión no borra registros locales aún no sincronizados.
+- El botón **Terminar** se habilita cuando todas las comparsas de la noche seleccionada están cerradas en servidor.
+- El cierre de sesión no elimina votos confirmados porque la fuente de verdad es el servidor.
 
 ## 6. Flujo del Fiscal
 - Usa un panel operativo con selector de noche, indicadores en vivo, avance por comparsa y planilla consolidada.
@@ -86,7 +86,7 @@ Al autenticar:
 ## 8. Flujo del Administrador
 - CRUD de usuarios, noches, comparsas y rubros/ítems; el borrado se permite solo sin historial asociado y se bloquea cuando hay evidencia que preservar.
 - Apertura y cierre administrativo de noches.
-- Consulta de auditoría y estado de sincronización.
+- Consulta de auditoría y estado operativo.
 - Generación de reportes técnicos y operativos.
 - No puede editar/eliminar puntuaciones confirmadas ni alterar actas certificadas.
 
@@ -102,9 +102,9 @@ El sistema debe producir:
 - Corte de red durante la confirmación.
 - Reintento de la misma operación.
 - Doble click/reenvío accidental.
-- Cierre de comparsa con votos pendientes de sincronización.
+- Cierre de comparsa con conexión caída o timeout.
 - Jurado desactivado con sesión abierta.
-- Noche cerrada mientras un dispositivo está desconectado.
+- Noche cerrada durante un reintento manual posterior a una falla de red.
 - Intento de voto fuera de término.
 - Empate técnico e impugnación: se registran y auditan, pero su resolución depende del reglamento oficial.
 

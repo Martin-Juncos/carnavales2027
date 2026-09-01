@@ -3,11 +3,9 @@ import { Navigate } from 'react-router-dom'
 import { z } from 'zod'
 import { FiLoader, FiSend } from 'react-icons/fi'
 import { ApiClientError } from '../../api/apiClient'
-import { useConnectionStatus } from '../../hooks/useConnectionStatus'
 import { useAuth } from './AuthProvider'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
 import { PasswordInput } from '../../components/ui/PasswordInput'
 
@@ -20,7 +18,6 @@ const otpSchema = z.object({ code: z.string().regex(/^\d{6}$/, 'Ingresá el cód
 
 export function LoginPage() {
   const auth = useAuth()
-  const connection = useConnectionStatus()
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
   const [dni, setDni] = useState('')
@@ -76,9 +73,8 @@ export function LoginPage() {
           <p className="mt-2 text-slate-300">PWA segura, táctil y preparada para cortes de conectividad.</p>
         </div>
         <Card>
-          <div className="mb-5 flex items-center justify-between gap-3">
+          <div className="mb-5">
             <h2 className="text-xl font-bold">Ingresar</h2>
-            <Badge tone={connection.apiReachable ? 'success' : 'warning'}>{connection.label}</Badge>
           </div>
 
           <form className="space-y-4" onSubmit={(event) => { void submitCredentials(event) }}>

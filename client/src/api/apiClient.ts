@@ -31,7 +31,7 @@ export class ApiClientError extends Error implements NormalizedApiError {
 export function normalizeError(error: unknown): NormalizedApiError {
   if (error instanceof ApiClientError) return error
   if (error instanceof DOMException && error.name === 'AbortError') {
-    return { code: 'TIMEOUT', message: 'La solicitud tardó demasiado. Se reintentará cuando sea seguro.', status: 0, retryable: true }
+    return { code: 'TIMEOUT', message: 'La solicitud tardó demasiado. Verificá la conexión y reintentá manualmente.', status: 0, retryable: true }
   }
   if (error instanceof TypeError) {
     return { code: 'NETWORK_ERROR', message: 'No se pudo comunicar con el servidor.', status: 0, retryable: true }

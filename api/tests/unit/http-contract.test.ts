@@ -41,6 +41,14 @@ describe('HTTP contract', () => {
     expect(body.paths['/admin/comparsas/{id}']?.delete).toBeDefined()
   })
 
+  it('keeps health outside the general rate limiter', async () => {
+    const response = await request(app).get('/health')
+
+    expect(response.status).toBe(200)
+    expect(response.headers['ratelimit']).toBeUndefined()
+    expect(response.headers['x-ratelimit-limit']).toBeUndefined()
+  })
+
   it('protects juror routes without consulting client-provided roles', async () => {
     const response = await request(app)
       .get('/api/v1/jurado/contexto')

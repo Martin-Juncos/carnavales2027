@@ -6,23 +6,15 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Modal } from '../../components/ui/Modal'
 import { Badge } from '../../components/ui/Badge'
-import { ConflictBanner } from '../../components/domain/ConflictBanner'
-import { PendingOperationsIndicator } from '../../components/domain/PendingOperationsIndicator'
 import { SyncStatusBadge } from '../../components/domain/SyncStatusBadge'
-import { useConnectionStatus } from '../../hooks/useConnectionStatus'
-import { useSyncSummary } from '../../hooks/useSyncSummary'
+import { ApiClientError } from '../../api/apiClient'
 import { useAuth } from '../auth/AuthProvider'
-import { SYNC_EVENT_NAME } from '../../offline/db'
 import {
-  enqueueCloseComparsaOperation,
-  enqueueVoteOperation,
-  getCloseDrafts,
   getJuradoContextCache,
-  getVoteDrafts,
   saveJuradoContextCache,
 } from '../../offline/syncRepository'
-import { processSyncQueue, scheduleSync } from '../../offline/syncEngine'
-import type { Comparsa, ComparsaCloseDraft, JuradoContext, ScoringItem, VoteDraft } from '../../types/domain'
+import { newOperationId } from '../../offline/device'
+import type { Comparsa, ComparsaCloseDraft, JuradoContext, ScoringItem, ServerComparsaClose, ServerVote, VoteDraft } from '../../types/domain'
 import { buildItemTree, calculateParentTotal, closeStatus, missingScorableItems, progressForComparsa, progressLabel, scoreStateForItem, type ItemNode } from './voteCalculations'
 import { NightCalendarCarousel } from './NightCalendarCarousel'
 import { VoteInput } from './VoteInput'
@@ -31,6 +23,21 @@ interface PendingVoteSelection {
   comparsa: Comparsa
   item: ScoringItem
   value: number
+}
+
+const noVoteDrafts: VoteDraft[] = []
+const noCloseDrafts: ComparsaCloseDraft[] = []
+
+function mergeVotes(serverVotes: ServerVote[], confirmedVotes: ServerVote[]): ServerVote[] {
+  const byOperation = new Map(serverVotes.map((vote) => [vote.operationUuid, vote]))
+  for (const vote of confirmedVotes) byOperation.set(vote.operationUuid, vote)
+  return Array.from(byOperation.values())
+}
+
+function mergeCloses(serverCloses: ServerComparsaClose[], confirmedCloses: ServerComparsaClose[]): ServerComparsaClose[] {
+  const byOperation = new Map(serverCloses.map((close) => [close.operationUuid, close]))
+  for (const close of confirmedCloses) byOperation.set(close.operationUuid, close)
+  return Array.from(byOperation.values())
 }
 
 function renderItemNode(
@@ -105,15 +112,15 @@ function nightStatusTone(status: JuradoContext['assignment']['night']['status'])
 export function JudgePage() {
   const auth = useAuth()
   const queryClient = useQueryClient()
-  const syncSummary = useSyncSummary()
-  const connection = useConnectionStatus()
   const [cachedContext, setCachedContext] = useState<JuradoContext | undefined>()
   const [selectedNightId, setSelectedNightId] = useState<number | undefined>()
   const [selectedComparsaId, setSelectedComparsaId] = useState<number | undefined>()
-  const [drafts, setDrafts] = useState<VoteDraft[]>([])
-  const [closeDrafts, setCloseDrafts] = useState<ComparsaCloseDraft[]>([])
+  const [confirmedVotes, setConfirmedVotes] = useState<ServerVote[]>([])
+  const [confirmedCloses, setConfirmedCloses] = useState<ServerComparsaClose[]>([])
   const [pendingVote, setPendingVote] = useState<PendingVoteSelection | null>(null)
   const [closeConfirm, setCloseConfirm] = useState<Comparsa | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [browserOnline, setBrowserOnline] = useState(() => navigator.onLine)
   const [busy, setBusy] = useState(false)
 
   const nightsQuery = useQuery({
@@ -136,24 +143,31 @@ export function JudgePage() {
   }, [contextQuery.error])
 
   useEffect(() => {
-    const refreshLocal = (): void => {
-      void Promise.all([getVoteDrafts(), getCloseDrafts()]).then(([nextDrafts, nextCloses]) => {
-        setDrafts(nextDrafts)
-        setCloseDrafts(nextCloses)
-      })
+    const online = (): void => setBrowserOnline(true)
+    const offline = (): void => setBrowserOnline(false)
+    window.addEventListener('online', online)
+    window.addEventListener('offline', offline)
+    return () => {
+      window.removeEventListener('online', online)
+      window.removeEventListener('offline', offline)
     }
-    refreshLocal()
-    window.addEventListener(SYNC_EVENT_NAME, refreshLocal)
-    return () => window.removeEventListener(SYNC_EVENT_NAME, refreshLocal)
   }, [])
 
   useEffect(() => {
-    if (connection.apiReachable) {
-      void processSyncQueue().then(() => queryClient.invalidateQueries({ queryKey: ['jurado-context', selectedNightId] }))
-    }
-  }, [connection.apiReachable, queryClient, selectedNightId])
+    setConfirmedVotes([])
+    setConfirmedCloses([])
+    setActionError(null)
+  }, [selectedNightId])
 
-  const context = contextQuery.data ?? (cachedContext?.assignment.night.id === selectedNightId ? cachedContext : undefined)
+  const rawContext = contextQuery.data ?? (cachedContext?.assignment.night.id === selectedNightId ? cachedContext : undefined)
+  const context = useMemo(() => {
+    if (!rawContext) return undefined
+    return {
+      ...rawContext,
+      votes: mergeVotes(rawContext.votes, confirmedVotes),
+      closes: mergeCloses(rawContext.closes, confirmedCloses),
+    }
+  }, [confirmedCloses, confirmedVotes, rawContext])
   const selectedComparsa = context?.comparsas.find((comparsa) => comparsa.id === selectedComparsaId) ?? context?.comparsas[0]
 
   useEffect(() => {
@@ -188,7 +202,7 @@ export function JudgePage() {
       <main className="mx-auto max-w-4xl px-4 py-6">
         <Card>
           <h2 className="text-xl font-bold">No hay contexto de jurado disponible</h2>
-          <p className="mt-2 text-slate-300">Necesitamos una sesión válida o datos previamente cacheados para operar sin conexión.</p>
+          <p className="mt-2 text-slate-300">Necesitamos una sesión válida o datos previamente cacheados para mostrar la última planilla conocida.</p>
           {cachedContext ? <Button className="mt-4" onClick={() => setSelectedNightId(cachedContext.assignment.night.id)}><FiClock size={18} aria-hidden="true" />Usar última noche cacheada</Button> : null}
           {contextQuery.error ? <p className="mt-3 text-sm text-rose-200">{contextQuery.error.message}</p> : null}
         </Card>
@@ -197,22 +211,39 @@ export function JudgePage() {
   }
 
   const night = context.assignment.night
-  const close = selectedComparsa ? closeStatus(selectedComparsa.id, closeDrafts, context.closes) : undefined
-  const missing = selectedComparsa ? missingScorableItems(selectedComparsa.id, context.items, drafts, context.votes) : []
+  const close = selectedComparsa ? closeStatus(selectedComparsa.id, noCloseDrafts, context.closes) : undefined
+  const missing = selectedComparsa ? missingScorableItems(selectedComparsa.id, context.items, noVoteDrafts, context.votes) : []
   const selectedIndex = selectedComparsa ? Math.max(0, context.comparsas.findIndex((comparsa) => comparsa.id === selectedComparsa.id)) : 0
   const wrapperBg = tabBackgrounds[selectedIndex % tabBackgrounds.length]
-  const pendingVoteDraftsForSelected = selectedComparsa
-    ? drafts.filter((draft) => draft.comparsaId === selectedComparsa.id && draft.syncStatus !== 'SYNCED')
-    : []
-  const canCloseSelected = selectedComparsa && missing.length === 0 && pendingVoteDraftsForSelected.length === 0 && !close
+  const canCloseSelected = selectedComparsa && missing.length === 0 && !close && browserOnline && !busy
 
   const confirmVote = async (): Promise<void> => {
     if (!pendingVote) return
+    if (!navigator.onLine) {
+      setActionError('No hay conexión. Recuperá internet y volvé a confirmar la nota.')
+      return
+    }
     setBusy(true)
+    setActionError(null)
     try {
-      await enqueueVoteOperation({ comparsaId: pendingVote.comparsa.id, itemId: pendingVote.item.id, valor: pendingVote.value })
+      const created = await juradoApi.createVote({
+        operationUuid: newOperationId(),
+        comparsaId: pendingVote.comparsa.id,
+        itemId: pendingVote.item.id,
+        valor: pendingVote.value,
+        clientCreatedAt: new Date().toISOString(),
+      })
+      setConfirmedVotes((current) => [...current, created])
       setPendingVote(null)
-      scheduleSync(100)
+      await queryClient.invalidateQueries({ queryKey: ['jurado-context', selectedNightId] })
+    } catch (caught) {
+      if (caught instanceof ApiClientError && caught.code === 'VOTE_ALREADY_CONFIRMED') {
+        setPendingVote(null)
+        setActionError('Esa puntuación ya estaba confirmada en el servidor. Actualizamos la planilla.')
+        await queryClient.invalidateQueries({ queryKey: ['jurado-context', selectedNightId] })
+      } else {
+        setActionError(caught instanceof ApiClientError ? caught.message : 'No se pudo confirmar la nota. Verificá conexión y reintentá.')
+      }
     } finally {
       setBusy(false)
     }
@@ -220,11 +251,28 @@ export function JudgePage() {
 
   const confirmClose = async (): Promise<void> => {
     if (!closeConfirm) return
+    if (!navigator.onLine) {
+      setActionError('No hay conexión. Recuperá internet y volvé a cerrar la comparsa.')
+      return
+    }
     setBusy(true)
+    setActionError(null)
     try {
-      await enqueueCloseComparsaOperation({ comparsaId: closeConfirm.id })
+      const created = await juradoApi.closeComparsa(closeConfirm.id, {
+        operationUuid: newOperationId(),
+        clientCreatedAt: new Date().toISOString(),
+      })
+      setConfirmedCloses((current) => [...current, created])
       setCloseConfirm(null)
-      scheduleSync(100)
+      await queryClient.invalidateQueries({ queryKey: ['jurado-context', selectedNightId] })
+    } catch (caught) {
+      if (caught instanceof ApiClientError && caught.code === 'COMPARSA_CLOSED') {
+        setCloseConfirm(null)
+        setActionError('La comparsa ya estaba cerrada en el servidor. Actualizamos la planilla.')
+        await queryClient.invalidateQueries({ queryKey: ['jurado-context', selectedNightId] })
+      } else {
+        setActionError(caught instanceof ApiClientError ? caught.message : 'No se pudo cerrar la comparsa. Verificá conexión y reintentá.')
+      }
     } finally {
       setBusy(false)
     }
@@ -240,22 +288,19 @@ export function JudgePage() {
             <div className="mt-3 flex flex-wrap gap-2 text-sm text-slate-300">
               {auth.user ? <Badge tone="info">Jurado: {auth.user.nombre}</Badge> : null}
               <Badge tone={nightStatusTone(night.status)}>Estado: {night.status}</Badge>
-              <Badge tone={connection.apiReachable ? 'success' : 'warning'}>{connection.label}</Badge>
+              <Badge tone={browserOnline ? 'success' : 'warning'}>{browserOnline ? 'Con conexión' : 'Sin conexión'}</Badge>
             </div>
           </div>
           <Button variant="secondary" className="w-full sm:w-auto" onClick={() => setSelectedNightId(undefined)}><FiCalendar size={18} aria-hidden="true" />Cambiar noche</Button>
         </div>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <PendingOperationsIndicator summary={syncSummary} />
-        <ConflictBanner summary={syncSummary} />
-      </div>
+      {actionError ? <Card className="border-rose-500/40 bg-rose-500/10"><p className="text-sm font-semibold text-rose-100" role="alert">{actionError}</p></Card> : null}
 
       <section className="rounded-[2rem] border-2 border-slate-950 bg-white/10 p-2 shadow-[0_10px_0_rgba(15,23,42,0.75)] backdrop-blur-md">
         <div className="flex gap-1 overflow-x-auto px-1 pt-1" role="tablist" aria-label="Comparsas de la noche">
           {context.comparsas.map((comparsa, index) => {
-            const progress = progressForComparsa(context, comparsa.id, drafts, closeDrafts)
+            const progress = progressForComparsa(context, comparsa.id, noVoteDrafts, noCloseDrafts)
             const active = selectedComparsa?.id === comparsa.id
             return (
               <button
@@ -292,7 +337,7 @@ export function JudgePage() {
                 <span>Rubro / ítem</span>
                 <span>Puntaje</span>
               </div>
-              {tree.map((node) => renderItemNode(node, selectedComparsa.id, drafts, context, (item, value) => setPendingVote({ comparsa: selectedComparsa, item, value }), Boolean(close)))}
+              {tree.map((node) => renderItemNode(node, selectedComparsa.id, noVoteDrafts, context, (item, value) => setPendingVote({ comparsa: selectedComparsa, item, value }), Boolean(close) || busy || !browserOnline))}
             </div>
 
             <div className="mt-4 rounded-3xl border border-slate-300 bg-white/60 p-4">
@@ -301,12 +346,12 @@ export function JudgePage() {
                   <h3 className="text-lg font-bold">Cierre de comparsa</h3>
                   {missing.length > 0 ? (
                     <p className="mt-1 text-sm font-semibold text-amber-700">Faltan puntuar: {missing.map((item) => item.nombre).join(', ')}</p>
-                  ) : pendingVoteDraftsForSelected.length > 0 ? (
-                    <p className="mt-1 text-sm font-semibold text-amber-700">La planilla está completa localmente, pero hay votos pendientes de servidor. Sin eso NO cierres: primero sincronizamos.</p>
+                  ) : !browserOnline ? (
+                    <p className="mt-1 text-sm font-semibold text-amber-700">Sin conexión no se puede cerrar. Recuperá internet y reintentá.</p>
                   ) : close ? (
                     <p className="mt-1 text-sm font-semibold text-emerald-700">La comparsa tiene cierre registrado.</p>
                   ) : (
-                    <p className="mt-1 text-sm text-slate-700">Todos los ítems están completos y sincronizados.</p>
+                    <p className="mt-1 text-sm text-slate-700">Todos los ítems están confirmados por servidor.</p>
                   )}
                 </div>
                 <Button size="lg" className="w-full sm:w-auto" disabled={!canCloseSelected} onClick={() => setCloseConfirm(selectedComparsa)}><FiFlag size={18} aria-hidden="true" />Cerrar comparsa</Button>
@@ -322,9 +367,10 @@ export function JudgePage() {
       <Modal
         open={Boolean(pendingVote)}
         title="Confirmar puntuación"
-        description="Esta acción bloqueará la nota en este dispositivo y se enviará al servidor con un identificador idempotente. No es lo mismo que confirmación final del servidor."
+        description="Esta acción envía la nota al servidor con un identificador idempotente. Si no hay conexión, no se confirma y podés reintentar."
         confirmLabel="Confirmar nota"
         busy={busy}
+        confirmDisabled={!browserOnline}
         onConfirm={() => { void confirmVote() }}
         onCancel={() => setPendingVote(null)}
       >
@@ -340,10 +386,11 @@ export function JudgePage() {
       <Modal
         open={Boolean(closeConfirm)}
         title="Cerrar comparsa"
-        description="El cierre también es idempotente e irreversible desde la interfaz normal. Solo se habilita cuando los votos requeridos están confirmados por servidor."
+        description="El cierre se confirma directamente contra el servidor y es irreversible desde la interfaz normal."
         confirmLabel="Cerrar comparsa"
         danger
         busy={busy}
+        confirmDisabled={!browserOnline}
         onConfirm={() => { void confirmClose() }}
         onCancel={() => setCloseConfirm(null)}
       >

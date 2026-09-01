@@ -39,9 +39,9 @@ El DNI actúa como clave operativa del usuario. No existe una contraseña separa
 - `GET /jurado/noches/:nocheId/contexto` — contexto de la noche elegida: comparsas, ítems, progreso y estado.
 - `GET /jurado/contexto` — contexto heredado, mantenido por compatibilidad técnica.
 - `POST /jurado/votos` — crea voto idempotente.
-- `GET /jurado/votos` — reconciliación del dispositivo.
+- `GET /jurado/votos` — consulta/reconciliación técnica del dispositivo.
 - `POST /jurado/comparsas/:id/cerrar` — cierre idempotente.
-- `POST /jurado/sync/reconcile` — compara operaciones locales/servidor.
+- `POST /jurado/sync/reconcile` — compatibilidad técnica legacy; fuera del flujo principal del Jurado.
 
 ### Crear voto
 Request mínimo:
@@ -116,4 +116,4 @@ Si el mismo `operationUuid` llega nuevamente:
 - mismo payload → devolver resultado original;
 - payload diferente → `409 IDEMPOTENCY_CONFLICT`, preservando evidencia auditable.
 
-`POST /jurado/sync/reconcile` responde por operación con `APPLIED`, `ALREADY_APPLIED`, `REJECTED` o `CONFLICT`. La decisión reglamentaria final sobre operaciones recibidas después del cierre continúa pendiente; el flujo actual permite votar al jurado autenticado sobre comparsas activas de la noche elegida.
+El flujo principal del Jurado usa `POST /jurado/votos` y `POST /jurado/comparsas/:id/cerrar` de forma directa. `POST /jurado/sync/reconcile` responde por operación con `APPLIED`, `ALREADY_APPLIED`, `REJECTED` o `CONFLICT` y queda disponible por compatibilidad técnica.

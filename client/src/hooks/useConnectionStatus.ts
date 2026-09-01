@@ -8,7 +8,7 @@ export interface ConnectionStatusState {
   label: string
 }
 
-export function useConnectionStatus(pollMs = 20_000): ConnectionStatusState {
+export function useConnectionStatus(pollMs = 60_000): ConnectionStatusState {
   const [browserOnline, setBrowserOnline] = useState(() => navigator.onLine)
   const [apiReachable, setApiReachable] = useState(false)
   const [checking, setChecking] = useState(true)
@@ -50,7 +50,7 @@ export function useConnectionStatus(pollMs = 20_000): ConnectionStatusState {
       ? 'Verificando API'
       : apiReachable
         ? 'Conectado'
-        : 'API no responde'
+        : 'Sin verificar'
 
   return { browserOnline, apiReachable, checking, label }
 }

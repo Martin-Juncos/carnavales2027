@@ -10,7 +10,7 @@ Esta carpeta es la fuente de verdad funcional y técnica del sistema.
 4. `04-modelo-de-datos-erd.md` — modelo lógico y restricciones.
 5. `05-especificacion-api.md` — contratos HTTP vigentes.
 6. `06-matriz-roles-permisos.md` — RBAC.
-7. `07-especificacion-offline-sincronizacion.md` — IndexedDB, cola y reconciliación.
+7. `07-especificacion-offline-sincronizacion.md` — conectividad online-first, cache local e idempotencia.
 8. `08-seguridad-auditoria.md` — autenticación, sesiones, secretos y audit log.
 
 ## Decisiones vigentes

@@ -5,7 +5,7 @@
 **Versión:** 1.0
 
 ## 1. Objetivo
-Definir una arquitectura consistente para una PWA de votación conectada normalmente a Internet pero resiliente a cortes en el corsódromo.
+Definir una arquitectura consistente para una PWA de votación online-first: las escrituras críticas se confirman contra la API y los cortes se manejan con bloqueo claro y reintento manual.
 
 ## 2. Stack base
 - **Frontend:** React + TypeScript.
@@ -18,8 +18,8 @@ Definir una arquitectura consistente para una PWA de votación conectada normalm
 
 ## 3. Principios
 1. El servidor es la fuente de verdad oficial.
-2. Cada voto se persiste localmente antes del intento de red.
-3. Toda escritura crítica usa `operation_uuid` para idempotencia.
+2. Cada escritura crítica usa `operation_uuid` para idempotencia.
+3. La UI bloquea votos solo cuando el servidor acepta o reconoce un replay idempotente equivalente.
 4. Los votos confirmados son append-only/inmutables.
 5. Cálculos oficiales ocurren en servidor.
 6. Toda excepción administrativa relevante genera auditoría.
@@ -37,15 +37,13 @@ flowchart LR
 ```
 
 ## 5. Resiliencia de voto
-Estados locales recomendados:
-- `LOCAL`: operación creada y persistida localmente.
-- `PENDING`: pendiente de envío o reintento.
-- `SYNCING`: intento en curso.
-- `SYNCED`: servidor confirmó aceptación o idempotencia.
-- `CONFLICT`: conflicto preservado para revisión.
-- `REJECTED`: servidor rechazó por regla de negocio y debe mostrarse la causa.
+El flujo principal del Jurado es directo y simple:
 
-El Service Worker/background sync puede ayudar, pero la app debe poseer además un reconciliador explícito al abrir, recuperar foco y detectar conectividad.
+```text
+confirmar -> generar operationUuid -> POST API -> bloquear si servidor acepta
+```
+
+Si hay timeout, red caída o servidor inaccesible, la operación no se considera confirmada y la UI permite reintento manual. La idempotencia backend protege doble tap, replay accidental y respuesta perdida. IndexedDB queda para cache de lectura/contexto; la cola `sync/reconcile` permanece solo como compatibilidad técnica.
 
 ## 6. Autenticación
 - Identidad centralizada en una tabla `users` con rol.
@@ -66,7 +64,7 @@ Para la primera versión, polling corto del Fiscal es aceptable. El contrato deb
 ## 9. Observabilidad
 Mínimo:
 - logs estructurados con `request_id` y `operation_uuid`;
-- métricas de errores, latencia, votos pendientes/rechazados y sincronización;
+- métricas de errores, latencia, votos rechazados y disponibilidad;
 - auditoría separada de logs operativos.
 
 ## 10. Despliegue

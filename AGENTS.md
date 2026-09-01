@@ -183,9 +183,11 @@ El escenario normal es online, pero durante el carnaval pueden existir:
 * suspensión del dispositivo;
 * reintentos de requests.
 
-La PWA del jurado debe persistir una operación crítica localmente antes de considerarla segura.
+La PWA del jurado opera online-first: una nota o cierre solo queda confirmado cuando la API acepta la operación o reconoce un replay idempotente equivalente.
 
-Un fallo de red no debe provocar pérdida de un voto ya confirmado por el jurado.
+Si no hay conexión, timeout o API disponible, el frontend no debe confirmar localmente: debe mostrar un error claro y permitir reintento manual.
+
+IndexedDB queda para cache de sesión/contexto y recuperación visual; no debe ejecutarse una cola automática agresiva de votos desde el flujo principal.
 
 ---
 
@@ -305,7 +307,7 @@ Priorizar cobertura sobre:
 * concurrencia;
 * inmutabilidad;
 * selección de noche por Jurado;
-* sincronización;
+* conectividad;
 * cierres;
 * penalizaciones;
 * generación/verificación de documentos.

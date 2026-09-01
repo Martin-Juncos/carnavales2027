@@ -17,10 +17,6 @@ vi.mock('./AuthProvider', () => ({
   }),
 }))
 
-vi.mock('../../hooks/useConnectionStatus', () => ({
-  useConnectionStatus: () => ({ apiReachable: true, label: 'Conectado' }),
-}))
-
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -54,6 +50,12 @@ describe('LoginPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Mostrar u ocultar DNI' }))
     expect(dni).toHaveAttribute('type', 'text')
+  })
+
+  it('does not render health status before authentication', () => {
+    render(<MemoryRouter><LoginPage /></MemoryRouter>)
+
+    expect(screen.queryByText('Conectado')).not.toBeInTheDocument()
   })
 
   it('keeps only six numeric OTP digits when pasted', async () => {

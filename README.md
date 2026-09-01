@@ -1,12 +1,12 @@
 # Carnavales 2027
 
-Sistema web de votación digital para comparsas de carnaval, con API auditable, PWA offline-first para jurados y persistencia PostgreSQL.
+Sistema web de votación digital para comparsas de carnaval, con API auditable, PWA online-first para jurados con idempotencia y persistencia PostgreSQL.
 
 ## Estructura
 
-- `api/`: API Node.js/Express/TypeScript, PostgreSQL, OTP, auditoría, actas y sincronización.
+- `api/`: API Node.js/Express/TypeScript, PostgreSQL, OTP, auditoría, actas e idempotencia.
 - `client/`: PWA React/TypeScript para Jurado, Fiscal, Escribano y Admin.
-- `docs/`: documentación funcional, técnica, API, roles, offline y seguridad.
+- `docs/`: documentación funcional, técnica, API, roles, conectividad y seguridad.
 - `skills/`: instrucciones locales para agentes Codex del proyecto.
 
 ## Reglas vigentes clave
@@ -16,7 +16,7 @@ Sistema web de votación digital para comparsas de carnaval, con API auditable, 
 - El Admin gestiona usuarios, noches, comparsas y rubros/ítems; las comparsas se crean por noche y su orden depende de cada noche.
 - Fiscal y Escribanía trabajan con paneles operativos por noche: supervisión, penalizaciones, resultados, actas e integridad.
 - Los votos confirmados son inmutables, idempotentes y auditados.
-- La PWA del jurado persiste operaciones críticas en IndexedDB antes de sincronizar.
+- La PWA del jurado confirma votos online contra la API; si no hay conexión, no confirma y permite reintento manual. IndexedDB queda para cache de lectura/recuperación visual.
 
 ## Arranque local
 

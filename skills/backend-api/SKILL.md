@@ -74,4 +74,4 @@ Elegir status HTTP según la semántica documentada. Nunca exponer stack traces,
 - Aplicar límites de payload, CORS configurado y HTTPS en producción.
 - Asignar `requestId` a requests relevantes para correlación.
 - No registrar passwords, OTP, JWT, cookies, `Authorization` ni secretos.
-- Mantener compatibilidad con auditoría, idempotencia, sincronización offline, RBAC y errores de dominio, implementando solo lo imprescindible para el contrato HTTP solicitado.
+- Mantener compatibilidad con auditoría, idempotencia, conectividad online-first, RBAC y errores de dominio, implementando solo lo imprescindible para el contrato HTTP solicitado.

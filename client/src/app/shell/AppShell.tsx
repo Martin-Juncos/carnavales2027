@@ -2,9 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { FiEye, FiFileText, FiLogOut, FiSettings, FiUser } from 'react-icons/fi'
 import { Button } from '../../components/ui/Button'
 import { useConnectionStatus } from '../../hooks/useConnectionStatus'
-import { useSyncSummary } from '../../hooks/useSyncSummary'
 import { ConnectionStatus } from '../../components/domain/ConnectionStatus'
-import { LastSyncIndicator } from '../../components/domain/LastSyncIndicator'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { useServiceWorkerUpdate } from '../pwa/useServiceWorkerUpdate'
 
@@ -14,7 +12,6 @@ function navClass({ isActive }: { isActive: boolean }): string {
 
 export function AppShell() {
   const auth = useAuth()
-  const sync = useSyncSummary()
   const connection = useConnectionStatus()
   const update = useServiceWorkerUpdate()
 
@@ -28,8 +25,7 @@ export function AppShell() {
             {auth.offlineSession ? <p className="mt-1 text-xs text-carnival-amarillo-brillante">Sesión restaurada desde este dispositivo; falta validar con servidor.</p> : null}
           </div>
           <div className="flex flex-col gap-2 sm:items-end">
-            <ConnectionStatus connection={connection} sync={sync} />
-            <LastSyncIndicator lastSyncAt={sync.lastSyncAt} />
+            <ConnectionStatus connection={connection} />
           </div>
         </div>
         <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-3" aria-label="Navegación principal">
@@ -42,7 +38,7 @@ export function AppShell() {
       </header>
       {update.updateAvailable ? (
         <div className="border-b border-carnival-azul-profundo/40 bg-carnival-azul-profundo/10 px-4 py-3 text-sm text-cyan-100" role="status">
-          Nueva versión disponible. Antes de actualizar verificá que tus votos estén guardados localmente. <button className="font-bold underline" onClick={update.applyUpdate}>Aplicar actualización</button>
+          Nueva versión disponible. Antes de actualizar verificá que tus votos confirmados figuren en pantalla. <button className="font-bold underline" onClick={update.applyUpdate}>Aplicar actualización</button>
         </div>
       ) : null}
       <Outlet />

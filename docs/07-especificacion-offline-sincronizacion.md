@@ -1,66 +1,66 @@
-# 07 — Especificación de Resiliencia Offline y Sincronización
+# 07 — Especificación de Conectividad Online-first e Idempotencia
 
 **Estado:** Base de desarrollo  
-**Versión:** 1.0
+**Versión:** 1.1
 
 ## 1. Alcance
-El sistema es online con tolerancia a cortes temporales. La PWA del Jurado debe evitar pérdida de operaciones críticas durante una interrupción.
+El flujo operativo del Jurado es **online-first**. Si no hay conexión, timeout o API disponible, el sistema no confirma votos ni cierres.
 
-## 2. Cola local
-Cada operación almacena:
-- `operationUuid`;
-- tipo (`vote`, `close_comparsa`);
-- payload;
-- `clientCreatedAt`;
-- estado;
-- cantidad de intentos;
-- último error;
-- `serverResourceId` cuando sincroniza.
+La prioridad actual es estabilidad durante el evento: menos polling, menos reintentos automáticos y menos estados intermedios.
 
-Estados visibles actuales: `LOCAL`, `PENDING`, `SYNCING`, `SYNCED`, `CONFLICT`, `REJECTED`.
+## 2. Flujo de voto
+1. El jurado selecciona una nota.
+2. La UI solicita confirmación explícita.
+3. El cliente genera `operationUuid`.
+4. Envía `POST /jurado/votos`.
+5. Solo si el servidor acepta o reconoce un replay idempotente equivalente, la nota queda bloqueada.
 
-## 3. Flujo de voto
-1. Validación local básica.
-2. Confirmación del jurado.
-3. Escritura transaccional en IndexedDB.
-4. UI marca voto como confirmado localmente/pendiente.
-5. Envío al servidor.
-6. Confirmación server → `SYNCED`.
+Si falla por red, timeout o servidor inaccesible, la nota no queda confirmada y el jurado puede reintentar manualmente.
 
-Nunca se elimina una operación pendiente por logout, refresh o cierre de pestaña.
+## 3. Cierre de comparsa
+El cierre usa el mismo criterio:
 
-## 4. Reintentos
-- Reintento al recuperar conectividad, abrir app y volver a foreground.
-- Backoff para errores temporales.
-- No reintentar automáticamente errores 4xx de negocio salvo `429` o política explícita.
+```text
+confirmar cierre -> operationUuid -> POST /jurado/comparsas/:id/cerrar -> bloqueo si servidor acepta
+```
 
-## 5. Orden
-- Los votos de una comparsa pueden sincronizarse independientemente.
-- `close_comparsa` solo se envía cuando todos los votos locales de esa comparsa están `SYNCED` o reconciliados.
+La UI no habilita cierre sin conexión ni cuando faltan ítems confirmados.
 
-## 6. Idempotencia
-`operationUuid` es estable durante todos los reintentos. El servidor almacena su asociación con el resultado aceptado.
+## 4. Idempotencia
+`operationUuid` es estable para la operación enviada. El servidor almacena su asociación con el resultado aceptado:
 
-## 7. Reconciliación
-Al iniciar/reconectar:
-- consultar estado del servidor;
-- comparar operaciones locales;
-- marcar como `SYNCED` las ya existentes;
-- tratar `APPLIED` y `ALREADY_APPLIED` como sincronización exitosa;
-- detectar conflictos;
-- nunca sobrescribir automáticamente un voto distinto.
+- mismo `operationUuid` + mismo payload → devuelve el resultado original;
+- mismo `operationUuid` + payload distinto → `IDEMPOTENCY_CONFLICT`.
 
-## 8. Cierre de noche durante desconexión
-Una operación pendiente se envía igualmente para que el servidor decida. Si su validez temporal no puede determinarse inequívocamente, queda en conflicto/revisión y se registra auditoría. No se pierde ni se incorpora silenciosamente.
+Esto protege doble click, replay accidental y respuestas perdidas.
 
-## 9. Indicadores de UI
-Siempre visible:
-- Online / Sin conexión.
-- Cantidad de operaciones pendientes.
-- Estado de sincronización.
-- Advertencia clara antes de terminar si quedan operaciones sin resolver.
+## 5. IndexedDB
+IndexedDB queda para:
 
-## 10. Datos locales
-- No guardar secretos de autenticación en texto plano.
-- Minimizar PII en IndexedDB.
-- Limpiar datos ya sincronizados según política de retención, conservando lo necesario para reconciliación durante la jornada.
+- cache de sesión/contexto;
+- recuperación visual tras reload;
+- compatibilidad técnica con tablas históricas.
+
+No es cola crítica activa para confirmar nuevos votos offline.
+
+## 6. Sync legacy
+`POST /jurado/sync/reconcile` permanece disponible por compatibilidad técnica y para no forzar una refactorización riesgosa.
+
+El flujo principal del Jurado no usa reintentos automáticos, intervalos globales ni reconciliación por foco/online.
+
+## 7. Indicadores de UI
+Mostrar estados simples y accionables:
+
+- `Con conexión`;
+- `Sin conexión`;
+- `Confirmando`;
+- `Confirmado`;
+- error concreto de la última acción.
+
+Evitar mensajes agresivos o preventivos como “API no responde” si no afectan una acción concreta.
+
+## 8. Casos borde
+- Red caída antes de confirmar → no enviar, no bloquear, permitir reintento.
+- Timeout durante confirmación → no asumir éxito; refrescar contexto cuando sea posible y permitir reintento.
+- Servidor procesó pero la respuesta se perdió → el reintento idempotente debe devolver el recurso original.
+- Noche/comparsa cerrada durante reintento → backend rechaza con código de negocio y la UI muestra causa.

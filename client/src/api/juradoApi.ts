@@ -1,5 +1,12 @@
 import { apiClient } from './apiClient'
-import type { JuradoContext, NightSummary, SyncOperation, SyncResultStatus } from '../types/domain'
+import type {
+  CloseComparsaOperationPayload,
+  JuradoContext,
+  NightSummary,
+  SyncOperation,
+  SyncResultStatus,
+  VoteOperationPayload,
+} from '../types/domain'
 
 function numberFrom(value: unknown): number {
   if (typeof value === 'number') return value
@@ -38,6 +45,14 @@ export interface ReconcileResponse {
   operations: ReconcileResult[]
 }
 
+export interface CreateVoteRequest extends VoteOperationPayload {
+  operationUuid: string
+}
+
+export interface CloseComparsaRequest extends Omit<CloseComparsaOperationPayload, 'comparsaId'> {
+  operationUuid: string
+}
+
 export const juradoApi = {
   nights(): Promise<NightSummary[]> {
     return apiClient.get<NightSummary[]>('/jurado/noches')
@@ -47,6 +62,12 @@ export const juradoApi = {
   },
   votos() {
     return apiClient.get<JuradoContext['votes']>('/jurado/votos')
+  },
+  createVote(body: CreateVoteRequest) {
+    return apiClient.post<JuradoContext['votes'][number]>('/jurado/votos', body)
+  },
+  closeComparsa(comparsaId: number, body: CloseComparsaRequest) {
+    return apiClient.post<JuradoContext['closes'][number]>(`/jurado/comparsas/${comparsaId}/cerrar`, body)
   },
   reconcile(deviceId: string, operations: ReconcileRequestOperation[]): Promise<ReconcileResponse> {
     return apiClient.post<ReconcileResponse>('/jurado/sync/reconcile', { deviceId, operations })

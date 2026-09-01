@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "PWA frontend offline-first para Carnavales 2027",
+  "description": "PWA frontend online-first para Carnavales 2027",
   "engines": {
     "node": ">=20"
   },
