@@ -6,6 +6,7 @@ export interface AssignmentContext {
   noche_id: string
   noche_nombre: string
   noche_estado: 'draft' | 'open' | 'closed' | 'certified'
+  fecha: string
   assignment_status: 'active' | 'replaced' | 'cancelled' | 'completed'
 }
 
@@ -32,7 +33,7 @@ export async function lockComparsa(comparsaId: number, client: PoolClient): Prom
 
 export async function listAvailableNights() {
   const result = await query(
-    `SELECT id, nombre AS name, estado AS status
+    `SELECT id, nombre AS name, estado AS status, fecha
      FROM noches
      ORDER BY fecha, id`,
   )
@@ -169,7 +170,7 @@ export async function insertFiscalEvent(
 
 export async function getJurorContext(jurorId: string) {
   const assignment = await query<AssignmentContext>(
-    `SELECT ja.id AS assignment_id, n.id AS noche_id, n.nombre AS noche_nombre, n.estado AS noche_estado,
+    `SELECT ja.id AS assignment_id, n.id AS noche_id, n.nombre AS noche_nombre, n.estado AS noche_estado, n.fecha,
             ja.estado AS assignment_status
      FROM jurado_asignaciones ja JOIN noches n ON n.id = ja.noche_id
      WHERE ja.jurado_id = $1 AND ja.estado = 'active'`,
@@ -198,7 +199,7 @@ export async function getJurorContext(jurorId: string) {
   return {
     assignment: {
       id: current.assignment_id,
-      night: { id: current.noche_id, name: current.noche_nombre, status: current.noche_estado },
+      night: { id: current.noche_id, name: current.noche_nombre, status: current.noche_estado, fecha: current.fecha },
     },
     comparsas: comparsas.rows,
     items: items.rows,
@@ -208,8 +209,8 @@ export async function getJurorContext(jurorId: string) {
 }
 
 export async function getJurorContextForNight(jurorId: string, nightId: number) {
-  const night = await query<{ id: string; name: string; status: 'draft' | 'open' | 'closed' | 'certified' }>(
-    `SELECT id, nombre AS name, estado AS status
+  const night = await query<{ id: string; name: string; status: 'draft' | 'open' | 'closed' | 'certified'; fecha: string }>(
+    `SELECT id, nombre AS name, estado AS status, fecha
      FROM noches
      WHERE id = $1`,
     [nightId],

@@ -24,6 +24,7 @@ import {
 import { processSyncQueue, scheduleSync } from '../../offline/syncEngine'
 import type { Comparsa, ComparsaCloseDraft, JuradoContext, ScoringItem, VoteDraft } from '../../types/domain'
 import { buildItemTree, calculateParentTotal, closeStatus, missingScorableItems, progressForComparsa, progressLabel, scoreStateForItem, type ItemNode } from './voteCalculations'
+import { NightCalendarCarousel } from './NightCalendarCarousel'
 import { VoteInput } from './VoteInput'
 
 interface PendingVoteSelection {
@@ -174,24 +175,7 @@ export function JudgePage() {
           <p className="mt-2 text-slate-300">El servidor valida igualmente que la noche exista y esté abierta antes de aceptar votos.</p>
           {nightsQuery.error ? <p className="mt-3 text-sm text-rose-200">{nightsQuery.error.message}</p> : null}
           {cachedContext ? <Button className="mt-4" variant="secondary" onClick={() => setSelectedNightId(cachedContext.assignment.night.id)}><FiClock size={18} aria-hidden="true" />Usar última noche cacheada</Button> : null}
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {(nightsQuery.data ?? []).map((night) => (
-              <button
-                key={night.id}
-                type="button"
-                onClick={() => setSelectedNightId(night.id)}
-                className="rounded-3xl border border-white/20 bg-night-950/60 p-4 text-left transition hover:border-carnival-naranja-calido focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-naranja-calido"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm text-slate-400">Noche #{night.id}</p>
-                    <h3 className="text-xl font-bold text-slate-50">{night.name}</h3>
-                  </div>
-                  <Badge tone={night.status === 'open' ? 'success' : 'warning'}>{night.status}</Badge>
-                </div>
-              </button>
-            ))}
-          </div>
+          <NightCalendarCarousel nights={nightsQuery.data ?? []} onEnterNight={setSelectedNightId} />
           {nightsQuery.isLoading ? <p className="mt-4 text-sm text-slate-400">Cargando noches...</p> : null}
           {!nightsQuery.isLoading && (nightsQuery.data ?? []).length === 0 ? <p className="mt-4 text-sm text-slate-300">Todavía no hay noches creadas por Administración.</p> : null}
         </Card>

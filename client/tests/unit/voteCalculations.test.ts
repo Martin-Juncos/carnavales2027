@@ -9,7 +9,7 @@ const items: ScoringItem[] = [
 ]
 
 const context: JuradoContext = {
-  assignment: { id: 'assignment-1', night: { id: 1, name: 'Noche 1', status: 'open' } },
+  assignment: { id: 'assignment-1', night: { id: 1, name: 'Noche 1', status: 'open', fecha: '2027-02-06' } },
   comparsas: [{ id: 10, nombre: 'Ará Berá', orden: 1 }],
   items,
   votes: [{ id: 'vote-1', operationUuid: 'op-server', comparsaId: 10, itemId: 2, valor: 4, serverReceivedAt: '2027-02-06T22:00:00Z' }],

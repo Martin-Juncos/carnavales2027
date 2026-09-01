@@ -13,6 +13,7 @@ export interface NightSummary {
   id: number
   name: string
   status: NightStatus
+  fecha: string
 }
 
 export interface JurorAssignmentContext {
