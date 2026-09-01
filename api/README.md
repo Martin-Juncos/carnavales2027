@@ -68,6 +68,8 @@ docker compose up -d postgres
 npm run db:migrate
 ```
 
+Las migraciones siembran automáticamente las comparsas base `Tropicala`, `Ita Vera`, `Arami`, `Aymara`, `Oh Bahia` y `Poramba` en cada noche existente y en cada noche nueva. El Administrador conserva el CRUD y puede modificar el orden por noche.
+
 Para el correo OTP local, Mailpit expone SMTP en `127.0.0.1:1025` y su bandeja en `http://127.0.0.1:8025`:
 
 ```bash

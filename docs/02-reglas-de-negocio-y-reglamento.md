@@ -12,6 +12,7 @@
 - Un ítem padre con hijos es calculado; un ítem hoja es puntuable.
 - No se descartan nota máxima ni mínima con la información disponible actualmente.
 - Las comparsas se administran por noche: el Admin puede crearlas, editarlas, ordenar su pasada y borrarlas si no tienen historial asociado.
+- Cada noche parte con las comparsas base `Tropicala`, `Ita Vera`, `Arami`, `Aymara`, `Oh Bahia` y `Poramba`; ese seed no bloquea cambios administrativos posteriores.
 - Usuarios, noches, comparsas e ítems con evidencia asociada no se borran físicamente; el backend debe bloquear la operación para preservar trazabilidad.
 
 ## 2. Selección de jurados
