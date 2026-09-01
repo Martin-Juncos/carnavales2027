@@ -11,15 +11,16 @@ const eventsQuery = z.object({ query: z.object({ after: z.coerce.number().int().
 export function createSupervisionRouter(): Router {
   const router = Router()
   router.use(requireAuth, requireRoles('fiscal', 'escribano', 'admin'))
+  router.get('/noches', asyncHandler(async (_req, res) => {
+    const nights = await query(
+      'SELECT id, nombre, fecha, estado FROM noches ORDER BY fecha',
+    )
+    res.json({ data: nights.rows, meta: {} })
+  }))
   router.get('/noches/:id/estado', validate(nightParams), asyncHandler(async (req, res) => {
     const { params } = validated<{ params: { id: number } }>(req)
-    const [night, assignments, progress] = await Promise.all([
+    const [night, progress] = await Promise.all([
       query('SELECT id, nombre, fecha, estado FROM noches WHERE id = $1', [params.id]),
-      query(
-        `SELECT ja.id, ja.jurado_id AS "juradoId", u.nombre, ja.estado, ja.asignado_at AS "asignadoAt"
-         FROM jurado_asignaciones ja JOIN users u ON u.id = ja.jurado_id WHERE ja.noche_id = $1`,
-        [params.id],
-      ),
       query(
         `SELECT c.id AS "comparsaId", c.nombre AS "comparsaNombre",
                 COUNT(DISTINCT p.id)::int AS "votesReceived", COUNT(DISTINCT cc.id)::int AS "jurorCloses"
@@ -30,7 +31,7 @@ export function createSupervisionRouter(): Router {
         [params.id],
       ),
     ])
-    res.json({ data: { night: night.rows[0] ?? null, assignments: assignments.rows, progress: progress.rows }, meta: {} })
+    res.json({ data: { night: night.rows[0] ?? null, progress: progress.rows }, meta: {} })
   }))
   router.get('/eventos', validate(eventsQuery), asyncHandler(async (req, res) => {
     const { query: input } = validated<{ query: { after: number } }>(req)

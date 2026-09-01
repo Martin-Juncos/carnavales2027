@@ -42,9 +42,6 @@ export const juradoApi = {
   nights(): Promise<NightSummary[]> {
     return apiClient.get<NightSummary[]>('/jurado/noches')
   },
-  async context(): Promise<JuradoContext> {
-    return normalizeJuradoContext(await apiClient.get<JuradoContext>('/jurado/contexto'))
-  },
   async nightContext(nightId: number): Promise<JuradoContext> {
     return normalizeJuradoContext(await apiClient.get<JuradoContext>(`/jurado/noches/${nightId}/contexto`))
   },

@@ -77,6 +77,6 @@ Estados visuales: `pendiente`, `sincronizando`, `sincronizado`, `error`, `confli
 
 ## Roles, accesibilidad y calidad
 
-- Las vistas pueden incluir Fiscal (monitoreo/progreso/resultados disponibles/eventos/penalizaciones), Escribano (consulta/certificación/penalizaciones/actas/integridad) y Admin (configuración/usuarios/comparsas/rubros/asignaciones/operación). Ocultar/deshabilitar mejora UX, no autoriza; no crear permisos.
+- Las vistas pueden incluir Fiscal (panel operativo con selector de noche, progreso, eventos, resultados y penalizaciones), Escribano (panel operativo de consulta/certificación/penalizaciones/actas/integridad) y Admin (configuración/usuarios/noches/comparsas/rubros/orden/operación). Ocultar/deshabilitar mejora UX, no autoriza; no crear permisos.
 - Incluir labels, foco visible, teclado cuando aplique, contraste, targets amplios, mensajes legibles, modales accesibles y focus trap. Evitar fondos brillantes, grises ilegibles e indicadores solo cromáticos.
 - Mantener fluidez: evitar renders, requests y bundles innecesarios, keys inestables y lógica pesada en render; no sacrificar integridad o mantenibilidad por optimización prematura.

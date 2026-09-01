@@ -27,7 +27,15 @@ export interface ActRecord {
   certificadaAt?: string
 }
 
+export interface SupervisionNight {
+  id: number
+  nombre: string
+  fecha: string
+  estado: string
+}
+
 export const supervisionApi = {
+  nights: () => apiClient.get<SupervisionNight[]>('/supervision/noches'),
   nightState: (nightId: number) => apiClient.get<SupervisionNightState>(`/supervision/noches/${nightId}/estado`),
   events: (after = 0) => apiClient.get<FiscalEvent[]>(`/supervision/eventos?after=${after}`),
   jurorReport: (juradoId: string, nocheId: number) => apiClient.get<ReportRow[]>(`/reportes/jurado/${juradoId}/noche/${nocheId}`),

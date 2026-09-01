@@ -304,7 +304,7 @@ Priorizar cobertura sobre:
 * idempotencia;
 * concurrencia;
 * inmutabilidad;
-* asignaciones;
+* selección de noche por Jurado;
 * sincronización;
 * cierres;
 * penalizaciones;

@@ -1,6 +1,5 @@
 export type Role = 'jurado' | 'fiscal' | 'escribano' | 'admin'
 export type NightStatus = 'draft' | 'open' | 'closed' | 'certified'
-export type AssignmentStatus = 'active' | 'replaced' | 'cancelled' | 'completed'
 
 export interface AuthenticatedUser {
   id: string
@@ -158,7 +157,6 @@ export interface JurorNightProgress {
 
 export interface SupervisionNightState {
   night: { id: number; nombre: string; fecha: string; estado: NightStatus } | null
-  assignments: Array<{ id: string; juradoId: string; nombre: string; estado: AssignmentStatus; asignadoAt: string }>
   progress: Array<{ comparsaId: number; comparsaNombre: string; votesReceived: number; jurorCloses: number }>
 }
 

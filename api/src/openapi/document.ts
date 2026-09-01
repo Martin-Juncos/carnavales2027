@@ -136,7 +136,7 @@ const adminRoutes: RouteDefinition[] = [
   { method: 'get', path: '/admin/users', summary: 'Listar usuarios' },
   { method: 'post', path: '/admin/users', summary: 'Crear usuario', request: { body: createUserSchema.shape.body }, created: true },
   { method: 'patch', path: '/admin/users/{id}', summary: 'Actualizar usuario', request: { params: updateUserSchema.shape.params, body: updateUserSchema.shape.body } },
-  { method: 'delete', path: '/admin/users/{id}', summary: 'Dar de baja usuario', request: { params: uuidIdSchema.shape.params } },
+  { method: 'delete', path: '/admin/users/{id}', summary: 'Eliminar usuario sin evidencia asociada', request: { params: uuidIdSchema.shape.params } },
   { method: 'get', path: '/admin/noches', summary: 'Listar noches' },
   { method: 'post', path: '/admin/noches', summary: 'Crear noche', request: { body: createNightSchema.shape.body }, created: true },
   { method: 'patch', path: '/admin/noches/{id}', summary: 'Actualizar noche', request: { params: updateNightSchema.shape.params, body: updateNightSchema.shape.body } },
@@ -146,18 +146,19 @@ const adminRoutes: RouteDefinition[] = [
   { method: 'get', path: '/admin/comparsas', summary: 'Listar comparsas' },
   { method: 'post', path: '/admin/comparsas', summary: 'Crear comparsa', request: { body: createComparsaSchema.shape.body }, created: true },
   { method: 'patch', path: '/admin/comparsas/{id}', summary: 'Actualizar comparsa', request: { params: updateComparsaSchema.shape.params, body: updateComparsaSchema.shape.body } },
-  { method: 'delete', path: '/admin/comparsas/{id}', summary: 'Dar de baja comparsa', request: { params: numericIdSchema.shape.params } },
+  { method: 'delete', path: '/admin/comparsas/{id}', summary: 'Eliminar comparsa sin evidencia asociada', request: { params: numericIdSchema.shape.params } },
   { method: 'patch', path: '/admin/noches/{id}/comparsas/orden', summary: 'Actualizar orden de comparsas de una noche', request: { params: reorderComparsasSchema.shape.params, body: reorderComparsasSchema.shape.body } },
   { method: 'get', path: '/admin/items', summary: 'Listar items' },
   { method: 'post', path: '/admin/items', summary: 'Crear item', request: { body: createItemSchema.shape.body }, created: true },
   { method: 'patch', path: '/admin/items/{id}', summary: 'Actualizar item', request: { params: updateItemSchema.shape.params, body: updateItemSchema.shape.body } },
-  { method: 'delete', path: '/admin/items/{id}', summary: 'Dar de baja item', request: { params: numericIdSchema.shape.params } },
+  { method: 'delete', path: '/admin/items/{id}', summary: 'Eliminar item sin evidencia asociada', request: { params: numericIdSchema.shape.params } },
   { method: 'get', path: '/admin/asignaciones', summary: 'Listar asignaciones' },
   { method: 'post', path: '/admin/asignaciones', summary: 'Asignar jurado', request: { body: createAssignmentSchema.shape.body }, created: true },
   { method: 'post', path: '/admin/asignaciones/{id}/reemplazar', summary: 'Reemplazar jurado', request: { params: replaceAssignmentSchema.shape.params, body: replaceAssignmentSchema.shape.body } },
 ]
 adminRoutes.forEach(route)
 
+route({ method: 'get', path: '/supervision/noches', summary: 'Listar noches para supervisión' })
 route({ method: 'get', path: '/supervision/noches/{id}/estado', summary: 'Consultar avance de noche' })
 route({ method: 'get', path: '/supervision/eventos', summary: 'Consultar eventos por cursor' })
 route({ method: 'get', path: '/reportes/jurado/{juradoId}/noche/{nocheId}', summary: 'Planilla de jurado' })

@@ -57,6 +57,7 @@ Request mínimo:
 Respuesta exitosa: `201` la primera vez; un reintento idéntico puede responder `200` con el mismo recurso.
 
 ## 4. Fiscal/Escribano
+- `GET /supervision/noches`
 - `GET /supervision/noches/:id/estado`
 - `GET /supervision/eventos?after=<cursor>`
 - `GET /reportes/jurado/:juradoId/noche/:nocheId`

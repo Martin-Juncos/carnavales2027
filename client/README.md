@@ -16,7 +16,7 @@ PWA React/TypeScript para el sistema de votación digital.
 
 - Login con `nombre + email + DNI` y verificación OTP.
 - Jurado offline-first: selector de noche, comparsas de esa noche, planilla 0–5, confirmación inmutable, cierre y reconciliación.
-- Fiscal/Supervisión: avance por noche, eventos, reportes y penalizaciones.
+- Fiscal/Supervisión: panel operativo con selección de noche, avance por comparsa, indicadores en vivo, reportes, eventos y penalizaciones guiadas.
 - Escribano: panel operativo con resultados por noche, actas, verificación SHA-256, certificación, penalizaciones y auditoría.
 - Admin: CRUD de usuarios, noches, comparsas por noche, rubros/ítems y orden de pasada.
 

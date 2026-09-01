@@ -9,22 +9,6 @@ export interface AssignmentContext {
   assignment_status: 'active' | 'replaced' | 'cancelled' | 'completed'
 }
 
-export async function lockAssignment(jurorId: string, client: PoolClient): Promise<AssignmentContext | undefined> {
-  const result = await query<AssignmentContext>(
-    `SELECT ja.id AS assignment_id, n.id AS noche_id, n.nombre AS noche_nombre, n.estado AS noche_estado,
-            ja.estado AS assignment_status
-     FROM jurado_asignaciones ja
-     JOIN noches n ON n.id = ja.noche_id
-     WHERE ja.jurado_id = $1
-     ORDER BY (ja.estado = 'active') DESC, ja.asignado_at DESC
-     LIMIT 1
-     FOR SHARE OF ja, n`,
-    [jurorId],
-    client,
-  )
-  return result.rows[0]
-}
-
 export async function lockJurorComparsaScope(jurorId: string, comparsaId: number, client: PoolClient): Promise<void> {
   await query(
     'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',

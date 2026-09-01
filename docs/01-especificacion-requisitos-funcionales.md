@@ -70,7 +70,7 @@ Al autenticar:
 - El cierre de sesión no borra registros locales aún no sincronizados.
 
 ## 6. Flujo del Fiscal
-- Consulta el avance por noche, jurado y comparsa.
+- Usa un panel operativo con selector de noche, indicadores en vivo, avance por comparsa y planilla consolidada.
 - Recibe/consulta eventos de comparsa finalizada mediante polling o mecanismo equivalente.
 - Visualiza planilla por jurado, planilla por noche y planilla general.
 - Puede registrar penalizaciones conforme al Documento 2.

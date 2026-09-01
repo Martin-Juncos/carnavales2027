@@ -14,6 +14,7 @@ Sistema web de votación digital para comparsas de carnaval, con API auditable, 
 - Login operativo: `nombre + email + DNI`, seguido por OTP de 6 dígitos.
 - El rol técnico de “juez” es `jurado`.
 - El Admin gestiona usuarios, noches, comparsas y rubros/ítems; las comparsas se crean por noche y su orden depende de cada noche.
+- Fiscal y Escribanía trabajan con paneles operativos por noche: supervisión, penalizaciones, resultados, actas e integridad.
 - Los votos confirmados son inmutables, idempotentes y auditados.
 - La PWA del jurado persiste operaciones críticas en IndexedDB antes de sincronizar.
 

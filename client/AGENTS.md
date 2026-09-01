@@ -336,13 +336,13 @@ La UI debe poder distinguir estos casos.
 
 # 18. Fiscal
 
-La vista del Fiscal es principalmente de supervisión.
+La vista del Fiscal es un panel operativo de supervisión.
 
 Debe permitir visualizar:
 
-* jurados;
-* progreso;
-* comparsas completadas;
+* selector de noche;
+* estado operativo;
+* progreso por comparsa;
 * puntuaciones recibidas;
 * resultados disponibles;
 * penalizaciones cuando corresponda;
