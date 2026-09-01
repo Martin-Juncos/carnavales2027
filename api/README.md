@@ -146,7 +146,7 @@ npm run test:unit
 Las integraciones crean un esquema PostgreSQL temporal y requieren una URL explícita de test:
 
 ```bash
-TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/carnavales2027_test npm run test:integration
+TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/carnavales2027_test npm run test:integration
 ```
 
 `test:integration` falla de forma explícita si falta `TEST_DATABASE_URL` o si el nombre de la base no termina en `_test`.
@@ -154,7 +154,7 @@ TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/carnavales2027_t
 PowerShell:
 
 ```powershell
-$env:TEST_DATABASE_URL='postgresql://postgres:postgres@localhost:5432/carnavales2027_test'
+$env:TEST_DATABASE_URL='postgresql://postgres:postgres@127.0.0.1:5433/carnavales2027_test'
 npm run test:integration
 ```
 
