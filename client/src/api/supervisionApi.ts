@@ -4,11 +4,15 @@ import type { AuditRow, FiscalEvent, ReportRow, SupervisionNightState } from '..
 export interface PenaltyRecord {
   id: string
   comparsaId: number
+  comparsaNombre?: string
+  nocheId?: number
+  nocheNombre?: string
   puntos: number
   motivoCodigo?: string
   motivoDescripcion: string
   estado: string
   createdAt?: string
+  anuladaAt?: string
 }
 
 export interface ActRecord {
@@ -29,8 +33,21 @@ export const supervisionApi = {
   jurorReport: (juradoId: string, nocheId: number) => apiClient.get<ReportRow[]>(`/reportes/jurado/${juradoId}/noche/${nocheId}`),
   nightReport: (nocheId: number) => apiClient.get<ReportRow[]>(`/reportes/noche/${nocheId}`),
   generalReport: () => apiClient.get<ReportRow[]>('/reportes/general'),
+  penalties: (params: { nocheId?: number; estado?: 'active' | 'annulled'; limit?: number } = {}) => {
+    const search = new URLSearchParams()
+    if (params.nocheId) search.set('nocheId', String(params.nocheId))
+    if (params.estado) search.set('estado', params.estado)
+    search.set('limit', String(params.limit ?? 50))
+    return apiClient.get<PenaltyRecord[]>(`/penalizaciones?${search.toString()}`)
+  },
   createPenalty: (body: { comparsaId: number; puntos: number; motivoCodigo?: string; motivoDescripcion: string }) => apiClient.post<PenaltyRecord>('/penalizaciones', body),
   annulPenalty: (id: string, body: { motivo: string }) => apiClient.post<PenaltyRecord>(`/penalizaciones/${id}/anular`, body),
+  acts: (params: { nocheId?: number; limit?: number } = {}) => {
+    const search = new URLSearchParams()
+    if (params.nocheId) search.set('nocheId', String(params.nocheId))
+    search.set('limit', String(params.limit ?? 50))
+    return apiClient.get<ActRecord[]>(`/actas?${search.toString()}`)
+  },
   generateAct: (nocheId: number, type: 'pdf' | 'csv') => apiClient.post<ActRecord>(`/actas/noche/${nocheId}/generar`, { type }),
   getAct: (id: string) => apiClient.get<ActRecord>(`/actas/${id}`),
   certifyAct: (id: string) => apiClient.post<ActRecord>(`/actas/${id}/certificar`),

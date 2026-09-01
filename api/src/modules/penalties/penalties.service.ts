@@ -2,11 +2,30 @@ import { withTransaction, query } from '../../database/pool'
 import { errors } from '../../shared/errors/app-error'
 import { writeAudit } from '../audit/audit.repository'
 import type { AuthenticatedUser } from '../auth/auth.types'
-import type { AnnulPenaltyInput, CreatePenaltyInput } from './penalties.schemas'
+import type { AnnulPenaltyInput, CreatePenaltyInput, ListPenaltiesInput } from './penalties.schemas'
 
 interface Context { requestId: string; ip?: string }
 
 export class PenaltiesService {
+  async list(input: ListPenaltiesInput) {
+    const result = await query(
+      `SELECT p.id, p.comparsa_id AS "comparsaId", c.nombre AS "comparsaNombre",
+              c.noche_id AS "nocheId", n.nombre AS "nocheNombre",
+              p.puntos, p.motivo_codigo AS "motivoCodigo",
+              p.motivo_descripcion AS "motivoDescripcion", p.estado,
+              p.created_at AS "createdAt", p.anulada_at AS "anuladaAt"
+       FROM penalizaciones p
+       JOIN comparsas c ON c.id = p.comparsa_id
+       JOIN noches n ON n.id = c.noche_id
+       WHERE ($1::bigint IS NULL OR c.noche_id = $1)
+         AND ($2::text IS NULL OR p.estado = $2)
+       ORDER BY p.created_at DESC
+       LIMIT $3`,
+      [input.nocheId ?? null, input.estado ?? null, input.limit],
+    )
+    return result.rows
+  }
+
   async create(actor: AuthenticatedUser, input: CreatePenaltyInput, context: Context) {
     return withTransaction(async (client) => {
       const result = await query(

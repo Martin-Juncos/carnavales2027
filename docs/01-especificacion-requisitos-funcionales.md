@@ -77,9 +77,9 @@ Al autenticar:
 - No puede modificar votos.
 
 ## 7. Flujo del Escribano/Veedor
-- Acceso de solo lectura a puntuaciones, cierres, penalizaciones y auditoría.
-- Puede validar/certificar el cierre de actas.
-- Puede registrar o validar penalizaciones si el reglamento lo habilita.
+- Acceso operativo a resultados por noche, actas, penalizaciones y auditoría.
+- Puede generar actas PDF/CSV, verificar su hash SHA-256 y certificar actas generadas.
+- Puede anular penalizaciones activas con motivo obligatorio, dejando evidencia auditable.
 - No puede modificar ni eliminar votos confirmados.
 - Debe poder verificar hash, fecha de emisión y versión de un acta.
 

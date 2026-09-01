@@ -3,13 +3,17 @@ import { asyncHandler } from '../../shared/http/async-handler'
 import { errors } from '../../shared/errors/app-error'
 import { validate, validated } from '../../shared/http/validate'
 import { requireAuth, requireRoles } from '../auth/auth.middleware'
-import { actIdSchema, generateActSchema } from './acts.schemas'
+import { actIdSchema, generateActSchema, listActsSchema } from './acts.schemas'
 import { ActsService } from './acts.service'
 
 export function createActsRouter(): Router {
   const router = Router()
   const service = new ActsService()
   router.use(requireAuth)
+  router.get('/', requireRoles('fiscal', 'escribano', 'admin'), validate(listActsSchema), asyncHandler(async (req, res) => {
+    const input = validated<{ query: { nocheId?: number; limit: number } }>(req)
+    res.json({ data: await service.list(input.query), meta: {} })
+  }))
   router.post('/noche/:nocheId/generar', requireRoles('fiscal', 'escribano', 'admin'), validate(generateActSchema), asyncHandler(async (req, res) => {
     if (!req.auth) throw errors.authRequired()
     const input = validated<{ params: { nocheId: number }; body: { type: 'pdf' | 'csv' } }>(req)

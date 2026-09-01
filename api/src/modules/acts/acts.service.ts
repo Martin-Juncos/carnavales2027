@@ -62,6 +62,19 @@ function createPdf(nightId: number, rows: ReportRow[], generatedAt: string): Pro
 export class ActsService {
   constructor(private readonly storage: DocumentStorage = new FileSystemDocumentStorage()) {}
 
+  async list(input: { nocheId?: number; limit: number }) {
+    const result = await query(
+      `SELECT id, noche_id AS "nocheId", tipo, version, sha256, byte_size AS "byteSize", estado,
+              generada_at AS "generadaAt", certificada_por AS "certificadaPor", certificada_at AS "certificadaAt"
+       FROM actas
+       WHERE ($1::bigint IS NULL OR noche_id = $1)
+       ORDER BY generada_at DESC
+       LIMIT $2`,
+      [input.nocheId ?? null, input.limit],
+    )
+    return result.rows
+  }
+
   async generate(actor: AuthenticatedUser, nightId: number, type: ActType, context: Context) {
     let storedKey: string | undefined
     try {

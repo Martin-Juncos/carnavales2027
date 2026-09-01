@@ -62,10 +62,12 @@ Respuesta exitosa: `201` la primera vez; un reintento idéntico puede responder 
 - `GET /reportes/jurado/:juradoId/noche/:nocheId`
 - `GET /reportes/noche/:nocheId`
 - `GET /reportes/general`
+- `GET /penalizaciones?nocheId=&estado=&limit=` — listado para Fiscal/Escribano/Admin.
 - `POST /penalizaciones`
 - `POST /penalizaciones/:id/anular`
 
 ## 5. Actas
+- `GET /actas?nocheId=&limit=` — listado para Fiscal/Escribano/Admin.
 - `POST /actas/noche/:nocheId/generar`
 - `GET /actas/:id`
 - `POST /actas/:id/certificar`

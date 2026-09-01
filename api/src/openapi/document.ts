@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { env } from '../config/env'
 import { requestOtpSchema, verifyOtpSchema } from '../modules/auth/auth.schemas'
 import { closeComparsaSchema, createVoteSchema, nightIdSchema, syncSchema } from '../modules/jurado/jurado.schemas'
-import { annulPenaltySchema, createPenaltySchema } from '../modules/penalties/penalties.schemas'
+import { annulPenaltySchema, createPenaltySchema, listPenaltiesSchema } from '../modules/penalties/penalties.schemas'
 import {
   createAssignmentSchema,
   createComparsaSchema,
@@ -19,7 +19,7 @@ import {
   updateUserSchema,
   uuidIdSchema,
 } from '../modules/admin/admin.schemas'
-import { actIdSchema, generateActSchema } from '../modules/acts/acts.schemas'
+import { actIdSchema, generateActSchema, listActsSchema } from '../modules/acts/acts.schemas'
 
 const registry = new OpenAPIRegistry()
 registry.registerComponent('securitySchemes', 'sessionCookie', {
@@ -163,8 +163,10 @@ route({ method: 'get', path: '/supervision/eventos', summary: 'Consultar eventos
 route({ method: 'get', path: '/reportes/jurado/{juradoId}/noche/{nocheId}', summary: 'Planilla de jurado' })
 route({ method: 'get', path: '/reportes/noche/{nocheId}', summary: 'Planilla de noche' })
 route({ method: 'get', path: '/reportes/general', summary: 'Planilla general' })
+route({ method: 'get', path: '/penalizaciones', summary: 'Listar penalizaciones', request: { query: listPenaltiesSchema.shape.query } })
 route({ method: 'post', path: '/penalizaciones', summary: 'Registrar penalización', request: { body: createPenaltySchema.shape.body }, created: true })
 route({ method: 'post', path: '/penalizaciones/{id}/anular', summary: 'Anular penalización', request: { params: annulPenaltySchema.shape.params, body: annulPenaltySchema.shape.body } })
+route({ method: 'get', path: '/actas', summary: 'Listar actas', request: { query: listActsSchema.shape.query } })
 route({ method: 'post', path: '/actas/noche/{nocheId}/generar', summary: 'Generar acta PDF/CSV', request: { params: generateActSchema.shape.params, body: generateActSchema.shape.body }, created: true })
 route({ method: 'get', path: '/actas/{id}', summary: 'Consultar acta', request: { params: actIdSchema.shape.params } })
 route({ method: 'post', path: '/actas/{id}/certificar', summary: 'Certificar acta', request: { params: actIdSchema.shape.params } })

@@ -3,13 +3,17 @@ import { requireAuth, requireRoles } from '../auth/auth.middleware'
 import { validate, validated } from '../../shared/http/validate'
 import { asyncHandler } from '../../shared/http/async-handler'
 import { errors } from '../../shared/errors/app-error'
-import { annulPenaltySchema, createPenaltySchema, type AnnulPenaltyInput, type CreatePenaltyInput } from './penalties.schemas'
+import { annulPenaltySchema, createPenaltySchema, listPenaltiesSchema, type AnnulPenaltyInput, type CreatePenaltyInput, type ListPenaltiesInput } from './penalties.schemas'
 import { PenaltiesService } from './penalties.service'
 
 export function createPenaltiesRouter(): Router {
   const router = Router()
   const service = new PenaltiesService()
   router.use(requireAuth)
+  router.get('/', requireRoles('fiscal', 'escribano', 'admin'), validate(listPenaltiesSchema), asyncHandler(async (req, res) => {
+    const input = validated<{ query: ListPenaltiesInput }>(req)
+    res.json({ data: await service.list(input.query), meta: {} })
+  }))
   router.post('/', requireRoles('fiscal', 'escribano'), validate(createPenaltySchema), asyncHandler(async (req, res) => {
     if (!req.auth) throw errors.authRequired()
     const input = validated<{ body: CreatePenaltyInput }>(req)
