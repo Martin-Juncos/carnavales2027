@@ -9,6 +9,8 @@ node_modules/
 dist/
 build/
 coverage/
+playwright-report/
+test-results/
 .vite/
 .turbo/
 .cache/
@@ -22,6 +24,9 @@ yarn-error.log*
 pnpm-debug.log*
 tmp/
 temp/
+storage/
+api/storage/
+client/.vite/
 
 # Editores y sistema operativo
 .idea/

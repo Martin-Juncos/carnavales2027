@@ -18,7 +18,7 @@ PWA React/TypeScript para el sistema de votación digital.
 - Jurado offline-first: selector de noche, comparsas de esa noche, planilla 0–5, confirmación inmutable, cierre y reconciliación.
 - Fiscal/Supervisión: avance por noche, eventos, reportes y penalizaciones.
 - Escribano: actas, certificación, verificación de hash, auditoría y anulaciones.
-- Admin: CRUD de usuarios, noches, comparsas por noche, rubros/ítems, asignaciones/reemplazos y orden de pasada.
+- Admin: CRUD de usuarios, noches, comparsas por noche, rubros/ítems y orden de pasada.
 
 Las comparsas ya no son catálogo fijo: Administración las crea, modifica, ordena y borra por noche según el programa del evento. Los borrados y cambios sensibles se confirman con modal; si hay historial asociado, el backend bloquea el borrado.
 

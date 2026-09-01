@@ -133,14 +133,15 @@ npm run build
 npm start
 ```
 
-## Verificación
+## Verificación local
 
 ```bash
 npm run lint
 npm run typecheck
-npm run test:all
-npm run build
+npm run test:unit
 ```
+
+`npm run build` queda reservado para preparación de release/despliegue. Durante tareas de limpieza del repositorio se respeta la regla local de no ejecutar build.
 
 Las integraciones crean un esquema PostgreSQL temporal y requieren una URL explícita de test:
 

@@ -7,7 +7,7 @@ description: Diseñar o revisar esquemas, constraints, índices, migraciones y t
 
 ## Alcance y aislamiento
 
-Usar para crear/modificar tablas, constraints e índices; escribir o revisar migraciones; proteger inmutabilidad; resolver concurrencia; y modelar asignaciones, auditoría e idempotencia.
+Usar para crear/modificar tablas, constraints e índices; escribir o revisar migraciones; proteger inmutabilidad; resolver concurrencia, auditoría e idempotencia.
 
 No implementar controllers, REST/HTTP, React, IndexedDB, UX o 2FA; tampoco decidir reglas de negocio. Solo `carnavales-orchestrator` selecciona skills: no invocar, seleccionar, encadenar ni recomendar otras skills.
 
@@ -27,7 +27,7 @@ No implementar controllers, REST/HTTP, React, IndexedDB, UX o 2FA; tampoco decid
 - Aplicar `PRIMARY KEY`, `FOREIGN KEY`, `UNIQUE`, `CHECK`, `NOT NULL` e índices cuando expresen invariantes o consultas reales; no indexar indiscriminadamente.
 - Reforzar en base las reglas críticas aunque frontend o backend también las validen.
 - Proteger votos confirmados contra `UPDATE` y `DELETE` con mecanismos apropiados de PostgreSQL.
-- En operaciones críticas multirregistro, usar transacciones y considerar concurrencia real en asignaciones, votos, cierres y operaciones sensibles.
+- En operaciones críticas multirregistro, usar transacciones y considerar concurrencia real en votos, cierres y operaciones sensibles.
 - No usar `SELECT count(*)` → comprobar cupo → `INSERT` sin protección. Preferir constraints, locks, aislamiento o diseño transaccional consistente.
 - Evitar borrado físico de historial auditable cuando corresponda baja lógica, anulación o versionado. Modelar `audit_log` como append-only.
 - Parametrizar consultas; nunca concatenar input del usuario en SQL.
@@ -35,7 +35,6 @@ No implementar controllers, REST/HTTP, React, IndexedDB, UX o 2FA; tampoco decid
 
 ## Casos críticos
 
-- **Asignaciones:** garantizar concurrentemente el máximo activo permitido por noche; un reemplazo crea historial y trazabilidad, no sobrescribe la asignación anterior.
 - **Puntuaciones:** impedir duplicados por jurado + comparsa + ítem; el mismo `operationId` no duplica el voto; un voto confirmado no se edita ni elimina por el flujo normal.
 - **Auditoría:** impedir actualización/eliminación normal y conservar actor, acción, entidad, `TIMESTAMPTZ` y metadata necesaria.
 - **Actas:** conservar identificación, versión y hash (SHA-256 cuando corresponda); una versión nueva no sobrescribe la anterior.

@@ -167,7 +167,7 @@ Además del rol, validar contexto.
 
 Ejemplo:
 
-Un jurado autenticado puede elegir una noche creada, pero no puede votar si el backend no la considera operativa.
+Un jurado autenticado puede elegir una noche creada y votar comparsas activas de esa noche.
 
 También debe verificarse que:
 
@@ -175,44 +175,15 @@ También debe verificarse que:
 jurado
 → seleccionó una noche existente
 → la comparsa activa pertenece a esa noche
-→ y la votación continúa abierta
 ```
 
 ---
 
-# 7. Selección/asignación de noche
+# 7. Selección de noche
 
 La noche puede ser seleccionada por el jurado desde el catálogo creado por Administración.
 
-Resolver la autorización crítica validando en servidor que la noche exista, que la comparsa activa pertenezca a esa noche y que el estado permita votar.
-
-Si se usan asignaciones operativas, el sistema debe preservar:
-
-```text
-máximo 3 jurados activos por noche
-```
-
-La validación debe ser resistente a concurrencia.
-
-No implementar:
-
-```text
-SELECT count(*) ...
-if count < 3:
-    INSERT ...
-```
-
-sin protección transaccional adecuada.
-
-Utilizar una combinación apropiada de:
-
-* transacciones;
-* constraints;
-* locks;
-* índices;
-* estrategia consistente de concurrencia.
-
-Los reemplazos deben quedar auditados.
+Resolver la autorización crítica validando en servidor que la noche exista y que la comparsa activa pertenezca a esa noche. El Administrador no asigna jurados como parte del flujo operativo actual.
 
 ---
 
@@ -310,7 +281,6 @@ Utilizar transacciones para operaciones que afecten múltiples entidades relacio
 Ejemplos:
 
 * registrar voto + auditoría;
-* reemplazar jurado;
 * aplicar penalización + auditoría;
 * cerrar comparsa;
 * cerrar noche;

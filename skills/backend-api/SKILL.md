@@ -45,7 +45,7 @@ La API es autoridad funcional; PostgreSQL, autoridad final de integridad persist
 2. Definir request, response, errores y autorización contextual.
 3. Centralizar parsing/validación de params, query y body; no confiar en tipos del cliente, normalizar cuando corresponda y rechazar campos inesperados si el contrato lo exige.
 4. Delegar controller → service → repository, evitando duplicar lógica de dominio entre controllers.
-5. Reconocer transacciones necesarias sin diseñar toda PostgreSQL: voto/penalización + auditoría, reemplazo, cierre o acta.
+5. Reconocer transacciones necesarias sin diseñar toda PostgreSQL: voto/penalización + auditoría, cierre, cambios administrativos o acta.
 6. Mapear resultados y errores al contrato HTTP vigente.
 7. Si cambian ruta, request, response, error o semántica, actualizar la especificación y evitar incompatibilidades silenciosas.
 

@@ -83,13 +83,7 @@ El Jurado elige una noche creada después de autenticarse.
 
 El backend debe validar que la noche exista y que la comparsa activa pertenezca a esa noche antes de aceptar votos o cierres.
 
-Los reemplazos de jurados deben preservar la trazabilidad de:
-
-* jurado original;
-* jurado reemplazante;
-* noche;
-* fecha y hora;
-* usuario que autorizó el cambio.
+No se requiere asignación administrativa de jurados para votar. El jurado autenticado elige una noche creada y el backend valida que la comparsa pertenezca a esa noche.
 
 ---
 
@@ -99,7 +93,7 @@ Las comparsas son administradas por noche.
 
 El Administrador puede crear, ver, modificar, ordenar y borrar comparsas. Usuarios, noches, comparsas e ítems solo se borran físicamente si no tienen historial asociado; si hay votos, cierres, penalizaciones, actas, sesiones, auditoría u otras dependencias, el backend debe bloquear el borrado para preservar evidencia.
 
-Toda acción administrativa sensible de modificación, borrado, apertura/cierre, reemplazo o guardado de orden debe requerir confirmación explícita en modal antes de llamar a la API.
+Toda acción administrativa sensible de modificación, borrado, apertura/cierre o guardado de orden debe requerir confirmación explícita en modal antes de llamar a la API.
 
 La interfaz de votación presenta las comparsas activas correspondientes a la noche elegida por el jurado.
 
@@ -225,7 +219,6 @@ Las operaciones críticas deben generar evidencia auditable.
 Ejemplos:
 
 * autenticación;
-* asignación/reemplazo de jurados;
 * emisión de voto;
 * cierre de comparsa;
 * cierre de noche;

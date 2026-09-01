@@ -44,7 +44,7 @@ Adaptar el modelo si ya existe uno.
 |---|---|
 | API confirma | Marcar `SYNCED`. |
 | Timeout/red/DNS/servidor temporal | Volver a `PENDING`, preservar y reintentar con backoff. |
-| `NIGHT_CLOSED`, `COMPARSA_CLOSED`, `JUROR_NOT_ASSIGNED`, `ASSIGNMENT_INACTIVE`, `ITEM_NOT_SCORABLE` | Marcar `conflict`/`error`, preservar evidencia y no reintentar indefinidamente. |
+| `NIGHT_CLOSED`, `COMPARSA_CLOSED`, `ITEM_NOT_SCORABLE` | Marcar `conflict`/`error`, preservar evidencia y no reintentar indefinidamente. |
 | Mismo `operationId` + mismo payload ya procesado | Tratar como duplicate retry y marcar `synced`, incluso si la respuesta original se perdió. |
 | Mismo `operationId` + payload distinto | Marcar `IDEMPOTENCY_CONFLICT`; preservar y nunca generar otro UUID para forzar el envío. |
 
@@ -54,7 +54,7 @@ Adaptar el modelo si ya existe uno.
 - Respetar dependencias. Ejemplo: sincronizar/reconciliar votos requeridos antes de enviar el cierre de comparsa; no asumir orden libre.
 - Al iniciar/reabrir: abrir IndexedDB → recuperar no finalizadas → obtener contexto del servidor si es alcanzable → reconciliar → procesar pendientes válidas → marcar conflictos → actualizar UI.
 - No asumir que React conserva estado tras refresh.
-- Cubrir refresh, cierre/suspensión/reapertura, pérdida durante confirmación, post-commit sin respuesta, varias pendientes/reconexiones, sesión expirada, jurado reemplazado, noche cerrada y reinicio del dispositivo.
+- Cubrir refresh, cierre/suspensión/reapertura, pérdida durante confirmación, post-commit sin respuesta, varias pendientes/reconexiones, sesión expirada, noche cerrada y reinicio del dispositivo.
 
 ## Persistencia, Service Worker y seguridad
 

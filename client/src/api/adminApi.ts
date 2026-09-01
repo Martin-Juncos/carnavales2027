@@ -38,19 +38,6 @@ export interface AdminItem {
   activo: boolean
 }
 
-export interface AdminAssignment {
-  id: string
-  juradoId: string
-  juradoNombre: string
-  nocheId: number
-  nocheNombre: string
-  estado: string
-  reemplazaAsignacionId?: string | null
-  motivo?: string | null
-  asignadoAt: string
-  finalizadoAt?: string | null
-}
-
 export const adminApi = {
   users: () => apiClient.get<AdminUser[]>('/admin/users'),
   createUser: (body: { nombre: string; dni: string; email: string; role: Role; activo: boolean }) => apiClient.post<AdminUser>('/admin/users', body),
@@ -71,7 +58,4 @@ export const adminApi = {
   createItem: (body: { nombre: string; parentItemId?: number | null; orden: number; activo: boolean }) => apiClient.post<AdminItem>('/admin/items', body),
   updateItem: (id: number, body: Partial<{ nombre: string; parentItemId: number | null; orden: number; activo: boolean }>) => apiClient.patch<AdminItem>(`/admin/items/${id}`, body),
   deleteItem: (id: number) => apiClient.delete<AdminItem>(`/admin/items/${id}`),
-  assignments: () => apiClient.get<AdminAssignment[]>('/admin/asignaciones'),
-  createAssignment: (body: { juradoId: string; nocheId: number; motivo?: string }) => apiClient.post<AdminAssignment>('/admin/asignaciones', body),
-  replaceAssignment: (id: string, body: { replacementJurorId: string; motivo: string }) => apiClient.post<AdminAssignment>(`/admin/asignaciones/${id}/reemplazar`, body),
 }

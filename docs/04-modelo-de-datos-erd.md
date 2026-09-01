@@ -5,7 +5,7 @@
 **Versión:** 1.0
 
 ## 1. Decisión principal
-Se reemplaza la duplicación de identidad en `jurados`, `fiscales` y `escribanos` por una entidad central `users`. Los datos específicos de participación se modelan con asignaciones y relaciones. Esto simplifica autenticación, RBAC, baja lógica y auditoría.
+Se reemplaza la duplicación de identidad en `jurados`, `fiscales` y `escribanos` por una entidad central `users`. La participación operativa del Jurado se resuelve por selección de noche luego del login. Esto simplifica autenticación, RBAC y auditoría.
 
 ## 2. ERD lógico
 ```mermaid
@@ -34,10 +34,7 @@ Roles iniciales: `jurado`, `fiscal`, `escribano`, `admin`.
 `id`, `nombre`, `fecha`, `estado` (`draft|open|closed|certified`), timestamps.
 
 ### `jurado_asignaciones`
-Relaciona jurado+noche con vigencia cuando Administración necesita registrar asignaciones o reemplazos operativos auditables.
-Campos: `id`, `jurado_id`, `noche_id`, `estado`, `asignado_at`, `finalizado_at`, `reemplaza_asignacion_id`, `motivo`.
-
-Las asignaciones no son la única fuente para votar: el Jurado elige una noche creada y el backend valida el estado de esa noche.
+Tabla heredada de compatibilidad técnica. No forma parte del flujo operativo visible actual: el Jurado elige una noche creada y el backend valida pertenencia de comparsa.
 
 ### `comparsas`
 `id`, `nombre`, `noche_id`, `orden`, `activo`, timestamps. `UNIQUE(noche_id, orden)`.

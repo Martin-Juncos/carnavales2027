@@ -19,7 +19,7 @@ Ejecutar primero la prueba mínima; escalar a módulo, integración, E2E o suite
 - Preparar/limpiar solo datos necesarios; no compartir estado mutable salvo requisito del framework.
 - Areas: dominio, API, PostgreSQL, auth, autorización, votos, concurrencia, sync, PWA y auditoría.
 
-Prioridad: **critical** pérdida/duplicado/alteración de voto, autorización, corrupción transaccional y cupo de jurados; **high** sync, OTP, cierres, penalizaciones y auditoría; **normal** componentes secundarios, filtros y presentación.
+Prioridad: **critical** pérdida/duplicado/alteración de voto, autorización y corrupción transaccional; **high** sync, OTP, cierres, penalizaciones y auditoría; **normal** componentes secundarios, filtros y presentación.
 
 ## Unitarias y dominio
 
@@ -44,11 +44,11 @@ Casos obligatorios de voto:
 7. fallo transaccional sin estado parcial;
 8. éxito con evidencia auditable cuando corresponda.
 
-## Concurrencia y asignaciones
+## Concurrencia y selección de noche
 
-Usar concurrencia real del runtime/framework, no llamadas secuenciales disfrazadas. Probar requests simultáneos para mismo voto, mismo `operationId`, último cupo de jurados, reemplazo concurrente con voto y cierre de noche concurrente con operación entrante.
+Usar concurrencia real del runtime/framework, no llamadas secuenciales disfrazadas. Probar requests simultáneos para mismo voto, mismo `operationId` y cierre de noche concurrente con operación entrante.
 
-En selección de noche verificar noche inexistente/cerrada rechazada, comparsa de otra noche rechazada por contexto de backend y reemplazos auditados cuando se usen asignaciones.
+En selección de noche verificar noche inexistente y comparsa de otra noche rechazada por contexto de backend.
 
 ## API, auth y RBAC
 
@@ -67,17 +67,17 @@ E2E esenciales, sin mega-flujos si pruebas menores bastan:
 - Jurado: login/OTP -> selector de noche -> comparsa -> puntuar/confirmar -> completar -> continuar -> terminar noche.
 - Pérdida de red: votar -> desconectar -> continuar local -> recargar/recuperar -> reconectar/sincronizar.
 - Fiscal: progreso, comparsa completa y resultados disponibles.
-- Admin: entidades permitidas, asignaciones y restricciones.
+- Admin: entidades permitidas, orden por noche, confirmaciones y restricciones.
 - Escribano: consulta y acciones autorizadas sobre penalizaciones/actas.
 
 ## Frontend y auditoría
 
 - Probar selector, modal, bloqueo post-confirmación, pendientes, cambio de comparsa, conexión/sync, recuperación y errores API.
 - Consultar por role, label o texto visible; evitar clases CSS, DOM interno y nombres privados de componentes.
-- Auditar voto, asignación/reemplazo, penalización, cierre, auth y generación/certificación de acta cuando corresponda. Verificar ausencia de OTP, tokens, passwords, cookies y `Authorization`.
+- Auditar voto, penalización, cierre, auth, cambios administrativos y generación/certificación de acta cuando corresponda. Verificar ausencia de OTP, tokens, passwords, cookies y `Authorization`.
 
 ## Datos y regresiones
 
-Usar factories/builders solo si reducen duplicación, fixtures mínimos y nombres de escenario explícitos, p. ej. `rejects_vote_from_juror_assigned_to_another_night`.
+Usar factories/builders solo si reducen duplicación, fixtures mínimos y nombres de escenario explícitos, p. ej. `rejects_vote_for_comparsa_from_another_night`.
 
 Ante un bug: reproducirlo con un test cuando sea razonable -> demostrar fallo -> aplicar fix -> verificar éxito -> conservar regression test. No implementar funcionalidades completas innecesarias para probarlo ni ejecutar toda la suite si una prueba focalizada basta.

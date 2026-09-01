@@ -268,10 +268,10 @@ export async function readyOperations(limit: number, force = false): Promise<Syn
 
 export function operationStatusLabel(status: VoteSyncStatus): string {
   const labels: Record<VoteSyncStatus, string> = {
-    LOCAL: 'Guardado local',
-    PENDING: 'Pendiente de sincronizar',
+    LOCAL: 'Local',
+    PENDING: 'Pendiente',
     SYNCING: 'Sincronizando',
-    SYNCED: 'Confirmado por servidor',
+    SYNCED: 'Confirmado',
     CONFLICT: 'Conflicto',
     REJECTED: 'Rechazado',
   }

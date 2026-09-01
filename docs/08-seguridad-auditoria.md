@@ -47,7 +47,6 @@ Debe registrar al menos:
 - emisión y cierre de votos/comparsas;
 - apertura/cierre de noche;
 - altas/bajas/cambios de configuración;
-- reemplazo de jurados;
 - penalizaciones y anulaciones;
 - generación/certificación de actas;
 - decisiones sobre operaciones de sincronización en conflicto o revisión.

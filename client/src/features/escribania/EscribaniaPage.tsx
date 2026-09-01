@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { FiAward, FiFileText, FiShield, FiXCircle } from 'react-icons/fi'
 import { supervisionApi } from '../../api/supervisionApi'
 import { ApiClientError } from '../../api/apiClient'
 import { Button } from '../../components/ui/Button'
@@ -49,15 +50,15 @@ export function EscribaniaPage() {
         <Card>
           <h2 className="text-xl font-bold">Actas oficiales</h2>
           <form className="mt-3 space-y-3" onSubmit={submitGenerate}>
-            <label className="block text-sm font-semibold">Noche ID<input id="act-night" name="nocheId" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={nocheId} onChange={(event) => setNocheId(event.target.value)} inputMode="numeric" /></label>
-            <label className="block text-sm font-semibold">Tipo<select id="act-type" name="actType" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={actType} onChange={(event) => setActType(event.target.value === 'csv' ? 'csv' : 'pdf')}><option value="pdf">PDF</option><option value="csv">CSV</option></select></label>
-            <Button type="submit" className="w-full">Generar acta</Button>
+            <label className="block text-sm font-semibold">Noche ID<input id="act-night" name="nocheId" className="mt-1 min-h-11 w-full rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={nocheId} onChange={(event) => setNocheId(event.target.value)} inputMode="numeric" /></label>
+            <label className="block text-sm font-semibold">Tipo<select id="act-type" name="actType" className="mt-1 min-h-11 w-full rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={actType} onChange={(event) => setActType(event.target.value === 'csv' ? 'csv' : 'pdf')}><option value="pdf">PDF</option><option value="csv">CSV</option></select></label>
+            <Button type="submit" className="w-full"><FiFileText size={18} aria-hidden="true" />Generar acta</Button>
           </form>
           <form className="mt-5 space-y-3" onSubmit={(event) => { if (canCertifyOrAnnul) submitCertify(event); else event.preventDefault() }}>
-            <label className="block text-sm font-semibold">Acta ID<input id="act-id" name="actId" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={actId} onChange={(event) => setActId(event.target.value)} /></label>
+            <label className="block text-sm font-semibold">Acta ID<input id="act-id" name="actId" className="mt-1 min-h-11 w-full rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={actId} onChange={(event) => setActId(event.target.value)} /></label>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <Button type="button" variant="secondary" onClick={() => { void verify.refetch() }} disabled={!actId}>Verificar hash</Button>
-              {canCertifyOrAnnul ? <Button type="submit" disabled={!actId}>Certificar</Button> : null}
+              <Button type="button" variant="secondary" onClick={() => { void verify.refetch() }} disabled={!actId}><FiShield size={18} aria-hidden="true" />Verificar hash</Button>
+              {canCertifyOrAnnul ? <Button type="submit" disabled={!actId}><FiAward size={18} aria-hidden="true" />Certificar</Button> : null}
             </div>
           </form>
         </Card>
@@ -65,15 +66,15 @@ export function EscribaniaPage() {
         {canCertifyOrAnnul ? <Card>
           <h2 className="text-xl font-bold">Anular penalización</h2>
           <form className="mt-3 space-y-3" onSubmit={submitAnnul}>
-            <label className="block text-sm font-semibold">Penalización ID<input id="annul-penalty-id" name="penaltyId" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={annulPenaltyId} onChange={(event) => setAnnulPenaltyId(event.target.value)} /></label>
-            <label className="block text-sm font-semibold">Motivo<textarea id="annul-reason" name="annulReason" className="mt-1 min-h-24 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2" value={annulReason} onChange={(event) => setAnnulReason(event.target.value)} /></label>
-            <Button type="submit" variant="danger" className="w-full" disabled={!annulPenaltyId || annulReason.trim().length < 3}>Revisar anulación</Button>
+            <label className="block text-sm font-semibold">Penalización ID<input id="annul-penalty-id" name="penaltyId" className="mt-1 min-h-11 w-full rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={annulPenaltyId} onChange={(event) => setAnnulPenaltyId(event.target.value)} /></label>
+            <label className="block text-sm font-semibold">Motivo<textarea id="annul-reason" name="annulReason" className="mt-1 min-h-24 w-full rounded-2xl border border-white/20 bg-night-950/60 px-3 py-2 text-base" value={annulReason} onChange={(event) => setAnnulReason(event.target.value)} /></label>
+            <Button type="submit" variant="danger" className="w-full" disabled={!annulPenaltyId || annulReason.trim().length < 3}><FiXCircle size={18} aria-hidden="true" />Revisar anulación</Button>
           </form>
         </Card> : null}
       </aside>
 
       <section className="space-y-4">
-        {message ? <Card className="border-cyan-500/40 bg-cyan-500/10"><p className="text-cyan-100">{message}</p></Card> : null}
+        {message ? <Card className="border-carnival-azul-profundo/40 bg-carnival-azul-profundo/10"><p className="text-cyan-100">{message}</p></Card> : null}
         {verify.data ? (
           <Card className={verify.data.valid ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-rose-500/40 bg-rose-500/10'}>
             <div className="flex items-center gap-2"><h2 className="text-xl font-bold">Verificación de acta</h2><Badge tone={verify.data.valid ? 'success' : 'danger'}>{verify.data.valid ? 'Válida' : 'No coincide'}</Badge></div>
@@ -85,7 +86,7 @@ export function EscribaniaPage() {
           <h2 className="text-xl font-bold">Auditoría reciente</h2>
           <div className="mt-3 space-y-2">
             {(audit.data ?? []).map((row) => (
-              <div key={row.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">
+              <div key={row.id} className="rounded-2xl border border-white/15 bg-white/10 p-3 text-sm">
                 <p className="font-semibold">#{row.id} · {row.accion} · {row.entidad}</p>
                 <p className="text-slate-400">{new Date(row.createdAt).toLocaleString()} · actor {row.actorRole ?? 'sistema'}</p>
                 {row.operationUuid ? <p className="mt-1 break-all text-xs text-slate-500">operationUuid: {row.operationUuid}</p> : null}

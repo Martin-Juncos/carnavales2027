@@ -16,7 +16,7 @@ Solo el Skill Orchestrator selecciona skills. Esta skill no selecciona, enruta, 
 ## Reglas
 
 - El jurado elige una noche creada después de autenticarse y puede votar sus comparsas activas al ingresar; el servidor valida existencia de noche y pertenencia de comparsa.
-- Las comparsas se administran por noche. El Admin puede crearlas, editarlas, ordenar su pasada y darlas de baja; si hay historial, la baja debe preservar votos, cierres, penalizaciones y auditoría.
+- Las comparsas se administran por noche. El Admin puede crearlas, editarlas, ordenar su pasada y borrarlas solo si no tienen historial; si hay dependencias, el backend debe bloquear el borrado para preservar votos, cierres, penalizaciones y auditoría.
 - La escala válida es de 0 a 5.
 - Un ítem padre con hijos no se puntúa directamente: vale la suma de sus subítems. Un ítem hoja sí se puntúa directamente.
 - Una puntuación confirmada es inmutable; modificarla o eliminarla no forma parte del flujo normal.

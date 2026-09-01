@@ -1,4 +1,4 @@
-const CACHE_NAME = 'carnavales2027-shell-v2'
+const CACHE_NAME = 'carnavales2027-shell-v3'
 const APP_SHELL = ['/', '/offline.html', '/manifest.webmanifest', '/icons/icon.svg']
 
 self.addEventListener('install', (event) => {

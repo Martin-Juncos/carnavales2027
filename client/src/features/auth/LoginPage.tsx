@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { z } from 'zod'
+import { FiLoader, FiSend } from 'react-icons/fi'
 import { ApiClientError } from '../../api/apiClient'
 import { useConnectionStatus } from '../../hooks/useConnectionStatus'
 import { useAuth } from './AuthProvider'
@@ -67,11 +68,11 @@ export function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#172554_0,#050713_45%,#020617_100%)] px-4 py-8 text-slate-50">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#2E6B45_0%,#1A4A2E_55%,#10271A_100%)] px-4 py-8 text-slate-50">
+      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md flex-col justify-center">
         <div className="mb-6 text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-carnival-gold">Carnavales 2027</p>
-          <h1 className="mt-3 text-3xl font-black">Sistema de votación</h1>
+          <p className="font-display text-4xl font-black leading-none text-carnival-naranja-calido">Carnavales 2027</p>
+          <h1 className="font-heading mt-2 text-3xl text-slate-50">Sistema de votación</h1>
           <p className="mt-2 text-slate-300">PWA segura, táctil y preparada para cortes de conectividad.</p>
         </div>
         <Card>
@@ -83,18 +84,20 @@ export function LoginPage() {
           <form className="space-y-4" onSubmit={(event) => { void submitCredentials(event) }}>
               <label className="block">
                 <span className="text-sm font-semibold text-slate-200">Nombre</span>
-                <input id="login-name" name="nombre" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-base text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={nombre} onChange={(event) => setNombre(event.target.value)} autoComplete="name" />
+                <input id="login-name" name="nombre" className="mt-2 min-h-12 w-full rounded-2xl border border-white/25 bg-night-950/60 px-4 text-base text-slate-50 outline-none focus:border-carnival-naranja-calido focus:ring-2 focus:ring-carnival-naranja-calido/40" value={nombre} onChange={(event) => setNombre(event.target.value)} autoComplete="name" />
               </label>
               <label className="block">
                 <span className="text-sm font-semibold text-slate-200">Email</span>
-                <input id="login-email" name="email" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-base text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" />
+                <input id="login-email" name="email" className="mt-2 min-h-12 w-full rounded-2xl border border-white/25 bg-night-950/60 px-4 text-base text-slate-50 outline-none focus:border-carnival-naranja-calido focus:ring-2 focus:ring-carnival-naranja-calido/40" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" />
               </label>
               <label className="block">
                 <span className="text-sm font-semibold text-slate-200">DNI</span>
-                <PasswordInput id="login-dni" name="dni" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-base text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={dni} onChange={(event) => setDni(event.target.value)} autoComplete="current-password" inputMode="numeric" toggleLabel="Mostrar u ocultar DNI" />
+                <PasswordInput id="login-dni" name="dni" className="mt-2 min-h-12 w-full rounded-2xl border border-white/25 bg-night-950/60 px-4 text-base text-slate-50 outline-none focus:border-carnival-naranja-calido focus:ring-2 focus:ring-carnival-naranja-calido/40" value={dni} onChange={(event) => setDni(event.target.value)} autoComplete="current-password" inputMode="numeric" toggleLabel="Mostrar u ocultar DNI" />
               </label>
               {error ? <p className="rounded-2xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-100" role="alert">{error}</p> : null}
-              <Button type="submit" size="lg" className="w-full" disabled={busy}>{busy ? 'Solicitando código...' : 'Solicitar código'}</Button>
+              <Button type="submit" size="lg" className="w-full" disabled={busy}>
+                {busy ? <><FiLoader size={18} className="animate-spin" aria-hidden="true" />Solicitando código...</> : <><FiSend size={18} aria-hidden="true" />Solicitar código</>}
+              </Button>
             </form>
         </Card>
       </div>
@@ -112,7 +115,7 @@ export function LoginPage() {
         <form className="space-y-4" onSubmit={(event) => { void submitOtp(event) }}>
           <label className="block">
             <span className="text-sm font-semibold text-slate-200">Código OTP</span>
-            <input id="login-otp" name="otp" className="mt-2 min-h-14 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-center text-2xl tracking-[0.35em] text-slate-50 outline-none focus:border-carnival-gold focus:ring-2 focus:ring-carnival-gold/40" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" autoFocus />
+            <input id="login-otp" name="otp" className="mt-2 min-h-14 w-full rounded-2xl border border-white/25 bg-night-950/60 px-4 text-center text-2xl tracking-[0.35em] text-slate-50 outline-none focus:border-carnival-naranja-calido focus:ring-2 focus:ring-carnival-naranja-calido/40" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" autoFocus />
           </label>
           {error ? <p className="rounded-2xl border border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-100" role="alert">{error}</p> : null}
         </form>

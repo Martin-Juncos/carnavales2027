@@ -53,6 +53,6 @@ Antes de persistir, comprobar:
 
 ## Concurrencia y bordes
 
-Resolver explícitamente doble click/tap, request duplicada, timeout post-commit, reintentos, dos requests concurrentes para el mismo voto, jurado reemplazado con sesión abierta, noche cerrada antes de recibir la operación, desconexión, reloj local incorrecto, sesión expirada y voto existente. Ningún caso debe duplicar, sobrescribir o dejar un voto confirmado sin auditoría.
+Resolver explícitamente doble click/tap, request duplicada, timeout post-commit, reintentos, dos requests concurrentes para el mismo voto, noche cerrada antes de recibir la operación, desconexión, reloj local incorrecto, sesión expirada y voto existente. Ningún caso debe duplicar, sobrescribir o dejar un voto confirmado sin auditoría.
 
 Errores de dominio disponibles: `NIGHT_CLOSED`, `COMPARSA_CLOSED`, `ITEM_NOT_SCORABLE`, `INVALID_SCORE`, `VOTE_ALREADY_CONFIRMED`, `IDEMPOTENCY_CONFLICT`. No fijar aquí su transporte HTTP.

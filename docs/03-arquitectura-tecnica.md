@@ -49,7 +49,7 @@ El Service Worker/background sync puede ayudar, pero la app debe poseer además 
 
 ## 6. Autenticación
 - Identidad centralizada en una tabla `users` con rol.
-- Perfil de jurado y asignaciones separados de la identidad.
+- El Jurado selecciona una noche creada luego de autenticarse; no requiere asignación administrativa previa.
 - Validación primaria con `nombre + email + DNI` y OTP de 6 dígitos según Documento 8.
 - Tokens/sesiones nunca se almacenan en texto plano en IndexedDB.
 - Preferencia: sesión segura mediante cookie `HttpOnly`, `Secure`, `SameSite` cuando la topología lo permita.

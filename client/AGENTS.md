@@ -580,7 +580,6 @@ Considerar explícitamente:
 * PWA cerrada con operaciones pendientes;
 * mismo voto enviado dos veces;
 * noche cerrada mientras existe cola local;
-* jurado reemplazado;
 * sesión expirada;
 * dispositivo con hora incorrecta.
 

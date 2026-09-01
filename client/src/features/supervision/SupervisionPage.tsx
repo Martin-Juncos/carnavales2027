@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { FiAlertTriangle } from 'react-icons/fi'
 import { supervisionApi } from '../../api/supervisionApi'
 import { ApiClientError } from '../../api/apiClient'
 import { Button } from '../../components/ui/Button'
@@ -80,7 +81,7 @@ export function SupervisionPage() {
           <h2 className="text-xl font-bold">Supervisión</h2>
           <label className="mt-4 block">
             <span className="text-sm font-semibold text-slate-200">Noche</span>
-            <input id="supervision-night" name="nightId" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 text-slate-50" type="number" min="1" value={nightId} onChange={(event) => setNightId(event.target.value)} />
+            <input id="supervision-night" name="nightId" className="mt-2 min-h-12 w-full rounded-2xl border border-white/20 bg-night-950/60 px-4 text-base text-slate-50" type="number" min="1" value={nightId} onChange={(event) => setNightId(event.target.value)} />
           </label>
           <p className="mt-3 text-sm text-slate-400">Actualización por polling controlado. No se asumen WebSockets.</p>
         </Card>
@@ -89,12 +90,12 @@ export function SupervisionPage() {
           <Card>
             <h2 className="text-lg font-bold">Registrar penalización</h2>
             <form className="mt-3 space-y-3" onSubmit={submitPenalty}>
-              <label className="block text-sm font-semibold">Comparsa ID<input id="penalty-comparsa" name="comparsaId" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={penalty.comparsaId} onChange={(event) => setPenalty({ ...penalty, comparsaId: event.target.value })} inputMode="numeric" /></label>
-              <label className="block text-sm font-semibold">Puntos<input id="penalty-points" name="puntos" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={penalty.puntos} onChange={(event) => setPenalty({ ...penalty, puntos: event.target.value })} inputMode="numeric" /></label>
-              <label className="block text-sm font-semibold">Código de motivo opcional<input id="penalty-code" name="motivoCodigo" className="mt-1 min-h-11 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3" value={penalty.motivoCodigo} onChange={(event) => setPenalty({ ...penalty, motivoCodigo: event.target.value })} /></label>
-              <label className="block text-sm font-semibold">Motivo<textarea id="penalty-reason" name="motivoDescripcion" className="mt-1 min-h-24 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2" value={penalty.motivoDescripcion} onChange={(event) => setPenalty({ ...penalty, motivoDescripcion: event.target.value })} /></label>
+              <label className="block text-sm font-semibold">Comparsa ID<input id="penalty-comparsa" name="comparsaId" className="mt-1 min-h-11 w-full rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={penalty.comparsaId} onChange={(event) => setPenalty({ ...penalty, comparsaId: event.target.value })} inputMode="numeric" /></label>
+              <label className="block text-sm font-semibold">Puntos<input id="penalty-points" name="puntos" className="mt-1 min-h-11 w-full rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={penalty.puntos} onChange={(event) => setPenalty({ ...penalty, puntos: event.target.value })} inputMode="numeric" /></label>
+              <label className="block text-sm font-semibold">Código de motivo opcional<input id="penalty-code" name="motivoCodigo" className="mt-1 min-h-11 w-full rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={penalty.motivoCodigo} onChange={(event) => setPenalty({ ...penalty, motivoCodigo: event.target.value })} /></label>
+              <label className="block text-sm font-semibold">Motivo<textarea id="penalty-reason" name="motivoDescripcion" className="mt-1 min-h-24 w-full rounded-2xl border border-white/20 bg-night-950/60 px-3 py-2 text-base" value={penalty.motivoDescripcion} onChange={(event) => setPenalty({ ...penalty, motivoDescripcion: event.target.value })} /></label>
               {error ? <p className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-100" role="alert">{error}</p> : null}
-              <Button type="submit" className="w-full">Revisar penalización</Button>
+              <Button type="submit" className="w-full"><FiAlertTriangle size={18} aria-hidden="true" />Revisar penalización</Button>
             </form>
           </Card>
         ) : null}
@@ -109,29 +110,16 @@ export function SupervisionPage() {
           {nightState.isLoading ? <p className="mt-4 text-slate-300">Cargando...</p> : null}
           {nightState.error ? <p className="mt-4 text-rose-200">{nightState.error.message}</p> : null}
           {nightState.data ? (
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <div>
-                <h3 className="font-bold text-slate-100">Jurados asignados</h3>
-                <div className="mt-2 space-y-2">
-                  {nightState.data.assignments.map((assignment) => (
-                    <div key={assignment.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                      <p className="font-semibold">{assignment.nombre}</p>
-                      <p className="text-sm text-slate-400">{assignment.estado} · {new Date(assignment.asignadoAt).toLocaleString()}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
+            <div className="mt-4">
                 <h3 className="font-bold text-slate-100">Progreso por comparsa</h3>
                 <div className="mt-2 space-y-2">
                   {nightState.data.progress.map((row) => (
-                    <div key={row.comparsaId} className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
+                    <div key={row.comparsaId} className="rounded-2xl border border-white/15 bg-white/10 p-3">
                       <p className="font-semibold">{row.comparsaNombre}</p>
                       <p className="text-sm text-slate-400">{row.votesReceived} votos recibidos · {row.jurorCloses} cierres de jurado</p>
                     </div>
                   ))}
                 </div>
-              </div>
             </div>
           ) : null}
         </Card>
@@ -143,7 +131,7 @@ export function SupervisionPage() {
               <thead className="text-slate-400"><tr><th className="py-2">Comparsa</th><th>Total bruto</th><th>Penalizaciones</th><th>Total final</th></tr></thead>
               <tbody>
                 {(report.data ?? []).map((row) => (
-                  <tr key={row.comparsaId} className="border-t border-slate-800"><td className="py-2 font-semibold">{row.comparsaNombre}</td><td>{row.grossTotal ?? '-'}</td><td>{row.penaltyTotal ?? '-'}</td><td className="font-bold text-carnival-gold">{row.finalTotal ?? '-'}</td></tr>
+                  <tr key={row.comparsaId} className="border-t border-white/15"><td className="py-2 font-semibold">{row.comparsaNombre}</td><td>{row.grossTotal ?? '-'}</td><td>{row.penaltyTotal ?? '-'}</td><td className="font-bold text-carnival-naranja-calido">{row.finalTotal ?? '-'}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -154,7 +142,7 @@ export function SupervisionPage() {
           <h2 className="text-xl font-bold">Eventos recientes</h2>
           <div className="mt-3 space-y-2">
             {(events.data ?? []).slice(-10).map((event) => (
-              <div key={event.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">
+              <div key={event.id} className="rounded-2xl border border-white/15 bg-white/10 p-3 text-sm">
                 <p className="font-semibold">#{event.id} · {event.tipo}</p>
                 <p className="text-slate-400">{new Date(event.createdAt).toLocaleString()}</p>
               </div>

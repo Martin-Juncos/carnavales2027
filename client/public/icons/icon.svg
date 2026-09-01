@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Carnavales 2027">
-  <rect width="512" height="512" rx="112" fill="#080b16"/>
-  <circle cx="178" cy="190" r="86" fill="#f8c94a" opacity="0.94"/>
-  <circle cx="334" cy="190" r="86" fill="#22d3ee" opacity="0.9"/>
-  <path d="M122 284c42 70 226 70 268 0 9-15 33-7 30 11-12 78-78 137-164 137S104 373 92 295c-3-18 21-26 30-11Z" fill="#a78bfa"/>
-  <path d="M184 181c18-22 48-22 66 0M262 181c18-22 48-22 66 0" stroke="#050713" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <rect width="512" height="512" rx="112" fill="#1A4A2E"/>
+  <circle cx="178" cy="190" r="86" fill="#FDA230" opacity="0.94"/>
+  <circle cx="334" cy="190" r="86" fill="#4787BB" opacity="0.9"/>
+  <path d="M122 284c42 70 226 70 268 0 9-15 33-7 30 11-12 78-78 137-164 137S104 373 92 295c-3-18 21-26 30-11Z" fill="#F03173"/>
+  <path d="M184 181c18-22 48-22 66 0M262 181c18-22 48-22 66 0" stroke="#1A4A2E" stroke-width="24" stroke-linecap="round" fill="none"/>
   <path d="M164 326c46 34 138 34 184 0" stroke="#f8fafc" stroke-width="24" stroke-linecap="round" fill="none"/>
 </svg>

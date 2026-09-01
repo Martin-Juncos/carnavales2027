@@ -37,7 +37,7 @@ El DNI actúa como clave operativa del usuario. No existe una contraseña separa
 ## 3. Jurado
 - `GET /jurado/noches` — noches creadas disponibles para selección.
 - `GET /jurado/noches/:nocheId/contexto` — contexto de la noche elegida: comparsas, ítems, progreso y estado.
-- `GET /jurado/contexto` — contexto heredado por asignación activa, mantenido por compatibilidad.
+- `GET /jurado/contexto` — contexto heredado, mantenido por compatibilidad técnica.
 - `POST /jurado/votos` — crea voto idempotente.
 - `GET /jurado/votos` — reconciliación del dispositivo.
 - `POST /jurado/comparsas/:id/cerrar` — cierre idempotente.

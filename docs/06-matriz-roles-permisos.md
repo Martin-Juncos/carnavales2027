@@ -18,7 +18,6 @@
 | Certificar acta | No | No | Sí | No |
 | Gestionar usuarios | No | No | No | Sí |
 | Gestionar noches/comparsas/items | No | No | No | Sí |
-| Asignar/reemplazar jurados | No | No | No | Sí |
 | Abrir/cerrar noche | No | No | No | Sí |
 
 ## Reglas

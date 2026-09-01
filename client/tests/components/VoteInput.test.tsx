@@ -19,7 +19,7 @@ describe('VoteInput', () => {
     render(<VoteInput itemName="Música" score={{ value: 5, status: 'PENDING', operationId: 'op-1' }} onSelect={vi.fn()} />)
 
     expect(screen.getByRole('combobox', { name: /nota bloqueada/i })).toBeDisabled()
-    expect(screen.getByText('Pendiente de sincronizar')).toBeInTheDocument()
+    expect(screen.getByText('Pendiente')).toBeInTheDocument()
     expect(screen.queryByRole('combobox', { name: /seleccionar nota/i })).not.toBeInTheDocument()
   })
 })

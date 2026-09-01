@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { FiCalendar, FiClock, FiFlag } from 'react-icons/fi'
 import { juradoApi } from '../../api/juradoApi'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -51,13 +52,13 @@ function renderItemNode(
 
   return (
     <div key={node.id}>
-      <div className={`grid grid-cols-[1fr_auto] items-center gap-3 border-b border-slate-200/70 px-3 py-3 ${depth > 0 ? 'bg-white/40' : 'bg-white/20'}`}>
-        <div style={{ paddingLeft: `${depth * 1.25}rem` }}>
+<div className={`flex flex-col gap-2 border-b border-slate-200/70 px-3 py-3 sm:flex-row sm:items-center sm:gap-3 ${depth > 0 ? 'bg-white/60' : 'bg-white/40'}`}>
+        <div className="min-w-0 flex-1" style={{ paddingLeft: `${depth * 1.25}rem` }}>
           <h3 className={isParent ? 'text-base font-black text-slate-950' : 'text-base font-bold text-slate-900'}>{node.nombre}</h3>
           <p className="text-xs text-slate-600">{isParent ? 'Rubro calculado por subítems' : 'Ítem puntuable'}</p>
         </div>
         {isParent ? (
-          <Badge tone="info">Subtotal: {subtotal ?? '-'}</Badge>
+          <Badge tone="info" className="self-start sm:self-auto">Subtotal: {subtotal ?? '-'}</Badge>
         ) : (
           <VoteInput itemName={node.nombre} score={score} disabled={disabled} onSelect={(value) => onSelect(node, value)} />
         )}
@@ -71,17 +72,27 @@ function renderItemNode(
   )
 }
 
+const tabBackgrounds = [
+  'bg-carnival-naranja-calido',
+  'bg-blue-600',
+  'bg-fuchsia-500',
+  'bg-emerald-500',
+  'bg-orange-500',
+  'bg-cyan-400',
+]
+const tabForegrounds = [
+  'text-night-950',
+  'text-white',
+  'text-white',
+  'text-night-950',
+  'text-night-950',
+  'text-night-950',
+]
+
 function tabClass(index: number, active: boolean): string {
-  const colors = [
-    'bg-carnival-gold text-night-950',
-    'bg-blue-600 text-white',
-    'bg-fuchsia-500 text-white',
-    'bg-emerald-500 text-night-950',
-    'bg-orange-500 text-night-950',
-    'bg-cyan-400 text-night-950',
-  ]
-  const color = colors[index % colors.length]
-  return `min-h-14 min-w-36 rounded-t-3xl border-2 border-slate-950 px-4 py-2 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-gold ${color} ${active ? 'translate-y-[2px] shadow-none' : 'opacity-80 shadow-[0_4px_0_rgba(15,23,42,0.75)] hover:opacity-100'}`
+  const color = tabBackgrounds[index % tabBackgrounds.length]
+  const foreground = tabForegrounds[index % tabForegrounds.length]
+  return `min-h-14 min-w-36 rounded-t-3xl border-2 border-slate-950 px-4 py-2 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-naranja-calido ${color} ${foreground} ${active ? 'translate-y-[2px] shadow-none' : 'opacity-80 shadow-[0_4px_0_rgba(15,23,42,0.75)] hover:opacity-100'}`
 }
 
 function nightStatusTone(status: JuradoContext['assignment']['night']['status']): 'success' | 'warning' | 'neutral' {
@@ -162,14 +173,14 @@ export function JudgePage() {
           <h2 className="text-2xl font-black">Elegí la noche que vas a votar</h2>
           <p className="mt-2 text-slate-300">El servidor valida igualmente que la noche exista y esté abierta antes de aceptar votos.</p>
           {nightsQuery.error ? <p className="mt-3 text-sm text-rose-200">{nightsQuery.error.message}</p> : null}
-          {cachedContext ? <Button className="mt-4" variant="secondary" onClick={() => setSelectedNightId(cachedContext.assignment.night.id)}>Usar última noche cacheada</Button> : null}
+          {cachedContext ? <Button className="mt-4" variant="secondary" onClick={() => setSelectedNightId(cachedContext.assignment.night.id)}><FiClock size={18} aria-hidden="true" />Usar última noche cacheada</Button> : null}
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {(nightsQuery.data ?? []).map((night) => (
               <button
                 key={night.id}
                 type="button"
                 onClick={() => setSelectedNightId(night.id)}
-                className="rounded-3xl border border-slate-800 bg-slate-950 p-4 text-left transition hover:border-carnival-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-gold"
+                className="rounded-3xl border border-white/20 bg-night-950/60 p-4 text-left transition hover:border-carnival-naranja-calido focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-naranja-calido"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -194,7 +205,7 @@ export function JudgePage() {
         <Card>
           <h2 className="text-xl font-bold">No hay contexto de jurado disponible</h2>
           <p className="mt-2 text-slate-300">Necesitamos una sesión válida o datos previamente cacheados para operar sin conexión.</p>
-          {cachedContext ? <Button className="mt-4" onClick={() => setSelectedNightId(cachedContext.assignment.night.id)}>Usar última noche cacheada</Button> : null}
+          {cachedContext ? <Button className="mt-4" onClick={() => setSelectedNightId(cachedContext.assignment.night.id)}><FiClock size={18} aria-hidden="true" />Usar última noche cacheada</Button> : null}
           {contextQuery.error ? <p className="mt-3 text-sm text-rose-200">{contextQuery.error.message}</p> : null}
         </Card>
       </main>
@@ -204,6 +215,8 @@ export function JudgePage() {
   const night = context.assignment.night
   const close = selectedComparsa ? closeStatus(selectedComparsa.id, closeDrafts, context.closes) : undefined
   const missing = selectedComparsa ? missingScorableItems(selectedComparsa.id, context.items, drafts, context.votes) : []
+  const selectedIndex = selectedComparsa ? Math.max(0, context.comparsas.findIndex((comparsa) => comparsa.id === selectedComparsa.id)) : 0
+  const wrapperBg = tabBackgrounds[selectedIndex % tabBackgrounds.length]
   const pendingVoteDraftsForSelected = selectedComparsa
     ? drafts.filter((draft) => draft.comparsaId === selectedComparsa.id && draft.syncStatus !== 'SYNCED')
     : []
@@ -235,18 +248,18 @@ export function JudgePage() {
 
   return (
     <main className="mx-auto max-w-7xl space-y-4 px-4 py-5">
-      <Card>
-        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
+<Card>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-carnival-gold">Planilla del jurado</p>
-            <h2 className="mt-1 text-3xl font-black text-slate-50">{night.name}</h2>
+            <p className="font-heading text-lg text-carnival-naranja-calido">Planilla del jurado</p>
+            <h2 className="mt-1 text-2xl font-black text-slate-50 sm:text-3xl">{night.name}</h2>
             <div className="mt-3 flex flex-wrap gap-2 text-sm text-slate-300">
               {auth.user ? <Badge tone="info">Jurado: {auth.user.nombre}</Badge> : null}
               <Badge tone={nightStatusTone(night.status)}>Estado: {night.status}</Badge>
               <Badge tone={connection.apiReachable ? 'success' : 'warning'}>{connection.label}</Badge>
             </div>
           </div>
-          <Button variant="secondary" onClick={() => setSelectedNightId(undefined)}>Cambiar noche</Button>
+          <Button variant="secondary" className="w-full sm:w-auto" onClick={() => setSelectedNightId(undefined)}><FiCalendar size={18} aria-hidden="true" />Cambiar noche</Button>
         </div>
       </Card>
 
@@ -255,7 +268,7 @@ export function JudgePage() {
         <ConflictBanner summary={syncSummary} />
       </div>
 
-      <section className="rounded-[2rem] border-2 border-slate-950 bg-carnival-gold p-2 shadow-[0_10px_0_rgba(15,23,42,0.75)]">
+      <section className="rounded-[2rem] border-2 border-slate-950 bg-white/10 p-2 shadow-[0_10px_0_rgba(15,23,42,0.75)] backdrop-blur-md">
         <div className="flex gap-1 overflow-x-auto px-1 pt-1" role="tablist" aria-label="Comparsas de la noche">
           {context.comparsas.map((comparsa, index) => {
             const progress = progressForComparsa(context, comparsa.id, drafts, closeDrafts)
@@ -276,22 +289,22 @@ export function JudgePage() {
           })}
         </div>
 
-        <div className="min-h-[28rem] rounded-b-[1.5rem] rounded-tr-[1.5rem] border-2 border-slate-950 bg-[#f6f0df] p-3 text-slate-950">
+        <div className={`min-h-[28rem] rounded-b-[1.5rem] rounded-tr-[1.5rem] border-2 border-slate-950 p-3 text-slate-950 ${wrapperBg}`}>
         {selectedComparsa ? (
           <>
-            <div className="rounded-3xl border border-slate-300 bg-white/60 p-4">
+<div className="rounded-3xl border border-slate-300 bg-white/60 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Comparsa</p>
-                  <h2 className="mt-1 text-3xl font-black">{selectedComparsa.nombre}</h2>
+                  <h2 className="mt-1 text-2xl font-black sm:text-3xl">{selectedComparsa.nombre}</h2>
                   <p className="mt-2 text-sm text-slate-700">Elegí un puntaje de 0 a 5. Antes de fijarlo se abre una confirmación.</p>
                 </div>
                 {close ? <SyncStatusBadge status={close} /> : null}
               </div>
             </div>
 
-            <div className="mt-4 overflow-hidden rounded-3xl border border-slate-300 bg-white/70">
-              <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-slate-300 bg-slate-950 px-3 py-3 text-sm font-black uppercase tracking-[0.15em] text-white">
+            <div className={`mt-4 overflow-hidden rounded-3xl border border-slate-300 ${wrapperBg}`}>
+              <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-slate-300 bg-night-950 px-3 py-3 text-sm font-black uppercase tracking-[0.15em] text-white">
                 <span>Rubro / ítem</span>
                 <span>Puntaje</span>
               </div>
@@ -312,12 +325,12 @@ export function JudgePage() {
                     <p className="mt-1 text-sm text-slate-700">Todos los ítems están completos y sincronizados.</p>
                   )}
                 </div>
-                <Button size="lg" disabled={!canCloseSelected} onClick={() => setCloseConfirm(selectedComparsa)}>Cerrar comparsa</Button>
+                <Button size="lg" className="w-full sm:w-auto" disabled={!canCloseSelected} onClick={() => setCloseConfirm(selectedComparsa)}><FiFlag size={18} aria-hidden="true" />Cerrar comparsa</Button>
               </div>
             </div>
           </>
         ) : (
-          <p className="p-6 font-semibold">No hay comparsas habilitadas para la noche seleccionada.</p>
+          <p className="p-6 font-semibold text-slate-50">No hay comparsas habilitadas para la noche seleccionada.</p>
         )}
         </div>
       </section>
@@ -335,7 +348,7 @@ export function JudgePage() {
           <dl className="grid gap-2 text-sm">
             <div className="flex justify-between gap-4"><dt className="text-slate-400">Comparsa</dt><dd className="font-bold text-slate-50">{pendingVote.comparsa.nombre}</dd></div>
             <div className="flex justify-between gap-4"><dt className="text-slate-400">Ítem</dt><dd className="font-bold text-slate-50">{pendingVote.item.nombre}</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-slate-400">Nota</dt><dd className="text-2xl font-black text-carnival-gold">{pendingVote.value}</dd></div>
+            <div className="flex justify-between gap-4"><dt className="text-slate-400">Nota</dt><dd className="text-2xl font-black text-carnival-naranja-calido">{pendingVote.value}</dd></div>
           </dl>
         ) : null}
       </Modal>

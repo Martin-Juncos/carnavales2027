@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { FiCalendar, FiEdit2, FiPlay, FiPlusCircle, FiSave, FiStopCircle, FiTrash2, FiUserPlus } from 'react-icons/fi'
 import { adminApi } from '../../api/adminApi'
 import type { AdminComparsa, AdminItem, AdminNight, AdminUser } from '../../api/adminApi'
 import { ApiClientError } from '../../api/apiClient'
@@ -196,28 +197,28 @@ export function AdminPage() {
 
   return (
     <main className="mx-auto max-w-7xl space-y-4 px-4 py-5">
-      {message ? <Card className="border-cyan-500/40 bg-cyan-500/10"><p className="text-cyan-100">{message}</p></Card> : null}
+      {message ? <Card className="border-carnival-azul-profundo/40 bg-carnival-azul-profundo/10"><p className="text-cyan-100">{message}</p></Card> : null}
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <h2 className="text-xl font-bold">Usuarios</h2>
           <form className="mt-3 grid gap-3 sm:grid-cols-2" onSubmit={onUser}>
-            <input id="admin-user-name" name="nombre" aria-label="Nombre" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.nombre} onChange={(event) => setUserForm({ ...userForm, nombre: event.target.value })} />
-            <input id="admin-user-dni" name="dni" aria-label="DNI" placeholder="DNI" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.dni} onChange={(event) => setUserForm({ ...userForm, dni: event.target.value })} />
-            <input id="admin-user-email" name="email" aria-label="Email" placeholder="Email" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} />
-            <select id="admin-user-role" name="role" aria-label="Rol" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value as Role })}><option value="jurado">Jurado</option><option value="fiscal">Fiscal</option><option value="escribano">Escribano</option><option value="admin">Admin</option></select>
-            <Button type="submit" disabled={busy}>Crear usuario</Button>
+            <input id="admin-user-name" name="nombre" aria-label="Nombre" placeholder="Nombre" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={userForm.nombre} onChange={(event) => setUserForm({ ...userForm, nombre: event.target.value })} />
+            <input id="admin-user-dni" name="dni" aria-label="DNI" placeholder="DNI" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={userForm.dni} onChange={(event) => setUserForm({ ...userForm, dni: event.target.value })} />
+            <input id="admin-user-email" name="email" aria-label="Email" placeholder="Email" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} />
+            <select id="admin-user-role" name="role" aria-label="Rol" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value as Role })}><option value="jurado">Jurado</option><option value="fiscal">Fiscal</option><option value="escribano">Escribano</option><option value="admin">Admin</option></select>
+            <Button type="submit" disabled={busy}><FiUserPlus size={18} aria-hidden="true" />Crear usuario</Button>
           </form>
           <div className="mt-4 max-h-80 space-y-2 overflow-auto">
             {(users.data ?? []).map((user) => (
-              <div key={user.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">
+              <div key={user.id} className="rounded-2xl border border-white/15 bg-white/10 p-3 text-sm">
                 <p className="font-semibold">{user.nombre}</p>
                 <p className="text-slate-400">{user.email} · {user.role} · {user.activo ? 'activo' : 'inactivo'}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button variant="secondary" disabled={busy} onClick={() => {
                     const nombre = window.prompt('Nuevo nombre', user.nombre)
                     if (nombre?.trim()) setConfirm({ type: 'updateUser', id: user.id, label: user.nombre, body: { nombre: nombre.trim() } })
-                  }}>Modificar</Button>
-                  <Button variant="danger" disabled={busy || !user.activo} onClick={() => setConfirm({ type: 'deleteUser', id: user.id, label: user.nombre })}>Borrar</Button>
+                  }}><FiEdit2 size={18} aria-hidden="true" />Modificar</Button>
+                  <Button variant="danger" disabled={busy || !user.activo} onClick={() => setConfirm({ type: 'deleteUser', id: user.id, label: user.nombre })}><FiTrash2 size={18} aria-hidden="true" />Borrar</Button>
                 </div>
               </div>
             ))}
@@ -227,15 +228,15 @@ export function AdminPage() {
         <Card>
           <h2 className="text-xl font-bold">Noches</h2>
           <form className="mt-3 grid gap-3 sm:grid-cols-3" onSubmit={onNight}>
-            <input id="admin-night-name" name="nightName" aria-label="Nombre de noche" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={nightForm.nombre} onChange={(event) => setNightForm({ ...nightForm, nombre: event.target.value })} />
-            <input id="admin-night-date" name="nightDate" aria-label="Fecha" type="date" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={nightForm.fecha} onChange={(event) => setNightForm({ ...nightForm, fecha: event.target.value })} />
-            <Button type="submit" disabled={busy}>Crear noche</Button>
+            <input id="admin-night-name" name="nightName" aria-label="Nombre de noche" placeholder="Nombre" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={nightForm.nombre} onChange={(event) => setNightForm({ ...nightForm, nombre: event.target.value })} />
+            <input id="admin-night-date" name="nightDate" aria-label="Fecha" type="date" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={nightForm.fecha} onChange={(event) => setNightForm({ ...nightForm, fecha: event.target.value })} />
+            <Button type="submit" disabled={busy}><FiCalendar size={18} aria-hidden="true" />Crear noche</Button>
           </form>
           <div className="mt-4 space-y-2">
-            {(nights.data ?? []).map((night) => <div key={night.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><div><p className="font-semibold">#{night.id} · {night.nombre}</p><p className="text-slate-400">{night.fecha}</p></div><Badge tone={night.estado === 'open' ? 'success' : 'warning'}>{night.estado}</Badge><div className="flex gap-2"><Button variant="secondary" onClick={() => {
+            {(nights.data ?? []).map((night) => <div key={night.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/15 bg-white/10 p-3 text-sm"><div><p className="font-semibold">#{night.id} · {night.nombre}</p><p className="text-slate-400">{night.fecha}</p></div><Badge tone={night.estado === 'open' ? 'success' : 'warning'}>{night.estado}</Badge><div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => {
               const nombre = window.prompt('Nuevo nombre de noche', night.nombre)
               if (nombre?.trim()) setConfirm({ type: 'updateNight', id: night.id, label: night.nombre, body: { nombre: nombre.trim() } })
-            }}>Modificar</Button><Button variant="secondary" onClick={() => setConfirm({ type: 'openNight', id: night.id, label: night.nombre })}>Abrir</Button><Button variant="danger" onClick={() => setConfirm({ type: 'closeNight', id: night.id, label: night.nombre })}>Cerrar</Button><Button variant="danger" disabled={busy} onClick={() => setConfirm({ type: 'deleteNight', id: night.id, label: night.nombre })}>Borrar</Button></div></div>)}
+            }}><FiEdit2 size={18} aria-hidden="true" />Modificar</Button><Button variant="secondary" onClick={() => setConfirm({ type: 'openNight', id: night.id, label: night.nombre })}><FiPlay size={18} aria-hidden="true" />Abrir</Button><Button variant="danger" onClick={() => setConfirm({ type: 'closeNight', id: night.id, label: night.nombre })}><FiStopCircle size={18} aria-hidden="true" />Cerrar</Button><Button variant="danger" disabled={busy} onClick={() => setConfirm({ type: 'deleteNight', id: night.id, label: night.nombre })}><FiTrash2 size={18} aria-hidden="true" />Borrar</Button></div></div>)}
           </div>
         </Card>
 
@@ -243,24 +244,24 @@ export function AdminPage() {
           <h2 className="text-xl font-bold">Comparsas</h2>
           <p className="mt-2 text-sm text-slate-400">CRUD de comparsas. El orden de pasada se administra en una sección separada por noche.</p>
           <form className="mt-3 grid gap-3 sm:grid-cols-3" onSubmit={onComparsa}>
-            <input aria-label="Nombre comparsa" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nombre} onChange={(event) => setComparsaForm({ ...comparsaForm, nombre: event.target.value })} />
-            <select aria-label="Noche de comparsa" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={comparsaForm.nocheId} onChange={(event) => setComparsaForm({ ...comparsaForm, nocheId: event.target.value })}>
+            <input aria-label="Nombre comparsa" placeholder="Nombre" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={comparsaForm.nombre} onChange={(event) => setComparsaForm({ ...comparsaForm, nombre: event.target.value })} />
+            <select aria-label="Noche de comparsa" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={comparsaForm.nocheId} onChange={(event) => setComparsaForm({ ...comparsaForm, nocheId: event.target.value })}>
               <option value="">Seleccionar noche</option>
               {(nights.data ?? []).map((night) => <option key={night.id} value={night.id}>{night.nombre}</option>)}
             </select>
-            <Button type="submit" disabled={busy}>Crear comparsa</Button>
+            <Button type="submit" disabled={busy}><FiPlusCircle size={18} aria-hidden="true" />Crear comparsa</Button>
           </form>
           <div className="mt-4 max-h-80 space-y-2 overflow-auto">
             {(comparsas.data ?? []).map((comparsa) => (
-              <div key={comparsa.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm">
+              <div key={comparsa.id} className="rounded-2xl border border-white/15 bg-white/10 p-3 text-sm">
                 <p className="font-semibold">{comparsa.nombre} {!comparsa.activo ? <em className="text-rose-200">(inactiva)</em> : null}</p>
                 <p className="text-slate-400">Noche: {comparsa.nocheNombre ?? comparsa.nocheId}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button variant="secondary" disabled={busy} onClick={() => {
                     const nombre = window.prompt('Nuevo nombre de comparsa', comparsa.nombre)
                     if (nombre?.trim()) setConfirm({ type: 'updateComparsa', id: comparsa.id, label: comparsa.nombre, body: { nombre: nombre.trim() } })
-                  }}>Modificar</Button>
-                  <Button variant="danger" disabled={busy || !comparsa.activo} onClick={() => setConfirm({ type: 'deleteComparsa', id: comparsa.id, label: comparsa.nombre })}>Borrar</Button>
+                  }}><FiEdit2 size={18} aria-hidden="true" />Modificar</Button>
+                  <Button variant="danger" disabled={busy || !comparsa.activo} onClick={() => setConfirm({ type: 'deleteComparsa', id: comparsa.id, label: comparsa.nombre })}><FiTrash2 size={18} aria-hidden="true" />Borrar</Button>
                 </div>
               </div>
             ))}
@@ -274,13 +275,13 @@ export function AdminPage() {
             {(nights.data ?? []).map((night) => {
               const rows = comparsasByNightMap.get(night.id) ?? []
               return (
-                <div key={night.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                  <div className="mb-3 flex items-center justify-between gap-3">
+                <div key={night.id} className="rounded-2xl border border-white/15 bg-white/10 p-3">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="font-semibold">{night.nombre}</p>
                       <p className="text-sm text-slate-400">{night.fecha}</p>
                     </div>
-                    <Button variant="secondary" disabled={busy || rows.length === 0} onClick={() => setConfirm({ type: 'reorderComparsas', id: night.id, label: night.nombre })}>Guardar orden</Button>
+                    <Button variant="secondary" disabled={busy || rows.length === 0} onClick={() => setConfirm({ type: 'reorderComparsas', id: night.id, label: night.nombre })}><FiSave size={18} aria-hidden="true" />Guardar orden</Button>
                   </div>
                 <div className="grid gap-2">
                   {rows.map((comparsa) => (
@@ -288,7 +289,7 @@ export function AdminPage() {
                       <span>{comparsa.nombre} {!comparsa.activo ? <em className="text-rose-200">(inactiva)</em> : null}</span>
                       <input
                         aria-label={`Orden ${comparsa.nombre}`}
-                        className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3"
+                        className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base"
                         inputMode="numeric"
                         value={orderDraft[comparsa.id] ?? String(comparsa.orden)}
                         onChange={(event) => setOrderDraft({ ...orderDraft, [comparsa.id]: event.target.value })}
@@ -306,15 +307,15 @@ export function AdminPage() {
         <Card>
           <h2 className="text-xl font-bold">Rubros / Ítems</h2>
           <form className="mt-3 grid gap-3 sm:grid-cols-4" onSubmit={onItem}>
-            <input id="admin-item-name" name="itemName" aria-label="Nombre ítem" placeholder="Nombre" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.nombre} onChange={(event) => setItemForm({ ...itemForm, nombre: event.target.value })} />
-            <input id="admin-item-parent" name="parentItemId" aria-label="Ítem padre" placeholder="Padre opcional" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.parentItemId} onChange={(event) => setItemForm({ ...itemForm, parentItemId: event.target.value })} />
-            <input id="admin-item-order" name="itemOrder" aria-label="Orden ítem" placeholder="Orden" className="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-3" value={itemForm.orden} onChange={(event) => setItemForm({ ...itemForm, orden: event.target.value })} />
-            <Button type="submit" disabled={busy}>Crear ítem</Button>
+            <input id="admin-item-name" name="itemName" aria-label="Nombre ítem" placeholder="Nombre" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={itemForm.nombre} onChange={(event) => setItemForm({ ...itemForm, nombre: event.target.value })} />
+            <input id="admin-item-parent" name="parentItemId" aria-label="Ítem padre" placeholder="Padre opcional" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={itemForm.parentItemId} onChange={(event) => setItemForm({ ...itemForm, parentItemId: event.target.value })} />
+            <input id="admin-item-order" name="itemOrder" aria-label="Orden ítem" placeholder="Orden" className="min-h-11 rounded-2xl border border-white/20 bg-night-950/60 px-3 text-base" value={itemForm.orden} onChange={(event) => setItemForm({ ...itemForm, orden: event.target.value })} />
+            <Button type="submit" disabled={busy}><FiPlusCircle size={18} aria-hidden="true" />Crear ítem</Button>
           </form>
-          <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(items.data ?? []).map((item) => <div key={item.id} className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm"><p>#{item.id} · {item.nombre} · padre {item.parentItemId ?? '-'} · orden {item.orden} · {item.activo ? 'activo' : 'inactivo'}</p><div className="mt-2 flex gap-2"><Button variant="secondary" disabled={busy} onClick={() => {
+          <div className="mt-4 max-h-80 space-y-2 overflow-auto">{(items.data ?? []).map((item) => <div key={item.id} className="rounded-2xl border border-white/15 bg-white/10 p-3 text-sm"><p>#{item.id} · {item.nombre} · padre {item.parentItemId ?? '-'} · orden {item.orden} · {item.activo ? 'activo' : 'inactivo'}</p><div className="mt-2 flex flex-wrap gap-2"><Button variant="secondary" disabled={busy} onClick={() => {
             const nombre = window.prompt('Nuevo nombre de ítem', item.nombre)
             if (nombre?.trim()) setConfirm({ type: 'updateItem', id: item.id, label: item.nombre, body: { nombre: nombre.trim() } })
-          }}>Modificar</Button><Button variant="danger" disabled={busy || !item.activo} onClick={() => setConfirm({ type: 'deleteItem', id: item.id, label: item.nombre })}>Borrar</Button></div></div>)}</div>
+          }}><FiEdit2 size={18} aria-hidden="true" />Modificar</Button><Button variant="danger" disabled={busy || !item.activo} onClick={() => setConfirm({ type: 'deleteItem', id: item.id, label: item.nombre })}><FiTrash2 size={18} aria-hidden="true" />Borrar</Button></div></div>)}</div>
         </Card>
       </div>
 
