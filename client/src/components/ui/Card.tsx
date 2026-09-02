@@ -6,5 +6,5 @@ interface CardProps {
 }
 
 export function Card({ children, className = '' }: CardProps) {
-  return <section className={`rounded-3xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md ${className}`}>{children}</section>
+  return <section className={`rounded-[1.75rem] border border-white/15 bg-white/[0.09] p-5 shadow-glow backdrop-blur-xl sm:p-6 ${className}`}>{children}</section>
 }

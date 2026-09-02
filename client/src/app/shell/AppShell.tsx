@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { FiEye, FiFileText, FiLogOut, FiSettings, FiUser } from 'react-icons/fi'
+import { FiEye, FiFileText, FiLogOut, FiSettings, FiStar, FiUser } from 'react-icons/fi'
 import { Button } from '../../components/ui/Button'
 import { useConnectionStatus } from '../../hooks/useConnectionStatus'
 import { ConnectionStatus } from '../../components/domain/ConnectionStatus'
@@ -7,7 +7,7 @@ import { useAuth } from '../../features/auth/AuthProvider'
 import { useServiceWorkerUpdate } from '../pwa/useServiceWorkerUpdate'
 
 function navClass({ isActive }: { isActive: boolean }): string {
-  return `inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-2xl px-3 py-2 text-sm font-semibold transition ${isActive ? 'bg-carnival-naranja-calido text-night-950' : 'text-slate-200 hover:bg-white/10'}`
+  return `inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition ${isActive ? 'bg-carnival-naranja-calido text-night-950 shadow-[0_10px_24px_rgba(253,162,48,0.22)]' : 'text-slate-200 hover:bg-white/10'}`
 }
 
 export function AppShell() {
@@ -17,12 +17,17 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen text-slate-50">
-      <header className="sticky top-0 z-40 border-b border-white/20 bg-night-950/85 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="font-display text-2xl font-black leading-none text-carnival-naranja-calido lg:text-3xl">Carnavales 2027</p>
-            <h1 className="mt-1 text-lg font-bold text-slate-200">{auth.user?.nombre}</h1>
-            {auth.offlineSession ? <p className="mt-1 text-xs text-carnival-amarillo-brillante">Sesión restaurada desde este dispositivo; falta validar con servidor.</p> : null}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-night-950/70 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 pb-3 pt-[calc(0.85rem+env(safe-area-inset-top))] lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-carnival-naranja-calido text-night-950 shadow-[0_12px_30px_rgba(253,162,48,0.28)]">
+              <FiStar size={22} aria-hidden="true" />
+            </span>
+            <div>
+              <p className="font-display text-2xl font-black leading-none text-carnival-naranja-calido lg:text-3xl">Carnavales 2027</p>
+              <h1 className="mt-1 text-sm font-semibold text-slate-300">{auth.user?.nombre}</h1>
+              {auth.offlineSession ? <p className="mt-1 text-xs text-carnival-amarillo-brillante">Sesión restaurada desde este dispositivo; falta validar con servidor.</p> : null}
+            </div>
           </div>
           <div className="flex flex-col gap-2 sm:items-end">
             <ConnectionStatus connection={connection} />

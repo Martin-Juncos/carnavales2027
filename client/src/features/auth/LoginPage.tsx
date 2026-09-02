@@ -70,11 +70,12 @@ export function LoginPage() {
         <div className="mb-6 text-center">
           <p className="font-display text-4xl font-black leading-none text-carnival-naranja-calido">Carnavales 2027</p>
           <h1 className="font-heading mt-2 text-3xl text-slate-50">Sistema de votación</h1>
-          <p className="mt-2 text-slate-300">PWA segura, táctil y preparada para cortes de conectividad.</p>
+          <p className="mt-2 text-slate-300">Acceso seguro para operar durante el evento.</p>
         </div>
         <Card>
           <div className="mb-5">
-            <h2 className="text-xl font-bold">Ingresar</h2>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-carnival-naranja-calido">Acceso operativo</p>
+            <h2 className="mt-2 text-2xl font-black">Ingresar</h2>
           </div>
 
           <form className="space-y-4" onSubmit={(event) => { void submitCredentials(event) }}>

@@ -29,7 +29,11 @@ body {
   min-width: 320px;
   min-height: 100vh;
   min-height: 100dvh;
-  background: linear-gradient(180deg, #2E6B45 0%, #1A4A2E 100%);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(253, 162, 48, 0.18), transparent 32rem),
+    radial-gradient(circle at 90% 12%, rgba(157, 137, 223, 0.16), transparent 28rem),
+    linear-gradient(180deg, #2E6B45 0%, #1A4A2E 48%, #123522 100%);
+  color: #f8fafc;
 }
 
 button,
@@ -52,4 +56,10 @@ h2 {
 
 ::selection {
   background: rgba(253, 162, 48, 0.4);
+}
+
+input,
+select,
+textarea {
+  color-scheme: dark;
 }

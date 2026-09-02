@@ -117,13 +117,13 @@ export function SupervisionPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl space-y-4 px-4 py-5">
+    <main className="mx-auto max-w-7xl space-y-5 px-4 py-5 sm:py-8">
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-carnival-amarillo-brillante">Fiscalización</p>
-              <h1 className="mt-2 text-3xl font-black text-slate-50">Panel operativo del Fiscal</h1>
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-carnival-naranja-calido">Fiscalización</p>
+              <h1 className="mt-2 text-3xl font-black text-slate-50 sm:text-4xl">Panel operativo del Fiscal</h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-300">Monitoreá el avance de la noche, revisá resultados, detectá eventos y registrá penalizaciones sin tocar votos confirmados.</p>
             </div>
             <Button type="button" variant="secondary" onClick={refreshFiscalPanel} disabled={penaltyMutation.isPending}><FiRefreshCw size={18} aria-hidden="true" />Actualizar</Button>

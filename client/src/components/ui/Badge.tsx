@@ -8,8 +8,8 @@ interface BadgeProps {
 }
 
 const tones: Record<NonNullable<BadgeProps['tone']>, string> = {
-  neutral: 'border-slate-600 bg-slate-800 text-slate-200',
-  success: 'border-emerald-500/50 bg-emerald-500/15 text-emerald-200',
+  neutral: 'border-white/15 bg-white/10 text-slate-200',
+  success: 'border-emerald-400/50 bg-emerald-400/15 text-emerald-100',
   warning: 'border-carnival-amarillo-brillante/60 bg-yellow-500/15 text-yellow-100',
   danger: 'border-carnival-rojo-vibrante/60 bg-rose-500/15 text-rose-100',
   info: 'border-carnival-azul-profundo/60 bg-cyan-500/15 text-cyan-100',
@@ -25,5 +25,5 @@ const lightTones: Record<NonNullable<BadgeProps['tone']>, string> = {
 
 export function Badge({ tone = 'neutral', light = false, children, className = '' }: BadgeProps) {
   const toneClass = light ? lightTones[tone] : tones[tone]
-  return <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${toneClass} ${className}`}>{children}</span>
+  return <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold tracking-wide ${toneClass} ${className}`}>{children}</span>
 }

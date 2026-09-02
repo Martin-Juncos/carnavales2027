@@ -196,7 +196,22 @@ export function AdminPage() {
   const busy = createUser.isPending || createNight.isPending || createComparsa.isPending || reorderComparsas.isPending || createItem.isPending || openNight.isPending || closeNight.isPending || updateUser.isPending || deleteUser.isPending || updateNight.isPending || deleteNight.isPending || updateComparsa.isPending || deleteComparsa.isPending || updateItem.isPending || deleteItem.isPending
 
   return (
-    <main className="mx-auto max-w-7xl space-y-4 px-4 py-5">
+    <main className="mx-auto max-w-7xl space-y-5 px-4 py-5 sm:py-8">
+      <Card>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.28em] text-carnival-naranja-calido">Administración</p>
+            <h1 className="mt-2 text-3xl font-black text-slate-50 sm:text-4xl">Configuración operativa</h1>
+            <p className="mt-2 max-w-3xl text-sm text-slate-300">Gestioná usuarios, noches, comparsas, rubros y orden de pasada con confirmación previa en acciones sensibles.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[34rem]">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-3"><p className="text-xs text-slate-400">Usuarios</p><p className="text-2xl font-black">{users.data?.length ?? '-'}</p></div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-3"><p className="text-xs text-slate-400">Noches</p><p className="text-2xl font-black">{nights.data?.length ?? '-'}</p></div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-3"><p className="text-xs text-slate-400">Comparsas</p><p className="text-2xl font-black">{comparsas.data?.length ?? '-'}</p></div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-3"><p className="text-xs text-slate-400">Ítems</p><p className="text-2xl font-black">{items.data?.length ?? '-'}</p></div>
+          </div>
+        </div>
+      </Card>
       {message ? <Card className="border-carnival-azul-profundo/40 bg-carnival-azul-profundo/10"><p className="text-cyan-100">{message}</p></Card> : null}
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>

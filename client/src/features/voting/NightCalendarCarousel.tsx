@@ -85,7 +85,7 @@ export function NightCalendarCarousel({ nights, onEnterNight }: NightCalendarCar
       </div>
 
       <div
-        className="relative mx-auto mt-5 h-[24rem] max-w-xl touch-pan-y select-none outline-none"
+        className="relative mx-auto mt-5 h-[24rem] max-w-xl touch-pan-y select-none rounded-[2rem] bg-white/[0.04] outline-none"
         role="listbox"
         aria-label="Carrusel de noches"
         tabIndex={0}
@@ -108,13 +108,13 @@ export function NightCalendarCarousel({ nights, onEnterNight }: NightCalendarCar
               aria-selected={active}
               aria-label={`${night.name}, ${date.weekday} ${date.day} de ${date.month}, estado ${night.status}`}
               onClick={() => goTo(index)}
-              className={`absolute left-1/2 top-0 flex h-[22rem] w-[16rem] -translate-x-1/2 flex-col overflow-hidden rounded-[2rem] border-2 border-slate-950 bg-slate-50 text-night-950 shadow-[0_14px_0_rgba(15,23,42,0.75)] transition duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-carnival-naranja-calido sm:w-[18rem] ${cardPositionClass(position)}`}
+              className={`absolute left-1/2 top-3 flex h-[21.5rem] w-[16rem] -translate-x-1/2 flex-col overflow-hidden rounded-[2rem] border border-white/70 bg-slate-50 text-night-950 shadow-[0_26px_70px_rgba(0,0,0,0.35)] transition duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-carnival-naranja-calido sm:w-[18rem] ${cardPositionClass(position)}`}
             >
-              <span className="flex items-center justify-center gap-2 bg-carnival-naranja-calido px-4 py-4 text-lg font-black uppercase tracking-[0.18em]">
+              <span className="flex items-center justify-center gap-2 bg-gradient-to-r from-carnival-naranja-calido to-carnival-amarillo-brillante px-4 py-4 text-lg font-black uppercase tracking-[0.18em]">
                 <FiCalendar size={20} aria-hidden="true" />{date.weekday}
               </span>
               <span className="flex flex-1 flex-col items-center justify-center px-5 text-center">
-                <span className="font-heading text-[7rem] leading-none text-night-950">{date.day}</span>
+                <span className="font-heading text-[7rem] leading-none text-night-950 drop-shadow-sm">{date.day}</span>
                 <span className="mt-2 text-2xl font-black capitalize">{date.month}</span>
                 <span className="mt-5 text-base font-bold">{night.name}</span>
                 <Badge tone={statusTone(night.status)} className="mt-3">{night.status}</Badge>

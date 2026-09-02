@@ -60,7 +60,7 @@ function renderItemNode(
 
   return (
     <div key={node.id}>
-<div className={`flex flex-col gap-2 border-b border-slate-200/70 px-3 py-3 sm:flex-row sm:items-center sm:gap-3 ${depth > 0 ? 'bg-white/60' : 'bg-white/40'}`}>
+      <div className={`flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 ${depth > 0 ? 'bg-slate-50' : 'bg-white'}`}>
         <div className="min-w-0 flex-1" style={{ paddingLeft: `${depth * 1.25}rem` }}>
           <h3 className={isParent ? 'text-base font-black text-slate-950' : 'text-base font-bold text-slate-900'}>{node.nombre}</h3>
           <p className="text-xs text-slate-600">{isParent ? 'Rubro calculado por subítems' : 'Ítem puntuable'}</p>
@@ -82,10 +82,10 @@ function renderItemNode(
 
 const tabBackgrounds = [
   'bg-carnival-naranja-calido',
-  'bg-blue-600',
-  'bg-fuchsia-500',
+  'bg-carnival-azul-profundo',
+  'bg-carnival-rosa',
   'bg-emerald-500',
-  'bg-orange-500',
+  'bg-carnival-rojo-vibrante',
   'bg-cyan-400',
 ]
 const tabForegrounds = [
@@ -100,7 +100,7 @@ const tabForegrounds = [
 function tabClass(index: number, active: boolean): string {
   const color = tabBackgrounds[index % tabBackgrounds.length]
   const foreground = tabForegrounds[index % tabForegrounds.length]
-  return `min-h-14 min-w-36 rounded-t-3xl border-2 border-slate-950 px-4 py-2 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-naranja-calido ${color} ${foreground} ${active ? 'translate-y-[2px] shadow-none' : 'opacity-80 shadow-[0_4px_0_rgba(15,23,42,0.75)] hover:opacity-100'}`
+  return `min-h-14 min-w-36 rounded-t-[1.35rem] border border-white/25 px-4 py-2 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carnival-naranja-calido ${color} ${foreground} ${active ? 'translate-y-[1px] opacity-100 shadow-none' : 'opacity-75 shadow-[0_8px_18px_rgba(0,0,0,0.2)] hover:opacity-100'}`
 }
 
 function nightStatusTone(status: JuradoContext['assignment']['night']['status']): 'success' | 'warning' | 'neutral' {
@@ -214,7 +214,7 @@ export function JudgePage() {
   const close = selectedComparsa ? closeStatus(selectedComparsa.id, noCloseDrafts, context.closes) : undefined
   const missing = selectedComparsa ? missingScorableItems(selectedComparsa.id, context.items, noVoteDrafts, context.votes) : []
   const selectedIndex = selectedComparsa ? Math.max(0, context.comparsas.findIndex((comparsa) => comparsa.id === selectedComparsa.id)) : 0
-  const wrapperBg = tabBackgrounds[selectedIndex % tabBackgrounds.length]
+  const activeTabBg = tabBackgrounds[selectedIndex % tabBackgrounds.length]
   const canCloseSelected = selectedComparsa && missing.length === 0 && !close && browserOnline && !busy
 
   const confirmVote = async (): Promise<void> => {
@@ -279,12 +279,12 @@ export function JudgePage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl space-y-4 px-4 py-5">
-<Card>
+    <main className="mx-auto max-w-7xl space-y-5 px-4 py-5 sm:py-8">
+      <Card className="overflow-hidden">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="font-heading text-lg text-carnival-naranja-calido">Planilla del jurado</p>
-            <h2 className="mt-1 text-2xl font-black text-slate-50 sm:text-3xl">{night.name}</h2>
+            <p className="text-xs font-black uppercase tracking-[0.28em] text-carnival-naranja-calido">Planilla del jurado</p>
+            <h2 className="mt-2 text-3xl font-black text-slate-50 sm:text-4xl">{night.name}</h2>
             <div className="mt-3 flex flex-wrap gap-2 text-sm text-slate-300">
               {auth.user ? <Badge tone="info">Jurado: {auth.user.nombre}</Badge> : null}
               <Badge tone={nightStatusTone(night.status)}>Estado: {night.status}</Badge>
@@ -297,7 +297,7 @@ export function JudgePage() {
 
       {actionError ? <Card className="border-rose-500/40 bg-rose-500/10"><p className="text-sm font-semibold text-rose-100" role="alert">{actionError}</p></Card> : null}
 
-      <section className="rounded-[2rem] border-2 border-slate-950 bg-white/10 p-2 shadow-[0_10px_0_rgba(15,23,42,0.75)] backdrop-blur-md">
+      <section className="rounded-[2rem] border border-white/15 bg-white/[0.08] p-2 shadow-glow backdrop-blur-xl">
         <div className="flex gap-1 overflow-x-auto px-1 pt-1" role="tablist" aria-label="Comparsas de la noche">
           {context.comparsas.map((comparsa, index) => {
             const progress = progressForComparsa(context, comparsa.id, noVoteDrafts, noCloseDrafts)
@@ -318,22 +318,22 @@ export function JudgePage() {
           })}
         </div>
 
-        <div className={`min-h-[28rem] rounded-b-[1.5rem] rounded-tr-[1.5rem] border-2 border-slate-950 p-3 text-slate-950 ${wrapperBg}`}>
+        <div className="min-h-[28rem] rounded-b-[1.5rem] rounded-tr-[1.5rem] border border-white/60 bg-slate-50/95 p-3 text-slate-950 shadow-inner sm:p-5">
         {selectedComparsa ? (
           <>
-<div className="rounded-3xl border border-slate-300 bg-white/60 p-4">
+            <div className={`rounded-3xl border border-white/70 p-4 text-white shadow-lg ${activeTabBg}`}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Comparsa</p>
-                  <h2 className="mt-1 text-2xl font-black sm:text-3xl">{selectedComparsa.nombre}</h2>
-                  <p className="mt-2 text-sm text-slate-700">Elegí un puntaje de 0 a 5. Antes de fijarlo se abre una confirmación.</p>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80">Comparsa activa</p>
+                  <h2 className="mt-1 text-3xl font-black sm:text-4xl">{selectedComparsa.nombre}</h2>
+                  <p className="mt-2 text-sm font-semibold opacity-90">Elegí un puntaje de 0 a 5. Antes de fijarlo se abre una confirmación.</p>
                 </div>
                 {close ? <SyncStatusBadge status={close} /> : null}
               </div>
             </div>
 
-            <div className={`mt-4 overflow-hidden rounded-3xl border border-slate-300 ${wrapperBg}`}>
-              <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-slate-300 bg-night-950 px-3 py-3 text-sm font-black uppercase tracking-[0.15em] text-white">
+            <div className="mt-4 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
+              <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-slate-200 bg-night-950 px-4 py-4 text-sm font-black uppercase tracking-[0.15em] text-white">
                 <span>Rubro / ítem</span>
                 <span>Puntaje</span>
               </div>

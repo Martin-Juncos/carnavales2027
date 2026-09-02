@@ -19,7 +19,7 @@ export function VoteInput({ itemName, score, disabled = false, className = '', o
         <>
           <select
             aria-label={`Nota bloqueada para ${itemName}`}
-            className="min-h-12 w-24 flex-shrink-0 rounded-2xl border border-carnival-naranja-calido bg-carnival-naranja-calido px-3 text-center text-xl font-black text-night-950 disabled:opacity-100"
+            className="min-h-14 w-24 flex-shrink-0 rounded-2xl border-2 border-carnival-naranja-calido bg-carnival-naranja-calido px-3 text-center text-2xl font-black text-night-950 shadow-[0_10px_24px_rgba(253,162,48,0.25)] disabled:opacity-100"
             value={score.value}
             disabled
           >
@@ -30,7 +30,7 @@ export function VoteInput({ itemName, score, disabled = false, className = '', o
       ) : (
         <select
           aria-label={`Seleccionar nota para ${itemName}`}
-          className="min-h-12 min-w-0 flex-1 rounded-2xl border border-white/25 bg-night-950/60 px-3 text-center text-lg font-bold text-slate-50 outline-none transition focus:border-carnival-naranja-calido focus:ring-2 focus:ring-carnival-naranja-calido/40 disabled:cursor-not-allowed disabled:opacity-50 sm:w-28 sm:flex-none"
+          className="min-h-14 min-w-0 flex-1 rounded-2xl border border-night-950/15 bg-white px-3 text-center text-xl font-black text-night-950 outline-none transition hover:border-carnival-naranja-calido focus:border-carnival-naranja-calido focus:ring-4 focus:ring-carnival-naranja-calido/25 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:opacity-60 sm:w-28 sm:flex-none"
           value=""
           disabled={locked}
           onChange={(event) => {
